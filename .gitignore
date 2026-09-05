@@ -1,0 +1,81 @@
+# ----------------------------------------------------------------------
+# SECRETS & CREDENTIALS (ZERO LEAKAGE)
+# ----------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.env
+*.pem
+*.key
+*.cert
+*.pfx
+
+# ----------------------------------------------------------------------
+# DEPENDENCIES & CACHE
+# ----------------------------------------------------------------------
+node_modules/
+apps/*/node_modules/
+server/node_modules/
+.pnp
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+
+# ----------------------------------------------------------------------
+# BUILD ARTIFACTS & DISTRIBUTION
+# ----------------------------------------------------------------------
+dist/
+build/
+out/
+.vite/
+.netlify/
+.cache/
+.parcel-cache/
+apps/*/dist/
+apps/*/build/
+
+# ----------------------------------------------------------------------
+# LOGS & RUNTIME FILES
+# ----------------------------------------------------------------------
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# ----------------------------------------------------------------------
+# IDE & EDITOR JUNK
+# ----------------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.eslintcache
+
+# ----------------------------------------------------------------------
+# OPERATING SYSTEM JUNK
+# ----------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini

@@ -1,0 +1,23 @@
+{
+  "name": "newhomeland",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "server"
+  ],
+  "scripts": {
+    "start": "npm run start --workspace=server",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:public": "npm run dev --workspace=apps/public-site",
+    "dev:admin": "npm run dev --workspace=apps/admin-portal",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:public\" \"npm run dev:admin\"",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  },
+  "dependencies": {
+    "mongodb": "^7.6.0"
+  }
+}
