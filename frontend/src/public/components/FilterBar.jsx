@@ -3,17 +3,23 @@ import { Search, MapPin, Home, IndianRupee } from 'lucide-react';
 
 const FilterBar = ({ onFilterChange }) => {
   const [filters, setFilters] = useState({
-    search: '',
+    location: 'All',
     propertyType: 'All',
-    minPrice: '',
-    maxPrice: '',
-    sortBy: 'newest'
+    maxPrice: ''
   });
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      onFilterChange(filters);
-    }, 500); // Debounce 500ms
+      // Map location and filters so backend property query handles them
+      const appliedFilters = {
+        propertyType: filters.propertyType,
+        maxPrice: filters.maxPrice,
+        search: filters.location !== 'All' ? filters.location : ''
+      };
+      if (onFilterChange) {
+        onFilterChange(appliedFilters);
+      }
+    }, 400);
 
     return () => clearTimeout(handler);
   }, [filters, onFilterChange]);
@@ -25,60 +31,77 @@ const FilterBar = ({ onFilterChange }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onFilterChange(filters);
+    const appliedFilters = {
+      propertyType: filters.propertyType,
+      maxPrice: filters.maxPrice,
+      search: filters.location !== 'All' ? filters.location : ''
+    };
+    if (onFilterChange) {
+      onFilterChange(appliedFilters);
+    }
   };
 
   return (
-    <div className="hero-search-card" style={{ margin: '0 auto', maxWidth: '1000px', position: 'relative', top: '-40px', zIndex: 20 }}>
-      <form onSubmit={handleSubmit} className="search-form-grid">
-        {/* Search Keyword */}
+    <div className="hero-search-card" style={{ width: '100%', maxWidth: '1100px', margin: '2.5rem auto 0 auto' }}>
+      <form onSubmit={handleSubmit} className="search-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr)) 160px', alignItems: 'flex-end', gap: '1.25rem' }}>
+        {/* Location / City */}
         <div className="search-field">
-          <label className="search-label">
-            <Search size={14} color="#d49a3f" />
-            <span>Search Keyword</span>
+          <label className="search-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#b87d28', fontWeight: 600, fontSize: '0.8rem', letterSpacing: '0.5px' }}>
+            <MapPin size={14} color="#d49a3f" />
+            <span>LOCATION / CITY</span>
           </label>
-          <input
-            type="text"
-            name="search"
-            placeholder="e.g. Faridabad..."
-            value={filters.search}
+          <select
+            name="location"
+            value={filters.location}
             onChange={handleChange}
             className="search-select"
-            style={{ border: 'none', background: 'transparent', outline: 'none', padding: '0.5rem 0' }}
-          />
+            style={{ borderRadius: '12px', borderColor: '#e2e8f0', height: '48px', padding: '0 1rem', fontWeight: 500 }}
+          >
+            <option value="All">All Locations (NCR)</option>
+            <option value="Faridabad">Faridabad</option>
+            <option value="Gurgaon">Gurgaon</option>
+            <option value="Noida">Noida</option>
+            <option value="Greater Noida">Greater Noida</option>
+            <option value="Delhi">Delhi</option>
+          </select>
         </div>
 
         {/* Property Type */}
         <div className="search-field">
-          <label className="search-label">
+          <label className="search-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#b87d28', fontWeight: 600, fontSize: '0.8rem', letterSpacing: '0.5px' }}>
             <Home size={14} color="#d49a3f" />
-            <span>Property Type</span>
+            <span>PROPERTY TYPE</span>
           </label>
           <select
             name="propertyType"
             value={filters.propertyType}
             onChange={handleChange}
             className="search-select"
+            style={{ borderRadius: '12px', borderColor: '#e2e8f0', height: '48px', padding: '0 1rem', fontWeight: 500 }}
           >
-            <option value="All">All Types</option>
-            <option value="Residential">Residential</option>
-            <option value="Commercial">Commercial</option>
-            <option value="Agricultural">Agricultural</option>
-            <option value="Industrial">Industrial</option>
+            <option value="All">All Property Types</option>
+            <option value="Plot">Plots & Land</option>
+            <option value="Residential">Residential Plot</option>
+            <option value="Commercial">Commercial Plot</option>
+            <option value="Villa">Luxury Villa</option>
+            <option value="House">Independent House</option>
+            <option value="Apartment">Apartment</option>
+            <option value="Builder Floor">Builder Floor</option>
           </select>
         </div>
 
         {/* Max Budget */}
         <div className="search-field">
-          <label className="search-label">
+          <label className="search-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#b87d28', fontWeight: 600, fontSize: '0.8rem', letterSpacing: '0.5px' }}>
             <IndianRupee size={14} color="#d49a3f" />
-            <span>Max Budget</span>
+            <span>MAX BUDGET</span>
           </label>
           <select
             name="maxPrice"
             value={filters.maxPrice}
             onChange={handleChange}
             className="search-select"
+            style={{ borderRadius: '12px', borderColor: '#e2e8f0', height: '48px', padding: '0 1rem', fontWeight: 500 }}
           >
             <option value="">Any Budget</option>
             <option value="5000000">Up to ₹ 50 Lakh</option>
@@ -90,7 +113,24 @@ const FilterBar = ({ onFilterChange }) => {
         </div>
 
         {/* Submit Button */}
-        <button type="submit" className="search-submit-btn">
+        <button
+          type="submit"
+          className="search-submit-btn"
+          style={{
+            height: '48px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, #e5b364 0%, #c48b32 100%)',
+            color: '#1e293b',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            border: 'none',
+            boxShadow: '0 4px 14px rgba(212, 154, 63, 0.35)'
+          }}
+        >
           <Search size={18} />
           <span>Search</span>
         </button>
@@ -100,3 +140,4 @@ const FilterBar = ({ onFilterChange }) => {
 };
 
 export default FilterBar;
+

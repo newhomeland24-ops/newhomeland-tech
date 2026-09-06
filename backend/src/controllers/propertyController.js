@@ -2,21 +2,30 @@ const Land = require('../models/Land');
 const cloudinary = require('../config/cloudinary');
 
 const getPublicProperties = async (req, res) => {
-  const { search, propertyType, minPrice, maxPrice, minArea, maxArea, sortBy } = req.query;
+  const { search, location, propertyType, minPrice, maxPrice, minArea, maxArea, sortBy, status } = req.query;
   
   const query = {
-    status: { $in: ['published', 'sold'] },
     publishedAt: { $lte: new Date() }
   };
+
+  if (status && status !== 'All') {
+    query.status = status.toLowerCase();
+  } else {
+    query.status = { $in: ['published', 'sold'] };
+  }
 
   if (search) {
     query.$or = [
       { title: { $regex: search, $options: 'i' } },
-      { location: { $regex: search, $options: 'i' } }
+      { location: { $regex: search, $options: 'i' } },
+      { description: { $regex: search, $options: 'i' } }
     ];
   }
+  if (location && location !== 'All') {
+    query.location = { $regex: location, $options: 'i' };
+  }
   if (propertyType && propertyType !== 'All') {
-    query.propertyType = propertyType;
+    query.propertyType = { $regex: propertyType, $options: 'i' };
   }
   if (minPrice || maxPrice) {
     query.price = {};
@@ -33,14 +42,20 @@ const getPublicProperties = async (req, res) => {
   if (sortBy) {
     if (sortBy === 'price_asc') sortObj = { price: 1 };
     else if (sortBy === 'price_desc') sortObj = { price: -1 };
-    else if (sortBy === 'newest') sortObj = { publishedAt: -1 };
+    else if (sortBy === 'newest') sortObj = { publishedAt: -1, createdAt: -1 };
   }
 
   const properties = await Land.find(query).sort(sortObj);
   res.status(200).json(properties);
 };
 
+const mongoose = require('mongoose');
+
 const getPublicProperty = async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(404).json({ message: 'Property not found' });
+  }
+
   const property = await Land.findOne({
     _id: req.params.id,
     status: { $in: ['published', 'sold'] },
@@ -48,8 +63,7 @@ const getPublicProperty = async (req, res) => {
   });
 
   if (!property) {
-    res.status(404);
-    throw new Error('Property not found');
+    return res.status(404).json({ message: 'Property not found' });
   }
 
   res.status(200).json(property);

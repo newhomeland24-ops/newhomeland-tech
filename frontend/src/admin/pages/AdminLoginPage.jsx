@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../hooks/useAdminAuth';
 import { Shield, Lock, AlertCircle, ArrowRight } from 'lucide-react';
 
 const AdminLoginPage = () => {
+  useEffect(() => {
+    document.title = 'Admin Portal Secure Login | NewHomeLand';
+  }, []);
+
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

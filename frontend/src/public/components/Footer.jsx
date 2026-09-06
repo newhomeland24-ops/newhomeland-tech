@@ -72,9 +72,6 @@ export default function Footer() {
         {/* Footer Bottom */}
         <div className="footer-bottom">
           <p>&copy; {new Date().getFullYear()} NewHomeLand Brokerage. All rights reserved.</p>
-          <div style={{ display: 'flex', gap: '1.5rem' }}>
-            <Link to="/admin" style={{ color: 'inherit', fontSize: '0.82rem' }}>Admin Access</Link>
-          </div>
         </div>
       </div>
     </footer>

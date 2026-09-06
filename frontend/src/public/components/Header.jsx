@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Building2, Menu, X, ShieldCheck, MessageCircle } from 'lucide-react';
+import { Building2, Menu, X, Phone, MessageCircle } from 'lucide-react';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -26,6 +26,15 @@ export default function Header() {
           <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end>
             Home
           </NavLink>
+          <NavLink to="/properties" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            Properties
+          </NavLink>
+          <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            About Us
+          </NavLink>
+          <NavLink to="/contact" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            Contact Us
+          </NavLink>
         </nav>
 
         {/* Action Buttons */}
@@ -43,10 +52,10 @@ export default function Header() {
             </a>
           )}
 
-          <Link to="/admin" className="btn btn-outline btn-sm" title="Admin Portal">
-            <ShieldCheck size={16} />
-            <span>Admin</span>
-          </Link>
+          <a href="tel:+919876543210" className="call-btn" title="Call Us">
+            <Phone size={18} />
+            <span>+91 98765 43210</span>
+          </a>
 
           {/* Mobile Menu Toggle Button */}
           <button
@@ -70,20 +79,42 @@ export default function Header() {
           >
             Home
           </NavLink>
+          <NavLink
+            to="/properties"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            onClick={() => setMobileOpen(false)}
+          >
+            Properties
+          </NavLink>
+          <NavLink
+            to="/about"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            onClick={() => setMobileOpen(false)}
+          >
+            About Us
+          </NavLink>
+          <NavLink
+            to="/contact"
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+            onClick={() => setMobileOpen(false)}
+          >
+            Contact Us
+          </NavLink>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
             {cleanWhatsapp && (
               <a
                 href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent('Hello! I am inquiring about available properties.')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-gold btn-sm"
+                className="btn btn-outline btn-sm"
               >
-                <MessageCircle size={16} /> WhatsApp
+                <MessageCircle size={16} color="#25d366" /> WhatsApp
               </a>
             )}
-            <Link to="/admin" className="btn btn-dark btn-sm" onClick={() => setMobileOpen(false)}>
-              <ShieldCheck size={16} /> Admin Portal
-            </Link>
+            <a href="tel:+919876543210" className="btn btn-outline btn-sm">
+              <Phone size={16} /> +91 98765 43210
+            </a>
           </div>
         </div>
       )}

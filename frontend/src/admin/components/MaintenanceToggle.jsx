@@ -1,119 +1,201 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AlertTriangle, Settings2, Save } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, CheckCircle2, Save, RefreshCw, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const MaintenanceToggle = () => {
+const MaintenanceToggle = ({ onStatusChange, onClose }) => {
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const fetchSettings = async () => {
+    setIsLoading(true);
+    try {
+      const res = await axios.get('/api/settings');
+      if (res.data) {
+        setIsMaintenance(res.data.isMaintenance);
+        setMessage(res.data.maintenanceMessage || '');
+        setLastUpdated(res.data.updatedAt);
+        if (onStatusChange) onStatusChange(res.data.isMaintenance);
+      }
+    } catch (error) {
+      console.error('Failed to load settings', error);
+      toast.error('Failed to load maintenance settings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const res = await axios.get('/api/settings');
-        if (res.data) {
-          setIsMaintenance(res.data.isMaintenance);
-          setMessage(res.data.maintenanceMessage);
-        }
-      } catch (error) {
-        console.error('Failed to load settings', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchSettings();
   }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await axios.put('/api/settings', { isMaintenance, maintenanceMessage: message });
-      toast.success('Settings updated successfully');
+      const res = await axios.put('/api/settings', { 
+        isMaintenance, 
+        maintenanceMessage: message 
+      });
+      if (res.data) {
+        setLastUpdated(res.data.updatedAt || new Date());
+        if (onStatusChange) onStatusChange(isMaintenance);
+      }
+      toast.success(isMaintenance ? 'System placed in Maintenance Mode' : 'Public portal is now LIVE');
     } catch (error) {
+      console.error('Failed to update settings', error);
       toast.error('Failed to update settings');
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div style={{ padding: '2.5rem', textAlign: 'center', color: '#64748b' }}>
+        <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 0.75rem auto', color: '#d49a3f' }} />
+        <p style={{ margin: 0, fontSize: '0.9rem' }}>Retrieving system configuration...</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '1.5rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-        <div style={{ padding: '0.5rem', background: '#fef3c7', borderRadius: '8px', color: '#d97706' }}>
-          <Settings2 size={24} />
-        </div>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Global Maintenance Mode</h2>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', background: '#fef2f2', padding: '1rem', borderRadius: '8px', border: '1px solid #fecaca' }}>
-          <AlertTriangle size={20} color="#dc2626" style={{ marginTop: '0.1rem', marginRight: '0.75rem', flexShrink: 0 }} />
+    <div className="maintenance-panel-card">
+      <div className="maintenance-panel-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div className={`maintenance-icon-badge ${isMaintenance ? 'amber' : 'green'}`}>
+            {isMaintenance ? <ShieldAlert size={22} /> : <CheckCircle2 size={22} />}
+          </div>
           <div>
-            <p style={{ fontSize: '0.875rem', color: '#991b1b', fontWeight: 600, margin: '0 0 0.25rem 0' }}>Warning: Public Kill-Switch</p>
-            <p style={{ fontSize: '0.75rem', color: '#b91c1c', margin: 0, lineHeight: 1.5 }}>
-              Enabling this will immediately block all public traffic and display the maintenance splash screen. The Admin portal will remain operational.
+            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>
+              Public Portal Visibility & Maintenance
+            </h3>
+            <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+              Control whether public visitors can access properties or see a maintenance announcement.
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#334155', margin: '0 0 0.25rem 0' }}>Enable Maintenance</h4>
-            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Toggle public portal visibility</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className={`status-pill ${isMaintenance ? 'amber' : 'green'}`}>
+            <span className="pulse-dot" />
+            <span>{isMaintenance ? 'Maintenance Active' : 'Public Site Live'}</span>
           </div>
-          <label style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', cursor: 'pointer', marginLeft: 'auto' }}>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="modal-close-icon-btn"
+              title="Close Panel"
+              style={{ width: '32px', height: '32px' }}
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {isMaintenance ? (
+        <div className="maintenance-alert-box alert-warning">
+          <AlertTriangle size={20} style={{ flexShrink: 0, color: '#d97706' }} />
+          <div>
+            <div style={{ fontWeight: 700, color: '#92400e', fontSize: '0.88rem' }}>
+              Public Kill-Switch Engaged
+            </div>
+            <div style={{ color: '#b45309', fontSize: '0.82rem', marginTop: '0.2rem' }}>
+              All public visitors to NewHomeLand will see the maintenance splash screen. The Admin dashboard remains accessible.
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="maintenance-alert-box alert-success">
+          <CheckCircle2 size={20} style={{ flexShrink: 0, color: '#10b981' }} />
+          <div>
+            <div style={{ fontWeight: 700, color: '#065f46', fontSize: '0.88rem' }}>
+              Public Catalog Active
+            </div>
+            <div style={{ color: '#047857', fontSize: '0.82rem', marginTop: '0.2rem' }}>
+              All properties are visible to the public according to their individual published dates.
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* Toggle Switch */}
+        <div className="maintenance-toggle-row">
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e293b' }}>
+              Maintenance Mode Switch
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.15rem' }}>
+              {isMaintenance 
+                ? 'Flip to restore normal public access' 
+                : 'Flip to immediately suspend public browsing'}
+            </div>
+          </div>
+
+          <label className="switch-control">
             <input 
               type="checkbox" 
               checked={isMaintenance}
               onChange={(e) => setIsMaintenance(e.target.checked)}
-              style={{ display: 'none' }}
             />
-            <div style={{
-              width: '3.5rem', height: '1.75rem', background: isMaintenance ? '#d97706' : '#cbd5e1', borderRadius: '9999px',
-              transition: 'all 0.3s', position: 'relative'
-            }}>
-              <div style={{
-                position: 'absolute', top: '2px', left: isMaintenance ? 'calc(100% - 1.5rem - 2px)' : '2px',
-                width: '1.5rem', height: '1.5rem', background: '#fff', borderRadius: '50%', transition: 'all 0.3s',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}></div>
-            </div>
+            <span className="switch-slider" />
           </label>
         </div>
 
+        {/* Message Input */}
         <div>
-          <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#475569', marginBottom: '0.5rem' }}>
-            Maintenance Message (Visible to Public)
+          <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.5rem' }}>
+            Maintenance Announcement (Visible to Public Visitors)
           </label>
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            rows="3"
+            rows={3}
             className="form-input"
-            style={{ width: '100%', resize: 'none' }}
-            placeholder="We are currently performing maintenance..."
-          ></textarea>
+            style={{ width: '100%', resize: 'vertical', borderRadius: '10px', fontSize: '0.9rem' }}
+            placeholder="NewHomeLand catalog is currently undergoing scheduled maintenance..."
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.4rem', fontSize: '0.78rem', color: '#94a3b8' }}>
+            <span>Supports plain text announcements</span>
+            {lastUpdated && <span>Last modified: {new Date(lastUpdated).toLocaleString()}</span>}
+          </div>
         </div>
 
-        <button 
-          onClick={handleSave}
-          disabled={isSaving}
-          className="btn btn-gold"
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-        >
-          {isSaving ? (
-            <span>Saving...</span>
-          ) : (
-            <>
-              <Save size={18} />
-              <span>Save Settings</span>
-            </>
-          )}
-        </button>
+        {/* Action Button */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '0.5rem' }}>
+          <button 
+            type="button"
+            onClick={fetchSettings}
+            disabled={isSaving}
+            className="btn btn-outline btn-sm"
+          >
+            Reset Changes
+          </button>
+          <button 
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="btn btn-gold btn-sm"
+            style={{ minWidth: '140px' }}
+          >
+            {isSaving ? (
+              <>
+                <RefreshCw size={15} className="animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Save size={15} />
+                <span>Apply Settings</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

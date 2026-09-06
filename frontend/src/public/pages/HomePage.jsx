@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import FilterBar from '../components/FilterBar';
 import LandCard from '../components/LandCard';
 import { useProperties } from '../hooks/useProperties';
 import { useMaintenance } from '../hooks/useMaintenance';
 import MaintenancePage from './MaintenancePage';
+import villaBg from '../../assets/villa-1.jpg';
 
 const HomePage = () => {
   const { maintenance, loading: maintenanceLoading } = useMaintenance();
@@ -24,43 +26,58 @@ const HomePage = () => {
   return (
     <div className="flex flex-col min-h-screen">
       {/* 1. HERO SECTION */}
-      <section className="hero-section">
+      <section className="hero-section" style={{ marginTop: '-80px', paddingTop: 'calc(80px + 3.5rem)', paddingBottom: '4.5rem' }}>
         <div
           className="hero-bg-overlay"
-          style={{ backgroundImage: `url(https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80)` }}
+          style={{ backgroundImage: `url(${villaBg})` }}
         />
         <div className="hero-gradient-overlay" />
 
         <div className="container" style={{ position: 'relative', zIndex: 10 }}>
-          <div className="hero-content">
+          <div className="hero-content" style={{ marginBottom: '1.5rem' }}>
             <div className="hero-tag">
-              <Sparkles size={15} />
-              <span>Verified Real Estate Brokerage</span>
+              <Sparkles size={14} />
+              <span>VERIFIED DELHI NCR REAL ESTATE BROKERAGE</span>
             </div>
 
             <h1 className="hero-title">
-              Find Your Perfect <span>Plot, Villa & Dream Home</span>
+              Find Your Perfect Plot, Villa &<br />
+              <span>Dream Home</span>
             </h1>
 
             <p className="hero-subtitle">
-              Discover verified residential plots, luxury independent villas, modern apartments & commercial land with 100% legal title clearance.
+              Explore verified residential plots, luxury villas, high-rise apartments & commercial land with complete legal documentation.
             </p>
           </div>
+
+          {/* Hero Search Card inside Hero */}
+          <FilterBar onFilterChange={setFilters} />
         </div>
       </section>
 
-      {/* Hero Search Card */}
-      <FilterBar onFilterChange={setFilters} />
-
-      <main className="flex-grow bg-gray-50 py-12 pb-24 md:pb-12" style={{ marginTop: '-20px' }}>
+      <main className="flex-grow bg-gray-50 py-12 pb-24 md:pb-12">
         <div className="container">
-          
-          <div className="section-header">
-            <span className="section-tag">All Properties</span>
-            <h2 className="section-title">Discover Premium Properties</h2>
-            <p className="section-subtitle">
-              Find the perfect piece of land to secure your future.
-            </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <h2 className="section-title" style={{ margin: 0, textAlign: 'left' }}>
+              Discover Premium Properties
+            </h2>
+            <Link
+              to="/properties"
+              className="btn btn-gold"
+              style={{
+                borderRadius: '12px',
+                padding: '0.65rem 1.4rem',
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <span>All Properties</span>
+              <ArrowRight size={16} />
+            </Link>
           </div>
 
           {error && (
@@ -85,7 +102,7 @@ const HomePage = () => {
                 </div>
               ))}
             </div>
-          ) : properties.length === 0 ? (
+          ) : (!Array.isArray(properties) || properties.length === 0) ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
               <h3 className="text-xl font-bold text-gray-900 mb-2">No properties found</h3>
               <p className="text-gray-500">Try adjusting your filters or search terms.</p>
@@ -93,7 +110,7 @@ const HomePage = () => {
           ) : (
             <div className="property-grid">
               {properties.map(property => (
-                <LandCard key={property._id} property={property} />
+                <LandCard key={property._id || property.id} property={property} />
               ))}
             </div>
           )}

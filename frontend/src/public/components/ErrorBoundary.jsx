@@ -20,6 +20,11 @@ class ErrorBoundary extends React.Component {
         <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
           <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl text-center border border-gray-100">
             <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
+            {this.state.error && (
+              <pre className="text-xs text-red-600 bg-red-50 p-3 rounded-lg mb-4 text-left overflow-x-auto whitespace-pre-wrap font-mono">
+                {this.state.error.message || String(this.state.error)}
+              </pre>
+            )}
             <p className="text-gray-600 mb-6 text-sm">We apologize for the inconvenience. Please try refreshing the page or come back later.</p>
             <button 
               onClick={() => window.location.reload()}
