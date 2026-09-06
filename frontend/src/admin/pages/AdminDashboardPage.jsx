@@ -113,16 +113,6 @@ const AdminDashboardPage = () => {
           </div>
         </div>
 
-        {/* Dedicated Maintenance Panel (Collapsible / Expandable) */}
-        {showMaintenancePanel && (
-          <div style={{ marginBottom: '2rem' }}>
-            <MaintenanceToggle 
-              onStatusChange={(status) => setIsMaintenanceActive(status)} 
-              onClose={() => setShowMaintenancePanel(false)}
-            />
-          </div>
-        )}
-
         {/* 4 Balanced Uniform KPI Cards */}
         <div className="admin-stats-grid">
           {/* Card 1: Total Properties */}
@@ -182,7 +172,7 @@ const AdminDashboardPage = () => {
                   onClick={() => setShowMaintenancePanel(prev => !prev)}
                   style={{ background: 'none', border: 'none', padding: 0, color: '#d49a3f', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
                 >
-                  {showMaintenancePanel ? 'Close controls ↑' : 'Configure kill-switch →'}
+                  {showMaintenancePanel ? 'Close controls ↑' : 'Configure kill-switch ↓'}
                 </button>
               </div>
             </div>
@@ -191,6 +181,16 @@ const AdminDashboardPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Dedicated Maintenance Panel (Expands BELOW the KPI cards) */}
+        {showMaintenancePanel && (
+          <div style={{ marginBottom: '2.5rem' }}>
+            <MaintenanceToggle 
+              onStatusChange={(status) => setIsMaintenanceActive(status)} 
+              onClose={() => setShowMaintenancePanel(false)}
+            />
+          </div>
+        )}
 
         {/* Upload Form (Expandable) */}
         {showUpload && (
