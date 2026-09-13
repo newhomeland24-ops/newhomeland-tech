@@ -21,7 +21,7 @@ export default function AdminHeader() {
             <Building2 size={24} />
           </div>
           <div className="brand-text">
-            <span className="brand-title">NewHomeLand</span>
+            <span className="brand-title">NewHomeDevelopers</span>
             <span className="brand-subtitle" style={{ color: '#d49a3f' }}>Operations Console</span>
           </div>
         </Link>

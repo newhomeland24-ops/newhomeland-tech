@@ -1,5 +1,6 @@
 import React from 'react';
-import { Phone, MessageCircle } from 'lucide-react';
+import { Phone } from 'lucide-react';
+import WhatsAppIcon from '../../components/WhatsAppIcon';
 
 const ContactPage = () => {
   return (
@@ -19,7 +20,7 @@ const ContactPage = () => {
               <span>+91 98765 43210</span>
             </a>
             <a href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || ''}`} target="_blank" rel="noreferrer" className="btn btn-gold flex items-center gap-2">
-              <MessageCircle size={20} />
+              <WhatsAppIcon size={20} />
               <span>Chat on WhatsApp</span>
             </a>
           </div>

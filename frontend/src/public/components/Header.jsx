@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Building2, Menu, X, Phone, MessageCircle } from 'lucide-react';
+import { Building2, Menu, X, Phone } from 'lucide-react';
+import WhatsAppIcon from '../../components/WhatsAppIcon';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function Header() {
             <Building2 size={24} />
           </div>
           <div className="brand-text">
-            <span className="brand-title">NewHomeLand</span>
+            <span className="brand-title">NewHomeDevelopers</span>
             <span className="brand-subtitle">Your Ground. Your Future.</span>
           </div>
         </Link>
@@ -47,7 +48,7 @@ export default function Header() {
               className="call-btn"
               title="Chat on WhatsApp"
             >
-              <MessageCircle size={18} color="#25d366" />
+              <WhatsAppIcon size={18} color="#25d366" />
               <span>WhatsApp</span>
             </a>
           )}
@@ -109,7 +110,7 @@ export default function Header() {
                 rel="noopener noreferrer"
                 className="btn btn-outline btn-sm"
               >
-                <MessageCircle size={16} color="#25d366" /> WhatsApp
+                <WhatsAppIcon size={16} color="#25d366" /> WhatsApp
               </a>
             )}
             <a href="tel:+919876543210" className="btn btn-outline btn-sm">

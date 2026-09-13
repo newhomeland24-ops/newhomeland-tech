@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { MessageCircle, Phone } from 'lucide-react';
+import { Phone } from 'lucide-react';
+import WhatsAppIcon from './components/WhatsAppIcon';
 import ErrorBoundary from './public/components/ErrorBoundary';
 import Header from './public/components/Header';
 import Footer from './public/components/Footer';
@@ -10,8 +11,11 @@ import PropertyDetailPage from './public/pages/PropertyDetailPage';
 import PropertiesPage from './public/pages/PropertiesPage';
 import AboutPage from './public/pages/AboutPage';
 import ContactPage from './public/pages/ContactPage';
+import MaintenancePage from './public/pages/MaintenancePage';
+import { useMaintenance } from './public/hooks/useMaintenance';
 
 function PublicApp() {
+  const { maintenance, loading: maintenanceLoading } = useMaintenance();
   const location = useLocation();
   const phone = import.meta.env.VITE_WHATSAPP_NUMBER || '+919876543210';
   const cleanPhone = phone.replace(/[^\d+]/g, '');
@@ -19,20 +23,28 @@ function PublicApp() {
 
   useEffect(() => {
     const path = location.pathname;
-    if (path === '/') {
-      document.title = 'NewHomeLand | Verified Plots, Luxury Villas & Dream Homes';
-    } else if (path === '/properties') {
-      document.title = 'Verified Land & Properties Portfolio | NewHomeLand';
-    } else if (path === '/about') {
-      document.title = 'About Our Brokerage & Title Guarantee | NewHomeLand';
-    } else if (path === '/contact') {
-      document.title = 'Contact Principal Broker & Schedule Site Visit | NewHomeLand';
-    } else if (path.startsWith('/property/')) {
-      document.title = 'Property Overview & Verification | NewHomeLand';
+    if (location.pathname === '/') {
+      document.title = 'NewHomeDevelopers | Verified Plots, Luxury Villas & Dream Homes';
+    } else if (location.pathname === '/properties') {
+      document.title = 'Verified Land & Properties Portfolio | NewHomeDevelopers';
+    } else if (location.pathname === '/about') {
+      document.title = 'About Our Brokerage & Title Guarantee | NewHomeDevelopers';
+    } else if (location.pathname === '/contact') {
+      document.title = 'Contact Principal Broker & Schedule Site Visit | NewHomeDevelopers';
+    } else if (location.pathname.startsWith('/property/') || location.pathname.startsWith('/properties/')) {
+      document.title = 'Property Overview & Verification | NewHomeDevelopers';
     } else {
-      document.title = 'NewHomeLand | Your Ground. Your Future.';
+      document.title = 'NewHomeDevelopers | Your Ground. Your Future.';
     }
   }, [location.pathname]);
+
+  if (!maintenanceLoading && maintenance.isMaintenance) {
+    return (
+      <ErrorBoundary>
+        <MaintenancePage />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>
@@ -43,7 +55,8 @@ function PublicApp() {
           <Route path="/properties" element={<PropertiesPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
-          <Route path="/property/:id" element={<PropertyDetailPage />} />
+          <Route path="/property/:propertyId" element={<PropertyDetailPage />} />
+          <Route path="/properties/:propertyId" element={<PropertyDetailPage />} />
         </Routes>
         <Footer />
         <BottomStickyBar />
@@ -57,7 +70,7 @@ function PublicApp() {
             className="float-btn whatsapp"
             title="Chat on WhatsApp"
           >
-            <MessageCircle size={26} />
+            <WhatsAppIcon size={26} />
           </a>
 
           <a

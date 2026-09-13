@@ -1,6 +1,14 @@
 const mongoose = require('mongoose');
 
 const landSchema = new mongoose.Schema({
+  propertyId: {
+    type: String,
+    unique: true,
+    index: true,
+    uppercase: true,
+    trim: true,
+    required: true
+  },
   title: { type: String, required: true, trim: true, index: true },
   description: { type: String, trim: true },
   price: { type: Number, required: true, index: true },
@@ -33,6 +41,22 @@ const landSchema = new mongoose.Schema({
     default: null, 
     expires: 432000 // 5 days in seconds
   }
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  toJSON: {
+    transform: function (doc, ret) {
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  },
+  toObject: {
+    transform: function (doc, ret) {
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
+});
 
 module.exports = mongoose.model('Land', landSchema);

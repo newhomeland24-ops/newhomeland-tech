@@ -45,18 +45,18 @@ export const useProperties = (filters = {}) => {
   return { properties, loading, error };
 };
 
-export const usePropertyDetails = (id) => {
+export const usePropertyDetails = (propertyId) => {
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!propertyId) return;
     
     const fetchProperty = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`/api/properties/${id}`);
+        const res = await axios.get(`/api/properties/${propertyId}`);
         setProperty(res.data);
         setError(null);
       } catch (err) {
@@ -68,7 +68,7 @@ export const usePropertyDetails = (id) => {
     };
 
     fetchProperty();
-  }, [id]);
+  }, [propertyId]);
 
   return { property, loading, error };
 };

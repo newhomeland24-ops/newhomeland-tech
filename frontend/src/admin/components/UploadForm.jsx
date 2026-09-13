@@ -1,24 +1,37 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { X, UploadCloud, Plus, Video, Image, AlertCircle, FileText, Check } from 'lucide-react';
+import { X, UploadCloud, Plus, Video, Image, AlertCircle, FileText, Check, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { compressMediaBatch } from '../../utils/imageCompressor';
 
 const categories = ['Residential', 'Commercial', 'Agricultural', 'Industrial'];
 const units = ['Sq. Ft', 'Sq. Yds', 'Acres', 'Cents', 'Guntas'];
 
-const UploadForm = ({ onSuccess, onCancel }) => {
+const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
+  const isEditMode = Boolean(initialData);
+
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-    location: '',
-    area: '',
-    areaUnit: 'Sq. Ft',
-    propertyType: 'Residential',
-    status: 'published',
-    videoUrl: '',
-    publishedAt: new Date().toISOString().slice(0, 16)
+    propertyId: initialData?.propertyId || '',
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    price: initialData?.price !== undefined ? initialData.price : '',
+    location: initialData?.location || '',
+    area: initialData?.area !== undefined ? initialData.area : '',
+    areaUnit: initialData?.areaUnit || 'Sq. Ft',
+    propertyType: initialData?.propertyType || 'Residential',
+    status: initialData?.status || 'published',
+    videoUrl: initialData?.videoUrl || '',
+    publishedAt: initialData?.publishedAt 
+      ? new Date(initialData.publishedAt).toISOString().slice(0, 16) 
+      : new Date().toISOString().slice(0, 16)
   });
+
+  const [existingImages, setExistingImages] = useState(
+    Array.isArray(initialData?.images) ? initialData.images : []
+  );
+  const [existingPublicIds, setExistingPublicIds] = useState(
+    Array.isArray(initialData?.cloudinaryPublicIds) ? initialData.cloudinaryPublicIds : []
+  );
   
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,6 +65,12 @@ const UploadForm = ({ onSuccess, onCancel }) => {
     const res = await axios.post('/api/properties/admin/upload', data, {
       headers: {
         'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          toast.loading(`Uploading media to cloud (${percent}%)...`, { id: 'upload' });
+        }
       }
     });
     return res.data.results;
@@ -72,9 +91,15 @@ const UploadForm = ({ onSuccess, onCancel }) => {
       let finalVideoUrl = formData.videoUrl.trim() || null;
       
       if (selectedFiles.length > 0) {
-        toast.loading('Uploading media files to cloud...', { id: 'upload' });
+        toast.loading('Optimizing media files...', { id: 'upload' });
         try {
-          const results = await uploadMediaToBackend(selectedFiles);
+          // Compress high-res images before sending to backend/Cloudinary
+          const optimizedFiles = await compressMediaBatch(selectedFiles, (progress) => {
+            toast.loading(`Optimizing media files (${progress}%)...`, { id: 'upload' });
+          });
+
+          toast.loading('Uploading media to cloud (0%)...', { id: 'upload' });
+          const results = await uploadMediaToBackend(optimizedFiles);
           results.forEach(result => {
             publicIds.push(result.publicId);
             if (result.isVideo && !finalVideoUrl) {
@@ -90,6 +115,9 @@ const UploadForm = ({ onSuccess, onCancel }) => {
         }
       }
 
+      const combinedImages = [...existingImages, ...uploadedImages];
+      const combinedPublicIds = [...existingPublicIds, ...publicIds];
+
       const propertyData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
@@ -99,20 +127,29 @@ const UploadForm = ({ onSuccess, onCancel }) => {
         areaUnit: formData.areaUnit,
         propertyType: formData.propertyType,
         status: formData.status,
-        images: uploadedImages,
-        cloudinaryPublicIds: publicIds,
+        images: combinedImages,
+        cloudinaryPublicIds: combinedPublicIds,
         videoUrl: finalVideoUrl,
-        publishedAt: new Date(formData.publishedAt).toISOString()
+        publishedAt: new Date(formData.publishedAt).toISOString(),
+        ...(formData.propertyId.trim() ? { propertyId: formData.propertyId.trim().toUpperCase() } : {})
       };
 
-      await onSuccess(propertyData);
-      toast.success('Property listing published successfully!');
+      const result = await onSuccess(propertyData);
+      if (result && result.success === false) {
+        throw new Error(result.message || (isEditMode ? 'Failed to update listing' : 'Failed to publish listing'));
+      }
+      toast.success(isEditMode ? 'Property details updated successfully!' : 'Property listing published successfully!');
     } catch (error) {
       console.error('Submit error', error);
-      toast.error(error.message || 'Failed to publish listing');
+      toast.error(error.message || (isEditMode ? 'Failed to update listing' : 'Failed to publish listing'));
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const removeExistingImage = (index) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
+    setExistingPublicIds(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -120,14 +157,16 @@ const UploadForm = ({ onSuccess, onCancel }) => {
       <div className="upload-form-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <div className="upload-header-icon">
-            <Plus size={20} />
+            {isEditMode ? <Edit3 size={20} /> : <Plus size={20} />}
           </div>
           <div>
             <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
-              Create New Property Listing
+              {isEditMode ? `Edit Listing (${formData.propertyId || 'Property'})` : 'Create New Property Listing'}
             </h3>
             <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
-              Add a new luxury land or estate listing with photos, video walkthrough, and pricing.
+              {isEditMode 
+                ? 'Update pricing, dimensions, specifications, media walkthroughs, or listing status.'
+                : 'Add a new luxury land or estate listing with photos, video walkthrough, and pricing.'}
             </p>
           </div>
         </div>
@@ -147,6 +186,26 @@ const UploadForm = ({ onSuccess, onCancel }) => {
           {/* Left Column: Basic Details */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <div className="form-group">
+              <label className="form-label">
+                Custom Property ID {isEditMode ? '(Locked)' : '(Optional)'}
+              </label>
+              <input 
+                type="text" 
+                name="propertyId" 
+                value={formData.propertyId} 
+                onChange={handleInputChange} 
+                disabled={isEditMode}
+                className="form-input" 
+                placeholder="Enter custom Property ID or leave blank to auto-generate from location" 
+                style={{ 
+                  textTransform: 'uppercase',
+                  background: isEditMode ? '#f1f5f9' : '#ffffff',
+                  cursor: isEditMode ? 'not-allowed' : 'text'
+                }}
+              />
+            </div>
+
+            <div className="form-group">
               <label className="form-label">Property Title *</label>
               <input 
                 type="text" 
@@ -155,7 +214,7 @@ const UploadForm = ({ onSuccess, onCancel }) => {
                 value={formData.title} 
                 onChange={handleInputChange} 
                 className="form-input" 
-                placeholder="e.g. 5 Acres Prime Commercial Land on Highway" 
+                placeholder="Enter property title" 
               />
             </div>
             
@@ -169,7 +228,7 @@ const UploadForm = ({ onSuccess, onCancel }) => {
                   value={formData.price} 
                   onChange={handleInputChange} 
                   className="form-input" 
-                  placeholder="e.g. 25000000" 
+                  placeholder="Enter price in ₹ (INR)" 
                 />
               </div>
               <div className="form-group">
@@ -181,7 +240,7 @@ const UploadForm = ({ onSuccess, onCancel }) => {
                   value={formData.location} 
                   onChange={handleInputChange} 
                   className="form-input" 
-                  placeholder="e.g. Gurgaon, Haryana" 
+                  placeholder="Enter location / city" 
                 />
               </div>
             </div>
@@ -196,7 +255,7 @@ const UploadForm = ({ onSuccess, onCancel }) => {
                   value={formData.area} 
                   onChange={handleInputChange} 
                   className="form-input" 
-                  placeholder="e.g. 500" 
+                  placeholder="Enter total area" 
                 />
               </div>
               <div className="form-group">
@@ -265,7 +324,7 @@ const UploadForm = ({ onSuccess, onCancel }) => {
                 rows={4} 
                 className="form-input" 
                 style={{ resize: 'vertical' }} 
-                placeholder="Highlight title deed clarity, road connectivity, water/electricity access, zoning permissions..." 
+                placeholder="Enter detailed property description, title clearance, and connectivity details" 
               />
             </div>
 
@@ -279,7 +338,7 @@ const UploadForm = ({ onSuccess, onCancel }) => {
                 value={formData.videoUrl} 
                 onChange={handleInputChange} 
                 className="form-input" 
-                placeholder="https://www.youtube.com/watch?v=..." 
+                placeholder="Enter YouTube or video walkthrough URL" 
               />
               <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem', display: 'block' }}>
                 Optional: Paste a YouTube link or upload a video below.
@@ -307,7 +366,56 @@ const UploadForm = ({ onSuccess, onCancel }) => {
                 </p>
               </label>
 
-              {/* File list preview */}
+              {/* Existing Images preview in Edit mode */}
+              {existingImages.length > 0 && (
+                <div style={{ marginTop: '0.85rem' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '0.35rem' }}>
+                    Current Listing Media ({existingImages.length}):
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+                    {existingImages.map((imgUrl, i) => (
+                      <div 
+                        key={i} 
+                        style={{
+                          position: 'relative',
+                          width: '64px',
+                          height: '50px',
+                          borderRadius: '8px',
+                          overflow: 'hidden',
+                          border: '1px solid #cbd5e1',
+                          background: '#0f172a'
+                        }}
+                      >
+                        <img src={typeof imgUrl === 'string' ? imgUrl : imgUrl?.url} alt="Media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(i)}
+                          style={{
+                            position: 'absolute',
+                            top: '2px',
+                            right: '2px',
+                            background: 'rgba(239, 68, 68, 0.85)',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '18px',
+                            height: '18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer'
+                          }}
+                          title="Remove media"
+                        >
+                          <X size={11} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* File list preview for newly selected files */}
               {selectedFiles.length > 0 && (
                 <div className="upload-files-strip">
                   {selectedFiles.map((file, i) => {
@@ -354,7 +462,7 @@ const UploadForm = ({ onSuccess, onCancel }) => {
               <span>Saving Listing...</span>
             ) : (
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Check size={16} /> Publish Listing
+                <Check size={16} /> {isEditMode ? 'Update Property' : 'Publish Listing'}
               </span>
             )}
           </button>

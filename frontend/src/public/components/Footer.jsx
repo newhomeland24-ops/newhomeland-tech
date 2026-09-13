@@ -16,7 +16,7 @@ export default function Footer() {
                 <Building2 size={24} />
               </div>
               <div className="brand-text">
-                <span className="brand-title" style={{ fontSize: '1.2rem' }}>NewHomeLand</span>
+                <span className="brand-title" style={{ fontSize: '1.2rem' }}>NewHomeDevelopers</span>
                 <span className="brand-subtitle">Realty & Advisory</span>
               </div>
             </div>
@@ -60,7 +60,7 @@ export default function Footer() {
             </div>
             <div className="footer-contact-item">
               <Mail size={18} />
-              <a href={`mailto:contact@newhomeland.com`} style={{ color: 'inherit' }}>contact@newhomeland.com</a>
+              <a href={`mailto:contact@newhomedevelopers.com`} style={{ color: 'inherit' }}>contact@newhomedevelopers.com</a>
             </div>
             <div className="footer-contact-item">
               <Clock size={18} />
@@ -71,7 +71,7 @@ export default function Footer() {
 
         {/* Footer Bottom */}
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} NewHomeLand Brokerage. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} NewHomeDevelopers Brokerage. All rights reserved.</p>
         </div>
       </div>
     </footer>

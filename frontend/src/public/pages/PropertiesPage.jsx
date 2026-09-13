@@ -30,7 +30,7 @@ const PropertiesPage = () => {
   const { properties, loading, error } = useProperties(filters);
 
   useEffect(() => {
-    document.title = 'Verified Land & Properties Portfolio | NewHomeLand';
+    document.title = 'Verified Land & Properties Portfolio | NewHomeDevelopers';
   }, []);
 
   // Handle filter changes
@@ -166,7 +166,7 @@ const PropertiesPage = () => {
                   <input
                     type="text"
                     name="search"
-                    placeholder="e.g. Sector 85, Villa..."
+                    placeholder="Enter location or property keyword"
                     value={filters.search}
                     onChange={handleFilterChange}
                     className="w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white transition-all"
@@ -354,7 +354,7 @@ const PropertiesPage = () => {
           ) : (
             <div className="property-grid">
               {properties.map(property => (
-                <LandCard key={property._id || property.id} property={property} />
+                <LandCard key={property.propertyId || property._id || property.id} property={property} />
               ))}
             </div>
           )}

@@ -30,25 +30,35 @@ export const useAdminProperties = () => {
     }
   };
 
-  const markSold = async (id) => {
+  const updateProperty = async (propertyId, data) => {
     try {
-      const res = await axios.patch(`/api/properties/${id}/sold`);
-      setProperties(prev => prev.map(p => p._id === id ? res.data : p));
+      const res = await axios.put(`/api/properties/${propertyId}`, data);
+      setProperties(prev => prev.map(p => (p.propertyId === propertyId || p._id === propertyId) ? res.data : p));
+      return { success: true, data: res.data };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Failed to update property' };
+    }
+  };
+
+  const markSold = async (propertyId) => {
+    try {
+      const res = await axios.patch(`/api/properties/${propertyId}/sold`);
+      setProperties(prev => prev.map(p => (p.propertyId === propertyId || p._id === propertyId) ? res.data : p));
       return { success: true };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Failed to update property' };
     }
   };
 
-  const deleteProperty = async (id) => {
+  const deleteProperty = async (propertyId) => {
     try {
-      await axios.delete(`/api/properties/${id}`);
-      setProperties(prev => prev.filter(p => p._id !== id));
+      await axios.delete(`/api/properties/${propertyId}`);
+      setProperties(prev => prev.filter(p => (p.propertyId !== propertyId && p._id !== propertyId)));
       return { success: true };
     } catch (err) {
       return { success: false, message: err.response?.data?.message || 'Failed to delete property' };
     }
   };
 
-  return { properties, loading, error, fetchProperties, createProperty, markSold, deleteProperty };
+  return { properties, loading, error, fetchProperties, createProperty, updateProperty, markSold, deleteProperty };
 };

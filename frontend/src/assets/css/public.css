@@ -322,6 +322,9 @@
   flex-direction: column;
   border: 1px solid var(--slate-200);
   position: relative;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 450px;
+  will-change: transform;
 }
 
 .property-card:hover {
@@ -336,6 +339,7 @@
   height: 280px;
   overflow: hidden;
   background: var(--slate-800);
+  transform: translateZ(0);
 }
 
 .property-card-img {

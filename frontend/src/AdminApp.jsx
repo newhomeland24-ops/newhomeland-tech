@@ -1,21 +1,19 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ErrorBoundary from './admin/components/ErrorBoundary';
-import AdminHeader from './admin/components/AdminHeader';
 import AdminLoginPage from './admin/pages/AdminLoginPage';
 import AdminDashboardPage from './admin/pages/AdminDashboardPage';
 import { Toaster } from 'react-hot-toast';
 
 function AdminApp() {
   useEffect(() => {
-    document.title = 'Admin Portal | NewHomeLand';
+    document.title = 'Admin Portal | NewHomeDevelopers';
   }, []);
 
   return (
     <ErrorBoundary>
       <Toaster position="top-right" />
       <div className="admin-app-layout">
-        <AdminHeader />
         <Routes>
           <Route path="login" element={<AdminLoginPage />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />

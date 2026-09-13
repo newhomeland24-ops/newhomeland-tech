@@ -6,6 +6,7 @@ const {
   getPublicProperty,
   getAllAdminProperties,
   createProperty,
+  updateProperty,
   markSold,
   deleteProperty,
   getCloudinarySignature
@@ -14,13 +15,14 @@ const { publicLimiter } = require('../middleware/rateLimiter');
 
 // Public routes
 router.get('/', publicLimiter, getPublicProperties);
-router.get('/:id', publicLimiter, getPublicProperty);
+router.get('/:propertyId', publicLimiter, getPublicProperty);
 
 // Admin routes
 router.get('/admin/all', verifyAdmin, getAllAdminProperties);
 router.post('/', verifyAdmin, createProperty);
-router.patch('/:id/sold', verifyAdmin, markSold);
-router.delete('/:id', verifyAdmin, deleteProperty);
+router.put('/:propertyId', verifyAdmin, updateProperty);
+router.patch('/:propertyId/sold', verifyAdmin, markSold);
+router.delete('/:propertyId', verifyAdmin, deleteProperty);
 
 // Cloudinary upload
 const multer = require('multer');

@@ -110,7 +110,7 @@ const HomePage = () => {
           ) : (
             <div className="property-grid">
               {properties.map(property => (
-                <LandCard key={property._id || property.id} property={property} />
+                <LandCard key={property.propertyId || property._id || property.id} property={property} />
               ))}
             </div>
           )}

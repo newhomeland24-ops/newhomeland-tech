@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { getOptimizedImageUrl } from '../../utils/cloudinaryOptimizer';
 
 const MediaModal = ({ isOpen, onClose, images, videoUrl }) => {
   // Extract media items safely (handling both strings and objects)
@@ -227,7 +228,7 @@ const MediaModal = ({ isOpen, onClose, images, videoUrl }) => {
             )
           ) : (
             <img 
-              src={currentMedia.url} 
+              src={getOptimizedImageUrl(currentMedia.url, { width: 1920 })} 
               alt={`Property media ${currentIndex + 1}`}
               className="rounded-2xl shadow-2xl select-none"
               style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain', borderRadius: '16px' }}
@@ -317,7 +318,7 @@ const MediaModal = ({ isOpen, onClose, images, videoUrl }) => {
                   <Play size={18} fill="#ffffff" color="#ffffff" />
                 </div>
               ) : (
-                <img src={media.url} alt={`Thumb ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={getOptimizedImageUrl(media.url, { width: 160 })} alt={`Thumb ${idx + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               )}
             </button>
           ))}

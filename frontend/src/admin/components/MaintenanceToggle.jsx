@@ -105,7 +105,7 @@ const MaintenanceToggle = ({ onStatusChange, onClose }) => {
               Public Kill-Switch Engaged
             </div>
             <div style={{ color: '#b45309', fontSize: '0.82rem', marginTop: '0.2rem' }}>
-              All public visitors to NewHomeLand will see the maintenance splash screen. The Admin dashboard remains accessible.
+              All public visitors to NewHomeDevelopers will see the maintenance splash screen. The Admin dashboard remains accessible.
             </div>
           </div>
         </div>
@@ -158,7 +158,7 @@ const MaintenanceToggle = ({ onStatusChange, onClose }) => {
             rows={3}
             className="form-input"
             style={{ width: '100%', resize: 'vertical', borderRadius: '10px', fontSize: '0.9rem' }}
-            placeholder="NewHomeLand catalog is currently undergoing scheduled maintenance..."
+            placeholder="Enter maintenance announcement message for public visitors"
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.4rem', fontSize: '0.78rem', color: '#94a3b8' }}>
             <span>Supports plain text announcements</span>

@@ -4,6 +4,9 @@ import { usePropertyDetails } from '../hooks/useProperties';
 import { useMaintenance } from '../hooks/useMaintenance';
 import MaintenancePage from './MaintenancePage';
 import MediaModal from '../components/MediaModal';
+import PropertyInquiryAppointmentForms from '../components/PropertyInquiryAppointmentForms';
+import WhatsAppIcon from '../../components/WhatsAppIcon';
+import { getOptimizedImageUrl } from '../../utils/cloudinaryOptimizer';
 import {
   MapPin,
   Maximize2,
@@ -22,9 +25,10 @@ import {
 } from 'lucide-react';
 
 const PropertyDetailPage = () => {
-  const { id } = useParams();
+  const params = useParams();
+  const propertyId = params.propertyId || params.id;
   const { maintenance, loading: maintenanceLoading } = useMaintenance();
-  const { property, loading, error } = usePropertyDetails(id);
+  const { property, loading, error } = usePropertyDetails(propertyId);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -50,7 +54,7 @@ const PropertyDetailPage = () => {
 
   useEffect(() => {
     if (property?.title) {
-      document.title = `${property.title} | NewHomeLand`;
+      document.title = `${property.title} | NewHomeDevelopers`;
     }
   }, [property]);
 
@@ -167,7 +171,7 @@ const PropertyDetailPage = () => {
   };
 
   const whatsappMessage = encodeURIComponent(
-    `Hello NewHomeLand, I am interested in property "${property.title}" (ID: ${property._id}) located in ${property.location} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
+    `Hello NewHomeDevelopers, I am interested in property "${property.title}" (ID: ${property.propertyId || property._id}) located in ${property.location} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
   );
 
   const handleShare = () => {
@@ -219,6 +223,7 @@ const PropertyDetailPage = () => {
               autoPlay
               muted
               playsInline
+              preload="metadata"
               className="w-full h-full object-contain"
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
@@ -226,8 +231,9 @@ const PropertyDetailPage = () => {
         ) : (
           <img
             key={currentMedia.url}
-            src={currentMedia.url}
+            src={getOptimizedImageUrl(currentMedia.url, { width: 1400 })}
             alt={property.title}
+            decoding="async"
             className={`detail-media-img ${isSold ? 'grayscale' : ''}`}
           />
         )}
@@ -284,7 +290,7 @@ const PropertyDetailPage = () => {
                   <Play size={16} fill="#ffffff" color="#ffffff" />
                 </div>
               ) : (
-                <img src={item.url} alt={`Thumb ${idx + 1}`} />
+                <img src={getOptimizedImageUrl(item.url, { width: 180 })} alt={`Thumb ${idx + 1}`} loading="lazy" decoding="async" />
               )}
             </button>
           ))}
@@ -331,7 +337,7 @@ const PropertyDetailPage = () => {
       </div>
 
       <div style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
-        Listing ID: #{property._id?.slice(-8).toUpperCase()}
+        Listing ID: #{property.propertyId || property._id}
       </div>
     </div>
   );
@@ -341,10 +347,10 @@ const PropertyDetailPage = () => {
     <div className="broker-card">
       <div className="broker-header">
         <div className="broker-avatar">
-          NH
+          NHD
         </div>
         <div className="broker-info">
-          <h4>NewHomeLand Brokerage</h4>
+          <h4>NewHomeDevelopers Brokerage</h4>
           <p>Verified Property Advisory</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#10b981', fontSize: '0.78rem', fontWeight: 600, marginTop: '0.2rem' }}>
             <ShieldCheck size={14} /> Title Verified
@@ -368,13 +374,13 @@ const PropertyDetailPage = () => {
             rel="noopener noreferrer"
             className="btn-whatsapp-action"
           >
-            <MessageCircle size={18} />
+            <WhatsAppIcon size={18} />
             <span>Chat on WhatsApp</span>
           </a>
         )}
         
         <p className="text-xs text-center text-gray-400 mt-4">
-          Reference ID: <span className="font-mono text-gray-600">{property._id?.slice(-6).toUpperCase()}</span>
+          Reference ID: <span className="font-mono text-gray-600">{property.propertyId || property._id}</span>
         </p>
       </div>
     </div>
@@ -430,8 +436,6 @@ const PropertyDetailPage = () => {
     <div className="property-detail-page">
       <div className="container-wide">
         {/* Sold / Reserved Alert Notice */}
-
-        {/* Sold / Reserved Alert Notice */}
         {isSold && (
           <div style={{ background: '#fee2e2', border: '1px solid #ef4444', borderRadius: '14px', padding: '1rem 1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#b91c1c' }}>
             <AlertTriangle size={20} />
@@ -441,13 +445,14 @@ const PropertyDetailPage = () => {
           </div>
         )}
 
-        {/* Layout: On mobile -> 1. Video/Image slider, 2. Details card (price/title), 3. Broker, 4. Specs, 5. Description
-                    On desktop -> Left column (Media, Specs, Description), Right column (Sticky Details + Broker) */}
+        {/* Layout: On mobile -> 1. Video/Image slider, 2. Details card (price/title), 3. Broker, 4. Inquiry & Appointment Forms, 5. Specs, 6. Description
+                    On desktop -> Left column (Media, Specs, Description), Right column (Sticky Details + Broker + Forms) */}
         {isMobile ? (
           <div className="detail-mobile-layout">
             {mediaCard}
             {headerCard}
             {brokerCard}
+            <PropertyInquiryAppointmentForms property={property} />
             {specsCard}
             {descCard}
           </div>
@@ -461,6 +466,7 @@ const PropertyDetailPage = () => {
             <div className="sticky-sidebar">
               {headerCard}
               {brokerCard}
+              <PropertyInquiryAppointmentForms property={property} />
             </div>
           </div>
         )}

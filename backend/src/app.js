@@ -7,6 +7,8 @@ const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const propertyRoutes = require('./routes/propertyRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const inquiryRoutes = require('./routes/inquiryRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 
 const app = express();
 
@@ -24,6 +26,8 @@ app.use(cookieParser());
 app.use('/api/auth/admin', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/inquiries', inquiryRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // Error Handler
 app.use(errorHandler);

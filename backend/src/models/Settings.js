@@ -4,7 +4,7 @@ const settingsSchema = new mongoose.Schema({
   isMaintenance: { type: Boolean, default: false },
   maintenanceMessage: { 
     type: String, 
-    default: "NewHomeLand catalog is currently undergoing scheduled maintenance. Please connect directly with our broker on WhatsApp." 
+    default: "Our website is currently undergoing scheduled maintenance. Please connect with our team directly on WhatsApp for verified properties, floor plans, and site visits." 
   },
   updatedAt: { type: Date, default: Date.now }
 });

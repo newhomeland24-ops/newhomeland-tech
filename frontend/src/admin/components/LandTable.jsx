@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Trash2, CheckCircle, Clock, Search, Filter, Video, MapPin, Building } from 'lucide-react';
+import { Trash2, CheckCircle, Clock, Search, Filter, Video, MapPin, Building, ExternalLink, Eye, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import PropertyDetailModal from './PropertyDetailModal';
 
 const categories = ['All', 'Residential', 'Commercial', 'Agricultural', 'Industrial'];
 const statusTabs = [
@@ -11,10 +12,11 @@ const statusTabs = [
   { id: 'sold', label: 'Sold Out' },
 ];
 
-const LandTable = ({ properties, markSold, deleteProperty }) => {
+const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeTab, setActiveTab] = useState('all');
+  const [selectedProperty, setSelectedProperty] = useState(null);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-IN', {
@@ -50,6 +52,7 @@ const LandTable = ({ properties, markSold, deleteProperty }) => {
       const matchesSearch = !query || 
         item.title?.toLowerCase().includes(query) ||
         item.location?.toLowerCase().includes(query) ||
+        item.propertyId?.toLowerCase().includes(query) ||
         item._id?.toLowerCase().includes(query) ||
         item.description?.toLowerCase().includes(query);
 
@@ -115,7 +118,7 @@ const LandTable = ({ properties, markSold, deleteProperty }) => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title, city, or ID..."
+              placeholder="Search properties by title, city, or ID"
               className="admin-search-input"
             />
             {search && (
@@ -169,8 +172,15 @@ const LandTable = ({ properties, markSold, deleteProperty }) => {
                 ? (typeof property.images[0] === 'string' ? property.images[0] : property.images[0]?.url)
                 : null;
 
+              const currentPropertyId = property.propertyId || property._id;
+
               return (
-                <tr key={property._id}>
+                <tr 
+                  key={currentPropertyId}
+                  onClick={() => setSelectedProperty(property)}
+                  style={{ cursor: 'pointer' }}
+                  title="Click to view full property details"
+                >
                   {/* Thumbnail */}
                   <td>
                     <div className="table-thumb-wrap">
@@ -199,7 +209,7 @@ const LandTable = ({ properties, markSold, deleteProperty }) => {
                       <span>{property.location}</span>
                     </div>
                     <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '0.2rem', fontFamily: 'monospace' }}>
-                      ID: #{property._id?.slice(-8).toUpperCase()}
+                      ID: #{currentPropertyId}
                     </div>
                   </td>
 
@@ -244,28 +254,92 @@ const LandTable = ({ properties, markSold, deleteProperty }) => {
                   </td>
 
                   {/* Actions */}
-                  <td style={{ textAlign: 'right' }}>
-                    <div className="action-btn-group" style={{ justifyContent: 'flex-end' }}>
+                  <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                    <div className="action-btn-group" style={{ justifyContent: 'flex-end', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      {/* Open Admin Details Modal */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProperty(property);
+                        }}
+                        className="btn-action-icon view"
+                        title="View Property Details"
+                      >
+                        <Eye size={19} />
+                      </button>
+
+                      {/* Edit Property Button */}
+                      {onEditProperty && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditProperty(property);
+                          }}
+                          className="btn-action-icon"
+                          title="Edit Property Details"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '11px',
+                            border: '1.5px solid #bfdbfe',
+                            background: '#eff6ff',
+                            color: '#2563eb'
+                          }}
+                        >
+                          <Edit3 size={18} />
+                        </button>
+                      )}
+
+                      {/* View Live Public Page */}
+                      <a
+                        href={`/properties/${currentPropertyId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-action-icon"
+                        title="Open Public Listing Page"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '11px',
+                          border: '1.5px solid #e2e8f0',
+                          background: '#ffffff',
+                          color: '#475569'
+                        }}
+                      >
+                        <ExternalLink size={18} />
+                      </a>
+
                       {/* Mark Sold */}
                       {property.status !== 'sold' && (
                         <button
                           type="button"
-                          onClick={() => handleMarkSold(property._id, property.title)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkSold(currentPropertyId, property.title);
+                          }}
                           className="btn-action-icon sold"
                           title="Mark as Sold"
                         >
-                          <CheckCircle size={15} />
+                          <CheckCircle size={20} />
                         </button>
                       )}
 
                       {/* Delete */}
                       <button
                         type="button"
-                        onClick={() => handleDelete(property._id, property.title)}
+                        onClick={() => handleDelete(currentPropertyId, property.title)}
                         className="btn-action-icon delete"
                         title="Permanently Delete"
                       >
-                        <Trash2 size={15} />
+                        <Trash2 size={20} />
                       </button>
                     </div>
                   </td>
@@ -291,6 +365,22 @@ const LandTable = ({ properties, markSold, deleteProperty }) => {
           </tbody>
         </table>
       </div>
+
+      {/* Property Details Modal for Admin */}
+      <PropertyDetailModal
+        property={selectedProperty}
+        isOpen={!!selectedProperty}
+        onClose={() => setSelectedProperty(null)}
+        onEdit={onEditProperty}
+        onMarkSold={async (id, title) => {
+          await handleMarkSold(id, title);
+          setSelectedProperty(prev => prev ? { ...prev, status: 'sold' } : null);
+        }}
+        onDelete={async (id, title) => {
+          await handleDelete(id, title);
+          setSelectedProperty(null);
+        }}
+      />
     </div>
   );
 };

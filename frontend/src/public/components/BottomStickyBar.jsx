@@ -1,5 +1,6 @@
 import React from 'react';
-import { MessageCircle, Phone } from 'lucide-react';
+import { Phone } from 'lucide-react';
+import WhatsAppIcon from '../../components/WhatsAppIcon';
 
 const BottomStickyBar = () => {
   return (
@@ -10,7 +11,7 @@ const BottomStickyBar = () => {
         rel="noopener noreferrer"
         className="flex-1 bg-green-500 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center space-x-2 active:bg-green-600 transition-colors"
       >
-        <MessageCircle className="w-5 h-5" />
+        <WhatsAppIcon size={20} />
         <span>WhatsApp</span>
       </a>
       <a 

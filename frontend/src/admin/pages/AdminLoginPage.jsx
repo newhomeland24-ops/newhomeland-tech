@@ -5,7 +5,7 @@ import { Shield, Lock, AlertCircle, ArrowRight } from 'lucide-react';
 
 const AdminLoginPage = () => {
   useEffect(() => {
-    document.title = 'Admin Portal Secure Login | NewHomeLand';
+    document.title = 'Admin Portal Secure Login | NewHomeDevelopers';
   }, []);
 
   const [password, setPassword] = useState('');
@@ -42,7 +42,7 @@ const AdminLoginPage = () => {
           </div>
           <h2>Admin Portal</h2>
           <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-            NewHomeLand Management Dashboard
+            NewHomeDevelopers Management Dashboard
           </p>
         </div>
 
@@ -62,7 +62,7 @@ const AdminLoginPage = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter master password"
                 className="form-input"
                 style={{ paddingLeft: '2.5rem' }}
               />

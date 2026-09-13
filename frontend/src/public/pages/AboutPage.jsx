@@ -6,7 +6,7 @@ const AboutPage = () => {
       <div className="container">
         <div className="section-header">
           <span className="section-tag">About Us</span>
-          <h2 className="section-title">NewHomeLand</h2>
+          <h2 className="section-title">NewHomeDevelopers</h2>
           <p className="section-subtitle">
             Your Ground. Your Future.
           </p>

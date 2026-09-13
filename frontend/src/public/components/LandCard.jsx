@@ -6,18 +6,19 @@ import {
   ArrowRight,
   Play,
   Camera,
-  MessageCircle,
   ChevronLeft,
   ChevronRight,
   Sparkles
 } from 'lucide-react';
+import WhatsAppIcon from '../../components/WhatsAppIcon';
+import { getOptimizedImageUrl } from '../../utils/cloudinaryOptimizer';
 
 const LandCard = ({ property }) => {
   const navigate = useNavigate();
 
   if (!property) return null;
 
-  const propId = property._id || property.id;
+  const propId = property.propertyId || property._id || property.id;
   const isSold = property.status === 'sold' || property.status === 'Sold';
   const locationText = property.location || property.location_name || property.city || property.address || 'Delhi NCR';
   const typeText = property.propertyType || property.property_type || 'Residential';
@@ -33,16 +34,8 @@ const LandCard = ({ property }) => {
     }).format(price);
   };
 
-  // Build media list (video first if available, followed by images)
+  // Build media list with optimized images first
   const mediaList = [];
-
-  // Check for video
-  const videoUrl = property.videoUrl || (property.videos && property.videos.length > 0 ? (property.videos[0]?.video_url || property.videos[0]) : null);
-  if (videoUrl) {
-    mediaList.push({ type: 'video', url: videoUrl });
-  }
-
-  // Extract images
   if (property.images && property.images.length > 0) {
     property.images.forEach(img => {
       const src = typeof img === 'string' ? img : img?.url;
@@ -52,11 +45,15 @@ const LandCard = ({ property }) => {
     mediaList.push({ type: 'image', url: property.primary_image });
   }
 
+  // Check for video walkthrough
+  const videoUrl = property.videoUrl || (property.videos && property.videos.length > 0 ? (property.videos[0]?.video_url || property.videos[0]) : null);
+  const hasVideo = Boolean(videoUrl);
+
   // Fallback placeholder image if no media found
   if (mediaList.length === 0) {
     mediaList.push({
       type: 'image',
-      url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80'
+      url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     });
   }
 
@@ -107,7 +104,7 @@ const LandCard = ({ property }) => {
 
   // Card click navigates to details page
   const handleCardClick = () => {
-    navigate(`/property/${propId}`);
+    navigate(`/properties/${propId}`);
   };
 
   // WhatsApp click handler
@@ -116,21 +113,14 @@ const LandCard = ({ property }) => {
     const phone = import.meta.env.VITE_WHATSAPP_NUMBER || '';
     const cleanPhone = phone.replace(/[^\d]/g, '');
     const msg = encodeURIComponent(
-      `Hello NewHomeLand, I am interested in property "${property.title}" (ID: ${propId}) located in ${locationText} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
+      `Hello NewHomeDevelopers, I am interested in property "${property.title}" (ID: ${propId}) located in ${locationText} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
     );
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
-  // Helper for YouTube embed
-  const getYouTubeEmbedUrl = (url) => {
-    if (!url) return null;
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-    return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1&mute=1&loop=1&playlist=${match[1]}&controls=0&modestbranding=1&rel=0` : null;
-  };
 
   const currentMedia = mediaList[currentIndex] || mediaList[0];
-  const isCurrentVideo = currentMedia?.type === 'video';
-  const ytEmbed = isCurrentVideo ? getYouTubeEmbedUrl(currentMedia.url) : null;
+  const optimizedImgUrl = getOptimizedImageUrl(currentMedia.url, { width: 700 });
 
   return (
     <article
@@ -145,49 +135,27 @@ const LandCard = ({ property }) => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Render Active Slide */}
-        {isCurrentVideo ? (
-          ytEmbed ? (
-            <iframe
-              src={ytEmbed}
-              title={property.title}
-              className="w-full h-full object-cover pointer-events-none"
-              allow="autoplay; encrypted-media"
-              style={{ width: '100%', height: '100%', border: 'none' }}
-            />
-          ) : (
-            <video
-              key={currentMedia.url}
-              src={currentMedia.url}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full h-full object-cover"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          )
-        ) : (
-          <img
-            key={currentMedia.url}
-            src={currentMedia.url}
-            alt={property.title}
-            className={`property-card-img ${isSold ? 'grayscale' : ''}`}
-            loading="lazy"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        )}
+        {/* Render Active Image Slide */}
+        <img
+          key={currentMedia.url}
+          src={optimizedImgUrl}
+          alt={property.title}
+          className={`property-card-img ${isSold ? 'grayscale' : ''}`}
+          loading="lazy"
+          decoding="async"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
 
-        {/* Video Playing Badge */}
-        {isCurrentVideo && (
-          <div className="card-video-playing-badge">
-            <span className="playing-dot"></span>
+        {/* Video Walkthrough Indicator Badge */}
+        {hasVideo && (
+          <div className="card-video-playing-badge" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Play size={12} fill="#ffffff" color="#ffffff" />
             <span>Video Walkthrough</span>
           </div>
         )}
 
         {/* Media Type/Count Badge */}
-        {mediaList.length > 1 && !isCurrentVideo && (
+        {mediaList.length > 1 && (
           <div
             style={{
               position: 'absolute',
@@ -368,7 +336,7 @@ const LandCard = ({ property }) => {
                 color: '#0f172a'
               }}
             >
-              <MessageCircle size={19} />
+              <WhatsAppIcon size={19} />
             </button>
           </div>
         </div>
