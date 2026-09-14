@@ -12,10 +12,12 @@ const login = (req, res) => {
       expiresIn: '7d',
     });
 
+    const isProduction = process.env.NODE_ENV === 'production';
+
     res.cookie('adminToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -27,8 +29,11 @@ const login = (req, res) => {
 };
 
 const logout = (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('adminToken', '', {
     httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     expires: new Date(0),
   });
   res.status(200).json({ message: 'Logged out successfully' });

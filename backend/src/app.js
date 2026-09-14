@@ -15,16 +15,52 @@ const app = express();
 
 // Middleware
 app.use(helmet());
+// Allowed origins for CORS (Production custom domains, Cloudflare Pages previews, and local dev)
+const allowedOrigins = [
+  'https://newhomedeveloper.in',
+  'https://www.newhomedeveloper.in',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000'
+];
+
+if (process.env.FRONTEND_URL) {
+  allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/+$/, ''));
+}
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: (origin, callback) => {
+    // Allow server-to-server, mobile, curl, or monitoring pings with no origin
+    if (!origin) return callback(null, true);
+
+    // Allow explicitly defined domains
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow any Cloudflare Pages deployment (*.pages.dev)
+    try {
+      const url = new URL(origin);
+      if (url.hostname.endsWith('.pages.dev')) {
+        return callback(null, true);
+      }
+    } catch {
+      // Invalid URL format
+    }
+
+    return callback(null, false);
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '50kb' })); // limit payload size
 app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 app.use(cookieParser());
 
-// Health Check
-app.get(['/health', '/api/health'], (req, res) => {
+// Lightweight Health Check (Instant 200 OK for Render & UptimeRobot pings without DB dependency)
+app.get(['/health', '/api/health'], (req, res) => res.status(200).send('OK'));
+
+// Diagnostic Database Health Check
+app.get('/health/detail', (req, res) => {
   const isDbConnected = mongoose.connection.readyState === 1;
   res.status(isDbConnected ? 200 : 503).json({
     status: isDbConnected ? 'healthy' : 'degraded',
