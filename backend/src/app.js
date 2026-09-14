@@ -14,11 +14,14 @@ const appointmentRoutes = require('./routes/appointmentRoutes');
 const app = express();
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
+
 // Allowed origins for CORS (Production custom domains, Cloudflare Pages previews, and local dev)
 const allowedOrigins = [
-  'https://newhomedeveloper.in',
-  'https://www.newhomedeveloper.in',
+  'https://newhomedevelopers.in',
+  'https://www.newhomedevelopers.in',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000'
@@ -28,7 +31,7 @@ if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/+$/, ''));
 }
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     // Allow server-to-server, mobile, curl, or monitoring pings with no origin
     if (!origin) return callback(null, true);
@@ -38,9 +41,17 @@ app.use(cors({
       return callback(null, true);
     }
 
-    // Allow any Cloudflare Pages deployment (*.pages.dev)
     try {
       const url = new URL(origin);
+      // Allow any newhomedevelopers.in domain & subdomain (e.g., apex, www, admin)
+      if (
+        url.hostname === 'newhomedevelopers.in' ||
+        url.hostname.endsWith('.newhomedevelopers.in')
+      ) {
+        return callback(null, true);
+      }
+
+      // Allow any Cloudflare Pages deployment (*.pages.dev)
       if (url.hostname.endsWith('.pages.dev')) {
         return callback(null, true);
       }
@@ -50,8 +61,13 @@ app.use(cors({
 
     return callback(null, false);
   },
-  credentials: true
-}));
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '50kb' })); // limit payload size
 app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 app.use(cookieParser());

@@ -5,7 +5,12 @@ import axios from 'axios';
  * Resolves API Base URL from Vite environment variable (VITE_API_BASE_URL).
  * Normalizes trailing slashes and '/api' so all endpoint paths work consistently.
  */
-let apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+let apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+// In production, default directly to api.newhomedevelopers.in if env var is omitted
+if (!apiBaseUrl && import.meta.env.PROD) {
+  apiBaseUrl = 'https://api.newhomedevelopers.in';
+}
 
 if (apiBaseUrl) {
   // Strip trailing slashes
