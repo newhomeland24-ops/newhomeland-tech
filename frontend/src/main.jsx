@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import './config/axios'
 import './index.css'
 import './assets/css/index.css'
 import './assets/css/public.css'
