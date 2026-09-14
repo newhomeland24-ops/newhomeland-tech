@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
-import { getOptimizedImageUrl } from '../../utils/cloudinaryOptimizer';
+import { getOptimizedImageUrl, getOptimizedVideoUrl } from '../../utils/cloudinaryOptimizer';
 
 const MediaModal = ({ isOpen, onClose, images, videoUrl }) => {
   // Extract media items safely (handling both strings and objects)
@@ -219,7 +219,7 @@ const MediaModal = ({ isOpen, onClose, images, videoUrl }) => {
               />
             ) : (
               <video 
-                src={currentMedia.url} 
+                src={getOptimizedVideoUrl(currentMedia.url)} 
                 controls 
                 autoPlay
                 className="rounded-2xl shadow-2xl"

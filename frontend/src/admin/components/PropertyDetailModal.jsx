@@ -17,6 +17,7 @@ import {
   Tag,
   Edit3
 } from 'lucide-react';
+import { getOptimizedImageUrl, getOptimizedVideoUrl } from '../../utils/cloudinaryOptimizer';
 
 export default function PropertyDetailModal({ property, isOpen, onClose, onEdit, onMarkSold, onDelete }) {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
@@ -147,14 +148,14 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
                     />
                   ) : (
                     <video
-                      src={mediaList[activeMediaIndex].url}
+                      src={getOptimizedVideoUrl(mediaList[activeMediaIndex].url)}
                       controls
                       style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                     />
                   )
                 ) : (
                   <img
-                    src={mediaList[activeMediaIndex]?.url}
+                    src={getOptimizedImageUrl(mediaList[activeMediaIndex]?.url, { width: 1200 })}
                     alt="Property photo"
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />

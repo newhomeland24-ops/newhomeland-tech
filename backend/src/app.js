@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
 const errorHandler = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/authRoutes');
@@ -21,6 +22,17 @@ app.use(cors({
 app.use(express.json({ limit: '50kb' })); // limit payload size
 app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 app.use(cookieParser());
+
+// Health Check
+app.get(['/health', '/api/health'], (req, res) => {
+  const isDbConnected = mongoose.connection.readyState === 1;
+  res.status(isDbConnected ? 200 : 503).json({
+    status: isDbConnected ? 'healthy' : 'degraded',
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    database: isDbConnected ? 'connected' : 'disconnected'
+  });
+});
 
 // Routes
 app.use('/api/auth/admin', authRoutes);

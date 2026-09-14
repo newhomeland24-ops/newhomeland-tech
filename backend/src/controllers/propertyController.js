@@ -220,7 +220,11 @@ const deleteProperty = async (req, res) => {
   if (property.cloudinaryPublicIds && property.cloudinaryPublicIds.length > 0) {
     for (const publicId of property.cloudinaryPublicIds) {
       try {
-        await cloudinary.uploader.destroy(publicId);
+        const destroyRes = await cloudinary.uploader.destroy(publicId);
+        if (destroyRes && destroyRes.result === 'not found') {
+          // If not found as image, try deleting as video
+          await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+        }
       } catch (error) {
         console.error(`Failed to delete Cloudinary asset ${publicId}:`, error);
       }
@@ -241,8 +245,27 @@ const uploadMedia = async (req, res) => {
     const uploadPromises = req.files.map((file) => {
       return new Promise((resolve, reject) => {
         const isVideo = file.mimetype.startsWith('video/');
-        const uploadOptions = { resource_type: 'auto' };
-        if (!isVideo) {
+        const uploadOptions = { 
+          resource_type: isVideo ? 'video' : 'image' 
+        };
+
+        if (isVideo) {
+          // High-fidelity video compression (auto:best):
+          // - 1080p limit (c_limit, w:1920, h:1080)
+          // - auto:best perceptual quality (maintains crisp visuals, cuts ~30-40% file size)
+          // - vc_auto (optimal browser codec)
+          // - fast_start (instant playback without buffering full file)
+          uploadOptions.transformation = [
+            {
+              width: 1920,
+              height: 1080,
+              crop: 'limit',
+              quality: 'auto:best',
+              video_codec: 'auto',
+              flags: 'fast_start'
+            }
+          ];
+        } else {
           uploadOptions.transformation = [
             { quality: 'auto', fetch_format: 'auto' }
           ];
@@ -251,8 +274,16 @@ const uploadMedia = async (req, res) => {
         const uploadStream = cloudinary.uploader.upload_stream(
           uploadOptions,
           (error, result) => {
-            if (error) reject(error);
-            else resolve({ url: result.secure_url, publicId: result.public_id, isVideo });
+            if (error) {
+              reject(error);
+            } else {
+              let finalUrl = result.secure_url;
+              // Ensure video delivery URL applies high-fidelity transformation parameters
+              if (isVideo && finalUrl && finalUrl.includes('/upload/') && !finalUrl.includes('/q_auto')) {
+                finalUrl = finalUrl.replace('/upload/', '/upload/c_limit,w_1920,h_1080,q_auto:best,vc_auto,fl_fast_start/');
+              }
+              resolve({ url: finalUrl, publicId: result.public_id, isVideo });
+            }
           }
         );
         

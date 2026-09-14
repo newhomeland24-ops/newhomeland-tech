@@ -6,8 +6,8 @@ import MaintenancePage from './MaintenancePage';
 import MediaModal from '../components/MediaModal';
 import PropertyInquiryAppointmentForms from '../components/PropertyInquiryAppointmentForms';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
-import { getOptimizedImageUrl } from '../../utils/cloudinaryOptimizer';
 import { useSettings } from '../../context/SettingsContext';
+import { getOptimizedImageUrl, getOptimizedVideoUrl } from '../../utils/cloudinaryOptimizer';
 import {
   MapPin,
   Maximize2,
@@ -226,7 +226,7 @@ const PropertyDetailPage = () => {
           ) : (
             <video
               key={currentMedia.url}
-              src={currentMedia.url}
+              src={getOptimizedVideoUrl(currentMedia.url)}
               controls
               autoPlay
               muted
