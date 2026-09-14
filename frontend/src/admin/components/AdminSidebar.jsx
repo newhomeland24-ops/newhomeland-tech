@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { useAdminAuth } from '../hooks/useAdminAuth';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function AdminSidebar({
   activeTab = 'dashboard',
@@ -22,6 +23,7 @@ export default function AdminSidebar({
   onClose = () => {}
 }) {
   const { logout } = useAdminAuth();
+  const { settings } = useSettings();
 
   const handleLogout = async () => {
     if (window.confirm('Are you sure you want to sign out of the Admin Console?')) {
@@ -105,9 +107,33 @@ export default function AdminSidebar({
             <div className="sidebar-brand-icon-box">
               <Shield size={22} className="sidebar-shield-icon" />
             </div>
-            <div className="sidebar-brand-text">
-              <span className="sidebar-company-title">NewHomeDevelopers</span>
-              <span className="sidebar-company-subtitle">REALTY PORTAL</span>
+            <div 
+              className="sidebar-brand-text" 
+              style={{ minWidth: 0, overflow: 'hidden' }}
+              title={`${settings.business_name || 'NewHomeDevelopers'} — ${settings.tagline || 'REALTY PORTAL'}`}
+            >
+              <span 
+                className="sidebar-company-title"
+                style={{ 
+                  display: 'block', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis', 
+                  whiteSpace: 'nowrap' 
+                }}
+              >
+                {settings.business_name || 'NewHomeDevelopers'}
+              </span>
+              <span 
+                className="sidebar-company-subtitle"
+                style={{ 
+                  display: 'block', 
+                  overflow: 'hidden', 
+                  textOverflow: 'ellipsis', 
+                  whiteSpace: 'nowrap' 
+                }}
+              >
+                {settings.tagline || 'REALTY PORTAL'}
+              </span>
             </div>
           </div>
 

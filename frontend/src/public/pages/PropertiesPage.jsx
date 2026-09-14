@@ -12,6 +12,7 @@ import {
   CheckCircle2 
 } from 'lucide-react';
 import { useProperties } from '../hooks/useProperties';
+import { useSettings } from '../../context/SettingsContext';
 import LandCard from '../components/LandCard';
 
 const PropertiesPage = () => {
@@ -28,10 +29,11 @@ const PropertiesPage = () => {
   });
 
   const { properties, loading, error } = useProperties(filters);
+  const { settings } = useSettings();
 
   useEffect(() => {
-    document.title = 'Verified Land & Properties Portfolio | NewHomeDevelopers';
-  }, []);
+    document.title = `Verified Land & Properties Portfolio | ${settings.business_name || 'NewHomeDevelopers'}`;
+  }, [settings.business_name]);
 
   // Handle filter changes
   const handleFilterChange = (e) => {

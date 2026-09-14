@@ -8,7 +8,10 @@ import UploadForm from '../components/UploadForm';
 import MaintenanceToggle from '../components/MaintenanceToggle';
 import AdminSidebar from '../components/AdminSidebar';
 import PropertyDetailModal from '../components/PropertyDetailModal';
+import InquiryDetailModal from '../components/InquiryDetailModal';
+import AdminSettings from './AdminSettings';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
+import { useSettings } from '../../context/SettingsContext';
 import { 
   PlusCircle, 
   RefreshCw, 
@@ -36,6 +39,7 @@ import toast from 'react-hot-toast';
 const AdminDashboardPage = () => {
   const { isAuthenticated, loading: authLoading } = useAdminAuth();
   const { properties, loading: propertiesLoading, fetchProperties, createProperty, updateProperty, markSold, deleteProperty } = useAdminProperties();
+  const { settings } = useSettings();
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -43,6 +47,7 @@ const AdminDashboardPage = () => {
   const [isMaintenanceActive, setIsMaintenanceActive] = useState(false);
   const [previewProperty, setPreviewProperty] = useState(null);
   const [editingProperty, setEditingProperty] = useState(null);
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
 
   // Live Inquiries & Appointments State
   const [inquiries, setInquiries] = useState([]);
@@ -52,8 +57,8 @@ const AdminDashboardPage = () => {
   const [appointmentsLoading, setAppointmentsLoading] = useState(false);
 
   useEffect(() => {
-    document.title = 'Operations Console | NewHomeDevelopers Admin';
-  }, []);
+    document.title = `Operations Console | ${settings.business_name || 'Admin'}`;
+  }, [settings.business_name]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -176,6 +181,70 @@ const AdminDashboardPage = () => {
     }
   };
 
+  // Confirm Booking and Send Confirmation Message to Client on their given number
+  const handleConfirmBooking = async (app) => {
+    const businessName = settings.business_name || 'NewHomeDevelopers';
+    const brokerPhone = settings.phone || '+91 98765 43210';
+    const cleanPhone = (app.phone || '').replace(/[^\d]/g, '');
+
+    const confirmationMsg = 
+`Hello ${app.clientName || 'Valued Client'},
+
+Your site visit booking with *${businessName}* has been *CONFIRMED*! ✅
+
+📋 *Booking Details:*
+• Property: ${app.propertyTitle || 'Property Inspection'} ${app.propertyLocation ? `(${app.propertyLocation})` : ''}
+• Date: ${app.preferredDate}
+• Time Slot: ${app.preferredTime}
+• Visitors: ${app.visitorsCount || '1-2 people'}
+${app.notes ? `• Special Notes: "${app.notes}"\n` : ''}
+Our certified property advisor will be ready to assist you at the site. If you need directions or have any questions, feel free to call us at ${brokerPhone}.
+
+Thank you for choosing ${businessName}!`;
+
+    const encodedMsg = encodeURIComponent(confirmationMsg);
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
+
+    // Open WhatsApp immediately so browser doesn't block asynchronous popup
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+
+    try {
+      await axios.patch(`/api/appointments/${app._id}/status`, { status: 'CONFIRMED' });
+      setAppointments(prev => prev.map(a => a._id === app._id ? { ...a, status: 'CONFIRMED' } : a));
+      toast.success(`Booking Confirmed! Confirmation message sent to ${app.clientName} (${app.phone})`);
+    } catch (err) {
+      console.error('Failed to update status in database:', err);
+      toast.error('Confirmation message dispatched, but failed to update status in database.');
+    }
+  };
+
+  // WhatsApp Connect Helper for Appointments
+  const handleAppointmentWhatsApp = (app) => {
+    const businessName = settings.business_name || 'NewHomeDevelopers';
+    const brokerPhone = settings.phone || '+91 98765 43210';
+    const cleanPhone = (app.phone || '').replace(/[^\d]/g, '');
+
+    let msgText;
+    if (app.status === 'CONFIRMED') {
+      msgText = 
+`Hello ${app.clientName || 'Valued Client'},
+
+This is a reminder regarding your *CONFIRMED* site visit booking with *${businessName}*! ✅
+
+📋 *Booking Details:*
+• Property: ${app.propertyTitle || 'Property Inspection'} ${app.propertyLocation ? `(${app.propertyLocation})` : ''}
+• Date: ${app.preferredDate}
+• Time Slot: ${app.preferredTime}
+• Visitors: ${app.visitorsCount || '1-2 people'}
+
+Our property advisor is ready to assist you. Contact us at ${brokerPhone} for any inquiries.`;
+    } else {
+      msgText = `Hello ${app.clientName}, this is ${businessName} following up on your requested site visit for "${app.propertyTitle || 'our property'}" on ${app.preferredDate} (${app.preferredTime}). How may we assist you today?`;
+    }
+
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msgText)}`, '_blank', 'noopener,noreferrer');
+  };
+
   const handleDeleteAppointment = async (id) => {
     if (window.confirm('Delete this appointment record?')) {
       try {
@@ -188,10 +257,11 @@ const AdminDashboardPage = () => {
     }
   };
 
-  // WhatsApp Connect Helper
+  // WhatsApp Connect Helper for Inquiries
   const handleConnectWhatsApp = (phone, name, subject = '') => {
     const cleanPhone = phone.replace(/[^\d]/g, '');
-    const msg = encodeURIComponent(`Hello ${name}, this is NewHomeDevelopers Brokerage following up on your property inquiry${subject ? ` regarding "${subject}"` : ''}. How may we assist you today?`);
+    const businessName = settings.business_name || 'NewHomeDevelopers';
+    const msg = encodeURIComponent(`Hello ${name}, this is ${businessName} following up on your property inquiry${subject ? ` regarding "${subject}"` : ''}. How may we assist you today?`);
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
@@ -252,7 +322,7 @@ const AdminDashboardPage = () => {
           </button>
           <div className="admin-mobile-brand">
             <Shield size={18} color="#d49a3f" />
-            <span>NewHomeDevelopers</span>
+            <span>{settings.business_name || 'NewHomeDevelopers'}</span>
           </div>
           <div className="portal-status-badge">
             <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />
@@ -263,7 +333,7 @@ const AdminDashboardPage = () => {
         {/* Desktop Top Status Bar */}
         <header className="admin-top-status-bar">
           <div className="admin-system-name">
-            NewHomeDevelopers Management System
+            {settings.business_name || 'NewHomeDevelopers'} Management Portal
           </div>
           <div className="portal-status-badge">
             <span>Portal Status:</span>
@@ -282,7 +352,7 @@ const AdminDashboardPage = () => {
               {/* Heading Bar */}
               <div className="admin-heading-bar">
                 <div>
-                  <h1 className="admin-main-title">Operations Dashboard</h1>
+                  <h1 className="admin-main-title">Welcome to {settings.business_name || 'Operations'} Dashboard</h1>
                   <p className="admin-main-subtitle">
                     Real-time portfolio status, listing inventory, and brokerage operations summary.
                   </p>
@@ -640,7 +710,19 @@ const AdminDashboardPage = () => {
                               )}
                             </td>
                             <td>
-                              <div style={{ fontSize: '0.82rem', color: '#475569', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={inq.message}>
+                              <div 
+                                style={{ 
+                                  fontSize: '0.82rem', 
+                                  color: '#475569', 
+                                  maxWidth: '260px', 
+                                  overflow: 'hidden', 
+                                  textOverflow: 'ellipsis', 
+                                  whiteSpace: 'nowrap',
+                                  cursor: 'pointer'
+                                }} 
+                                title={inq.message ? `${inq.message} (Click to view full enquiry)` : 'No extra message'}
+                                onClick={() => setSelectedInquiry(inq)}
+                              >
                                 {inq.message || 'No extra message'}
                               </div>
                             </td>
@@ -671,6 +753,14 @@ const AdminDashboardPage = () => {
                             </td>
                             <td style={{ textAlign: 'right' }}>
                               <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedInquiry(inq)}
+                                  className="btn-action-icon view"
+                                  title="View Full Enquiry"
+                                >
+                                  <Eye size={15} />
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => handleConnectWhatsApp(inq.phone, inq.clientName, inq.propertyTitle)}
@@ -810,7 +900,14 @@ const AdminDashboardPage = () => {
                             <td>
                               <select
                                 value={app.status}
-                                onChange={(e) => handleUpdateAppointmentStatus(app._id, e.target.value)}
+                                onChange={(e) => {
+                                  const newStatus = e.target.value;
+                                  if (newStatus === 'CONFIRMED' && app.status !== 'CONFIRMED') {
+                                    handleConfirmBooking(app);
+                                  } else {
+                                    handleUpdateAppointmentStatus(app._id, newStatus);
+                                  }
+                                }}
                                 style={{
                                   fontSize: '0.76rem',
                                   fontWeight: 700,
@@ -832,20 +929,20 @@ const AdminDashboardPage = () => {
                                 {app.status === 'PENDING' && (
                                   <button
                                     type="button"
-                                    onClick={() => handleUpdateAppointmentStatus(app._id, 'CONFIRMED')}
+                                    onClick={() => handleConfirmBooking(app)}
                                     className="btn-action-icon"
                                     style={{ color: '#16a34a', background: '#f0fdf4', borderColor: '#bbf7d0' }}
-                                    title="Confirm Booking"
+                                    title="Confirm Booking & Send Notification"
                                   >
                                     <CheckCircle2 size={14} />
                                   </button>
                                 )}
                                 <button
                                   type="button"
-                                  onClick={() => handleConnectWhatsApp(app.phone, app.clientName, `Site Visit on ${app.preferredDate} (${app.preferredTime})`)}
+                                  onClick={() => handleAppointmentWhatsApp(app)}
                                   className="btn-action-icon"
                                   style={{ color: '#16a34a', background: '#f0fdf4', borderColor: '#bbf7d0' }}
-                                  title="WhatsApp Client"
+                                  title={app.status === 'CONFIRMED' ? 'Resend Confirmation via WhatsApp' : 'WhatsApp Client'}
                                 >
                                   <WhatsAppIcon size={16} />
                                 </button>
@@ -879,20 +976,7 @@ const AdminDashboardPage = () => {
 
           {/* TAB 6: BROKER SETTINGS */}
           {activeTab === 'settings' && (
-            <div>
-              <div className="admin-heading-bar">
-                <div>
-                  <h1 className="admin-main-title">Broker Settings</h1>
-                  <p className="admin-main-subtitle">
-                    Control public portal visibility, maintenance splash announcement, and system mode.
-                  </p>
-                </div>
-              </div>
-
-              <MaintenanceToggle 
-                onStatusChange={(status) => setIsMaintenanceActive(status)} 
-              />
-            </div>
+            <AdminSettings />
           )}
         </main>
       </div>
@@ -914,6 +998,22 @@ const AdminDashboardPage = () => {
           await deleteProperty(id);
           setPreviewProperty(null);
         }}
+      />
+
+      {/* Customer Enquiry Details Modal */}
+      <InquiryDetailModal
+        inquiry={selectedInquiry}
+        isOpen={!!selectedInquiry}
+        onClose={() => setSelectedInquiry(null)}
+        onUpdateStatus={(id, status) => {
+          handleUpdateInquiryStatus(id, status);
+          setSelectedInquiry(prev => prev ? { ...prev, status } : null);
+        }}
+        onDelete={(id) => {
+          handleDeleteInquiry(id);
+          setSelectedInquiry(null);
+        }}
+        onConnectWhatsApp={handleConnectWhatsApp}
       />
     </div>
   );

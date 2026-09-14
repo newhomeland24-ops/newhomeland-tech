@@ -1,26 +1,30 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, MapPin, BadgePercent } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FilterBar from '../components/FilterBar';
 import LandCard from '../components/LandCard';
 import { useProperties } from '../hooks/useProperties';
-import { useMaintenance } from '../hooks/useMaintenance';
+import { useSettings } from '../../context/SettingsContext';
 import MaintenancePage from './MaintenancePage';
 import villaBg from '../../assets/villa-1.jpg';
 
 const HomePage = () => {
-  const { maintenance, loading: maintenanceLoading } = useMaintenance();
+  const { settings, loading: settingsLoading } = useSettings();
   const [filters, setFilters] = useState({});
   const { properties, loading: propertiesLoading, error } = useProperties(filters);
 
-  if (maintenanceLoading) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-    </div>;
+  const businessName = settings.business_name || 'NewHomeDevelopers';
+
+  if (settingsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
   }
 
-  if (maintenance.isMaintenance) {
-    return <MaintenancePage message={maintenance.message} />;
+  if (settings.isMaintenance) {
+    return <MaintenancePage message={settings.maintenanceMessage} />;
   }
 
   return (
@@ -37,16 +41,15 @@ const HomePage = () => {
           <div className="hero-content" style={{ marginBottom: '1.5rem' }}>
             <div className="hero-tag">
               <Sparkles size={14} />
-              <span>VERIFIED DELHI NCR REAL ESTATE BROKERAGE</span>
+              <span>VERIFIED {businessName.toUpperCase()} BROKERAGE</span>
             </div>
 
             <h1 className="hero-title">
-              Find Your Perfect Plot, Villa &<br />
-              <span>Dream Home</span>
+              {settings.hero_title || 'Find Your Perfect Property in Delhi NCR'}
             </h1>
 
             <p className="hero-subtitle">
-              Explore verified residential plots, luxury villas, high-rise apartments & commercial land with complete legal documentation.
+              {settings.hero_subtitle || 'Explore verified residential plots, luxury villas, high-rise apartments & commercial land with complete legal documentation.'}
             </p>
           </div>
 
@@ -114,6 +117,54 @@ const HomePage = () => {
               ))}
             </div>
           )}
+
+          {/* Section: Why Buy Through {settings.business_name} */}
+          <div style={{ marginTop: '5rem', padding: '3rem 2rem', background: '#ffffff', borderRadius: '20px', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+            <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 2.5rem auto' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#d49a3f', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Exclusive Broker Guarantee
+              </span>
+              <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0f172a', marginTop: '0.4rem', marginBottom: '0.65rem' }}>
+                Why Buy Through {businessName}?
+              </h2>
+              <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                {settings.about_summary || 'Premier real estate advisory firm dedicated to assisting homebuyers, investors, and developers in acquiring verified properties.'}
+              </p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.75rem' }}>
+              <div style={{ padding: '1.75rem', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(212, 154, 63, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d49a3f', marginBottom: '1rem' }}>
+                  <ShieldCheck size={24} />
+                </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>100% Legal Title Clear</h3>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                  Every listed plot, villa, and commercial asset undergoes thorough legal vetting, title deeds verification, and registry check.
+                </p>
+              </div>
+
+              <div style={{ padding: '1.75rem', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb', marginBottom: '1rem' }}>
+                  <MapPin size={24} />
+                </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>Free Guided Site Visits</h3>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                  Book personalized chauffeur-assisted site tours to inspect demarcations, road widths, and surrounding infrastructure.
+                </p>
+              </div>
+
+              <div style={{ padding: '1.75rem', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', marginBottom: '1rem' }}>
+                  <BadgePercent size={24} />
+                </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>Transparent Pricing</h3>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                  Zero hidden brokerage premiums. Direct negotiation support with landowners and developers for clear terms.
+                </p>
+              </div>
+            </div>
+          </div>
+
         </div>
       </main>
     </div>

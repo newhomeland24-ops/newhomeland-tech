@@ -14,8 +14,13 @@ import {
 } from 'lucide-react';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import toast from 'react-hot-toast';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function PropertyInquiryAppointmentForms({ property }) {
+  const { settings } = useSettings();
+  const businessName = settings.business_name || 'NewHomeDevelopers';
+  const brokerPhone = (settings.whatsapp || import.meta.env.VITE_WHATSAPP_NUMBER || '916005707121').replace(/[^\d]/g, '');
+
   const [activeTab, setActiveTab] = useState('enquiry'); // 'enquiry' | 'appointment'
 
   const propCustomId = property?.propertyId || property?._id || '';
@@ -27,8 +32,8 @@ export default function PropertyInquiryAppointmentForms({ property }) {
     email: '',
     preferredContact: 'whatsapp',
     message: property?.title 
-      ? `Hello NewHomeDevelopers, I am interested in property "${property.title}" (ID: #${propCustomId}). Please share the verified paperwork, price breakdown, and site visit details.`
-      : 'Hello NewHomeDevelopers, I would like to inquire about this property.'
+      ? `Hello ${businessName}, I am interested in property "${property.title}" (ID: #${propCustomId}). Please share the verified paperwork, price breakdown, and site visit details.`
+      : `Hello ${businessName}, I would like to inquire about this property.`
   });
   const [enquiryLoading, setEnquiryLoading] = useState(false);
   const [enquirySuccess, setEnquirySuccess] = useState(false);
@@ -49,9 +54,6 @@ export default function PropertyInquiryAppointmentForms({ property }) {
   });
   const [appointmentLoading, setAppointmentLoading] = useState(false);
   const [appointmentSuccess, setAppointmentSuccess] = useState(false);
-
-  // Broker phone for direct WhatsApp fallback
-  const brokerPhone = (import.meta.env.VITE_WHATSAPP_NUMBER || '916005707121').replace(/[^\d]/g, '');
 
   // Handle Enquiry Submit
   const handleEnquirySubmit = async (e) => {
@@ -124,14 +126,14 @@ export default function PropertyInquiryAppointmentForms({ property }) {
   // Direct WhatsApp links
   const openEnquiryWhatsApp = () => {
     const text = encodeURIComponent(
-      `Hello NewHomeDevelopers, I submitted an enquiry for property "${property?.title}" (ID: #${propCustomId}).\nName: ${enquiryData.name || 'Interested Buyer'}\nPhone: ${enquiryData.phone || ''}\nMessage: ${enquiryData.message}`
+      `Hello ${businessName}, I submitted an enquiry for property "${property?.title}" (ID: #${propCustomId}).\nName: ${enquiryData.name || 'Interested Buyer'}\nPhone: ${enquiryData.phone || ''}\nMessage: ${enquiryData.message}`
     );
     window.open(`https://wa.me/${brokerPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
   };
 
   const openAppointmentWhatsApp = () => {
     const text = encodeURIComponent(
-      `Hello NewHomeDevelopers, I would like to book a site visit for property "${property?.title}" (ID: #${propCustomId}).\nClient: ${appointmentData.name || 'Interested Buyer'}\nPhone: ${appointmentData.phone || ''}\nRequested Date: ${appointmentData.preferredDate}\nTime Slot: ${appointmentData.preferredTime}\nVisitors: ${appointmentData.visitorsCount}`
+      `Hello ${businessName}, I would like to book a site visit for property "${property?.title}" (ID: #${propCustomId}).\nClient: ${appointmentData.name || 'Interested Buyer'}\nPhone: ${appointmentData.phone || ''}\nRequested Date: ${appointmentData.preferredDate}\nTime Slot: ${appointmentData.preferredTime}\nVisitors: ${appointmentData.visitorsCount}`
     );
     window.open(`https://wa.me/${brokerPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
   };
