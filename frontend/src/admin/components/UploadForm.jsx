@@ -69,7 +69,11 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       onUploadProgress: (progressEvent) => {
         if (progressEvent.total) {
           const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          toast.loading(`Uploading media to cloud (${percent}%)...`, { id: 'upload' });
+          if (percent >= 100) {
+            toast.loading('Processing & optimizing media in cloud...', { id: 'upload' });
+          } else {
+            toast.loading(`Uploading media to cloud (${percent}%)...`, { id: 'upload' });
+          }
         }
       }
     });
