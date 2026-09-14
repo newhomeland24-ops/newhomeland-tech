@@ -38,6 +38,7 @@ app.get(['/health', '/api/health'], (req, res) => {
 app.use('/api/auth/admin', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/admin/settings', settingsRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/appointments', appointmentRoutes);
 

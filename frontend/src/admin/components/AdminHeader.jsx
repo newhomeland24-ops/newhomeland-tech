@@ -2,9 +2,11 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Building2, ExternalLink, LogOut } from 'lucide-react';
 import { useAdminAuth } from '../hooks/useAdminAuth';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function AdminHeader() {
   const { isAuthenticated, logout } = useAdminAuth();
+  const { settings } = useSettings();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -21,7 +23,7 @@ export default function AdminHeader() {
             <Building2 size={24} />
           </div>
           <div className="brand-text">
-            <span className="brand-title">NewHomeDevelopers</span>
+            <span className="brand-title">{settings.business_name || 'NewHomeDevelopers'}</span>
             <span className="brand-subtitle" style={{ color: '#d49a3f' }}>Operations Console</span>
           </div>
         </Link>

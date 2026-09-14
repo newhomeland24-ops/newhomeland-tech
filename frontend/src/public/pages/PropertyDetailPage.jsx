@@ -6,6 +6,7 @@ import MaintenancePage from './MaintenancePage';
 import MediaModal from '../components/MediaModal';
 import PropertyInquiryAppointmentForms from '../components/PropertyInquiryAppointmentForms';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
+import { useSettings } from '../../context/SettingsContext';
 import { getOptimizedImageUrl, getOptimizedVideoUrl } from '../../utils/cloudinaryOptimizer';
 import {
   MapPin,
@@ -52,11 +53,14 @@ const PropertyDetailPage = () => {
   const touchEndX = useRef(null);
   const minSwipeDistance = 40;
 
+  const { settings } = useSettings();
+  const businessName = settings.business_name || 'NewHomeDevelopers';
+
   useEffect(() => {
     if (property?.title) {
-      document.title = `${property.title} | NewHomeDevelopers`;
+      document.title = `${property.title} | ${businessName}`;
     }
-  }, [property]);
+  }, [property, businessName]);
 
   if (maintenanceLoading || loading) {
     return (
@@ -170,8 +174,13 @@ const PropertyDetailPage = () => {
     touchEndX.current = null;
   };
 
+  const rawWhatsapp = settings.whatsapp || import.meta.env.VITE_WHATSAPP_NUMBER || '';
+  const cleanWhatsapp = rawWhatsapp.replace(/[^\d]/g, '');
+  const rawPhone = settings.phone || '+91 98765 43210';
+  const cleanPhone = rawPhone.replace(/[^\d+]/g, '');
+
   const whatsappMessage = encodeURIComponent(
-    `Hello NewHomeDevelopers, I am interested in property "${property.title}" (ID: ${property.propertyId || property._id}) located in ${property.location} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
+    `Hello ${businessName}, I am interested in property "${property.title}" (ID: ${property.propertyId || property._id}) located in ${property.location} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
   );
 
   const handleShare = () => {
@@ -188,7 +197,6 @@ const PropertyDetailPage = () => {
   };
 
   const statusClass = isSold ? 'sold' : 'available';
-  const cleanPhone = import.meta.env.VITE_WHATSAPP_NUMBER || '';
 
   // 1. Media Viewer Card
   const mediaCard = (
@@ -347,11 +355,11 @@ const PropertyDetailPage = () => {
     <div className="broker-card">
       <div className="broker-header">
         <div className="broker-avatar">
-          NHD
+          {businessName.slice(0, 3).toUpperCase()}
         </div>
         <div className="broker-info">
-          <h4>NewHomeDevelopers Brokerage</h4>
-          <p>Verified Property Advisory</p>
+          <h4>{businessName}</h4>
+          <p>{settings.tagline || 'Verified Property Advisory'}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#10b981', fontSize: '0.78rem', fontWeight: 600, marginTop: '0.2rem' }}>
             <ShieldCheck size={14} /> Title Verified
           </div>
@@ -360,16 +368,14 @@ const PropertyDetailPage = () => {
 
       {/* Primary Action Buttons */}
       <div className="broker-actions-grid">
-        {cleanPhone && (
-          <a href={`tel:${cleanPhone}`} className="btn-call-action">
-            <Phone size={18} />
-            <span>Call Broker: {cleanPhone}</span>
-          </a>
-        )}
+        <a href={`tel:${cleanPhone}`} className="btn-call-action">
+          <Phone size={18} />
+          <span>Call: {rawPhone}</span>
+        </a>
 
-        {cleanPhone && (
+        {cleanWhatsapp && (
           <a
-            href={`https://wa.me/${cleanPhone}?text=${whatsappMessage}`}
+            href={`https://wa.me/${cleanWhatsapp}?text=${whatsappMessage}`}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-whatsapp-action"

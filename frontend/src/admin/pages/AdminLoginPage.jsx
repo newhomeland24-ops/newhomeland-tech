@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../hooks/useAdminAuth';
+import { useSettings } from '../../context/SettingsContext';
 import { Shield, Lock, AlertCircle, ArrowRight } from 'lucide-react';
 
 const AdminLoginPage = () => {
+  const { settings } = useSettings();
+
   useEffect(() => {
-    document.title = 'Admin Portal Secure Login | NewHomeDevelopers';
-  }, []);
+    document.title = `Admin Portal Secure Login | ${settings.business_name || 'Admin'}`;
+  }, [settings.business_name]);
 
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -42,7 +45,7 @@ const AdminLoginPage = () => {
           </div>
           <h2>Admin Portal</h2>
           <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-            NewHomeDevelopers Management Dashboard
+            {settings.business_name || 'NewHomeDevelopers'} Management Dashboard
           </p>
         </div>
 

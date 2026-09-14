@@ -12,9 +12,11 @@ import {
 } from 'lucide-react';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import { getOptimizedImageUrl } from '../../utils/cloudinaryOptimizer';
+import { useSettings } from '../../context/SettingsContext';
 
 const LandCard = ({ property }) => {
   const navigate = useNavigate();
+  const { settings } = useSettings();
 
   if (!property) return null;
 
@@ -110,10 +112,11 @@ const LandCard = ({ property }) => {
   // WhatsApp click handler
   const handleWhatsAppClick = (e) => {
     e.stopPropagation();
-    const phone = import.meta.env.VITE_WHATSAPP_NUMBER || '';
+    const phone = settings.whatsapp || import.meta.env.VITE_WHATSAPP_NUMBER || '';
     const cleanPhone = phone.replace(/[^\d]/g, '');
+    const businessName = settings.business_name || 'NewHomeDevelopers';
     const msg = encodeURIComponent(
-      `Hello NewHomeDevelopers, I am interested in property "${property.title}" (ID: ${propId}) located in ${locationText} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
+      `Hello ${businessName}, I am interested in property "${property.title}" (ID: ${propId}) located in ${locationText} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
     );
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank', 'noopener,noreferrer');
   };

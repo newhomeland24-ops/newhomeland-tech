@@ -2,11 +2,16 @@ import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Building2, Menu, X, Phone } from 'lucide-react';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { settings } = useSettings();
 
-  const cleanWhatsapp = import.meta.env.VITE_WHATSAPP_NUMBER || '';
+  const rawWhatsapp = settings.whatsapp || import.meta.env.VITE_WHATSAPP_NUMBER || '';
+  const cleanWhatsapp = rawWhatsapp.replace(/[^\d]/g, '');
+  const rawPhone = settings.phone || '+91 98765 43210';
+  const cleanPhone = rawPhone.replace(/[^\d+]/g, '');
 
   return (
     <header className="site-header">
@@ -17,8 +22,8 @@ export default function Header() {
             <Building2 size={24} />
           </div>
           <div className="brand-text">
-            <span className="brand-title">NewHomeDevelopers</span>
-            <span className="brand-subtitle">Your Ground. Your Future.</span>
+            <span className="brand-title">{settings.business_name || 'NewHomeDevelopers'}</span>
+            <span className="brand-subtitle">{settings.tagline || 'Your Ground. Your Future.'}</span>
           </div>
         </Link>
 
@@ -42,7 +47,7 @@ export default function Header() {
         <div className="nav-actions">
           {cleanWhatsapp && (
             <a
-              href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent('Hello! I am inquiring about available properties.')}`}
+              href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Hello ${settings.business_name || 'Broker'}, I am inquiring about available properties.`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="call-btn"
@@ -53,9 +58,9 @@ export default function Header() {
             </a>
           )}
 
-          <a href="tel:+919876543210" className="call-btn" title="Call Us">
+          <a href={`tel:${cleanPhone}`} className="call-btn" title={`Call: ${rawPhone}`}>
             <Phone size={18} />
-            <span>+91 98765 43210</span>
+            <span>{rawPhone}</span>
           </a>
 
           {/* Mobile Menu Toggle Button */}
@@ -105,7 +110,7 @@ export default function Header() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
             {cleanWhatsapp && (
               <a
-                href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent('Hello! I am inquiring about available properties.')}`}
+                href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Hello ${settings.business_name || 'Broker'}, I am inquiring about available properties.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-outline btn-sm"
@@ -113,8 +118,8 @@ export default function Header() {
                 <WhatsAppIcon size={16} color="#25d366" /> WhatsApp
               </a>
             )}
-            <a href="tel:+919876543210" className="btn btn-outline btn-sm">
-              <Phone size={16} /> +91 98765 43210
+            <a href={`tel:${cleanPhone}`} className="btn btn-outline btn-sm">
+              <Phone size={16} /> {rawPhone}
             </a>
           </div>
         </div>

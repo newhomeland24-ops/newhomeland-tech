@@ -12,36 +12,39 @@ import PropertiesPage from './public/pages/PropertiesPage';
 import AboutPage from './public/pages/AboutPage';
 import ContactPage from './public/pages/ContactPage';
 import MaintenancePage from './public/pages/MaintenancePage';
-import { useMaintenance } from './public/hooks/useMaintenance';
+import { useSettings } from './context/SettingsContext';
 
 function PublicApp() {
-  const { maintenance, loading: maintenanceLoading } = useMaintenance();
+  const { settings, loading: settingsLoading } = useSettings();
   const location = useLocation();
-  const phone = import.meta.env.VITE_WHATSAPP_NUMBER || '+919876543210';
-  const cleanPhone = phone.replace(/[^\d+]/g, '');
-  const cleanWhatsapp = phone.replace(/[^\d]/g, '');
+
+  const rawPhone = settings.phone || '+91 98765 43210';
+  const rawWhatsapp = settings.whatsapp || '+919876543210';
+  const cleanPhone = rawPhone.replace(/[^\d+]/g, '');
+  const cleanWhatsapp = rawWhatsapp.replace(/[^\d]/g, '');
+  const businessName = settings.business_name || 'NewHomeDevelopers';
 
   useEffect(() => {
     const path = location.pathname;
-    if (location.pathname === '/') {
-      document.title = 'NewHomeDevelopers | Verified Plots, Luxury Villas & Dream Homes';
-    } else if (location.pathname === '/properties') {
-      document.title = 'Verified Land & Properties Portfolio | NewHomeDevelopers';
-    } else if (location.pathname === '/about') {
-      document.title = 'About Our Brokerage & Title Guarantee | NewHomeDevelopers';
-    } else if (location.pathname === '/contact') {
-      document.title = 'Contact Principal Broker & Schedule Site Visit | NewHomeDevelopers';
-    } else if (location.pathname.startsWith('/property/') || location.pathname.startsWith('/properties/')) {
-      document.title = 'Property Overview & Verification | NewHomeDevelopers';
+    if (path === '/') {
+      document.title = `${businessName} | ${settings.hero_title || 'Verified Plots, Luxury Villas & Dream Homes'}`;
+    } else if (path === '/properties') {
+      document.title = `Verified Land & Properties Portfolio | ${businessName}`;
+    } else if (path === '/about') {
+      document.title = `About Our Brokerage & Title Guarantee | ${businessName}`;
+    } else if (path === '/contact') {
+      document.title = `Contact Principal Broker & Schedule Site Visit | ${businessName}`;
+    } else if (path.startsWith('/property/') || path.startsWith('/properties/')) {
+      document.title = `Property Overview & Verification | ${businessName}`;
     } else {
-      document.title = 'NewHomeDevelopers | Your Ground. Your Future.';
+      document.title = `${businessName} | ${settings.tagline || 'Your Ground. Your Future.'}`;
     }
-  }, [location.pathname]);
+  }, [location.pathname, businessName, settings.hero_title, settings.tagline]);
 
-  if (!maintenanceLoading && maintenance.isMaintenance) {
+  if (!settingsLoading && settings.isMaintenance) {
     return (
       <ErrorBoundary>
-        <MaintenancePage />
+        <MaintenancePage message={settings.maintenanceMessage} />
       </ErrorBoundary>
     );
   }
@@ -63,20 +66,22 @@ function PublicApp() {
 
         {/* Floating Action Buttons */}
         <div className="floating-actions">
-          <a
-            href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent('Hello! I would like to inquire about available properties and plots.')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="float-btn whatsapp"
-            title="Chat on WhatsApp"
-          >
-            <WhatsAppIcon size={26} />
-          </a>
+          {cleanWhatsapp && (
+            <a
+              href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Hello ${businessName}, I would like to inquire about available properties and plots.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="float-btn whatsapp"
+              title="Chat on WhatsApp"
+            >
+              <WhatsAppIcon size={26} />
+            </a>
+          )}
 
           <a
             href={`tel:${cleanPhone}`}
             className="float-btn phone"
-            title={`Call Broker: ${phone}`}
+            title={`Call Broker: ${rawPhone}`}
           >
             <Phone size={24} />
           </a>
