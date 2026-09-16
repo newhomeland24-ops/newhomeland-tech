@@ -8,10 +8,8 @@ import {
   Calendar, 
   Settings, 
   ExternalLink, 
-  LogOut,
   X
 } from 'lucide-react';
-import { useAdminAuth } from '../hooks/useAdminAuth';
 import { useSettings } from '../../context/SettingsContext';
 
 export default function AdminSidebar({
@@ -22,15 +20,7 @@ export default function AdminSidebar({
   isOpen = false,
   onClose = () => {}
 }) {
-  const { logout } = useAdminAuth();
   const { settings } = useSettings();
-
-  const handleLogout = async () => {
-    if (window.confirm('Are you sure you want to sign out of the Admin Console?')) {
-      await logout();
-      window.location.href = '/admin/login';
-    }
-  };
 
   const navItems = [
     {
@@ -184,28 +174,12 @@ export default function AdminSidebar({
           </a>
         </div>
 
-        {/* Bottom User Profile Section */}
-        <div className="sidebar-user-section">
-          <div className="sidebar-user-profile">
-            <div className="sidebar-user-avatar">
-              <span>A</span>
-            </div>
-            <div className="sidebar-user-info">
-              <div className="sidebar-user-name">admin</div>
-              <div className="sidebar-user-email">admin@newhomedevelopers.com</div>
-            </div>
-          </div>
-
-          {/* Sign Out Button */}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="sidebar-signout-btn"
-            title="Sign Out of Admin Console"
-          >
-            <LogOut size={16} />
-            <span>Sign Out</span>
-          </button>
+        {/* Bottom Copyright Section */}
+        <div className="sidebar-copyright-box">
+          <p className="sidebar-copyright-brand">
+            © {new Date().getFullYear()} {settings.business_name || 'NewHomeDevelopers'}
+          </p>
+          <p className="sidebar-copyright-sub">All rights reserved.</p>
         </div>
       </aside>
     </>

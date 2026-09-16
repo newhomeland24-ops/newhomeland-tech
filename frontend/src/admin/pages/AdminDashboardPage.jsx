@@ -32,15 +32,22 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  Users
+  Users,
+  LogOut
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const AdminDashboardPage = () => {
-  const { isAuthenticated, loading: authLoading } = useAdminAuth();
+  const { isAuthenticated, loading: authLoading, logout } = useAdminAuth();
   const { properties, loading: propertiesLoading, fetchProperties, createProperty, updateProperty, markSold, deleteProperty } = useAdminProperties();
   const { settings } = useSettings();
   const navigate = useNavigate();
+
+  const handleAdminLogout = async () => {
+    await logout();
+    toast.success('Logged out successfully');
+    navigate('/admin/login');
+  };
   
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -324,9 +331,32 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
             <Shield size={18} color="#d49a3f" />
             <span>{settings.business_name || 'NewHomeDevelopers'}</span>
           </div>
-          <div className="portal-status-badge">
-            <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />
-            <span>{isMaintenanceActive ? 'Maint' : 'Live'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div className="portal-status-badge">
+              <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />
+              <span>{isMaintenanceActive ? 'Maint' : 'Live'}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleAdminLogout}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+                padding: '0.35rem 0.65rem',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                color: '#f87171',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
+              title="Sign Out of Admin Console"
+            >
+              <LogOut size={13} />
+              <span>Exit</span>
+            </button>
           </div>
         </div>
 
@@ -335,12 +365,44 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
           <div className="admin-system-name">
             {settings.business_name || 'NewHomeDevelopers'} Management Portal
           </div>
-          <div className="portal-status-badge">
-            <span>Portal Status:</span>
-            <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />
-            <span style={{ color: isMaintenanceActive ? '#d97706' : '#10b981', fontWeight: 700 }}>
-              {isMaintenanceActive ? 'Maintenance Active' : 'Live'}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div className="portal-status-badge">
+              <span>Portal Status:</span>
+              <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />
+              <span style={{ color: isMaintenanceActive ? '#d97706' : '#10b981', fontWeight: 700 }}>
+                {isMaintenanceActive ? 'Maintenance Active' : 'Live'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleAdminLogout}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                padding: '0.45rem 0.95rem',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: '#ef4444',
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+              }}
+              title="Sign Out of Admin Console"
+            >
+              <LogOut size={15} />
+              <span>Logout</span>
+            </button>
           </div>
         </header>
 

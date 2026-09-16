@@ -15,10 +15,6 @@
     grid-template-columns: 1fr 1fr;
     gap: 2.5rem;
   }
-
-  .admin-sidebar {
-    width: 220px;
-  }
 }
 
 @media (max-width: 768px) {
@@ -73,12 +69,6 @@
 
   .admin-layout {
     flex-direction: column;
-  }
-
-  .admin-sidebar {
-    width: 100%;
-    height: auto;
-    position: static;
   }
 
   .admin-topbar {

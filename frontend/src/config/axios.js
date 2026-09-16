@@ -25,4 +25,17 @@ if (apiBaseUrl) {
 // Enable sending cookies across origins (for admin authentication)
 axios.defaults.withCredentials = true;
 
+// Request interceptor to attach admin authorization bearer token if present
+axios.interceptors.request.use(
+  (config) => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${adminToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export default axios;
