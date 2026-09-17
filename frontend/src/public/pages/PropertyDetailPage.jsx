@@ -15,15 +15,15 @@ import {
   CheckCircle,
   Phone,
   MessageCircle,
-  Calendar,
   ShieldCheck,
   Share2,
   AlertTriangle,
-  Camera,
   ChevronLeft,
   ChevronRight,
-  Play
+  Play,
+  Sparkles
 } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 const PropertyDetailPage = () => {
   const params = useParams();
@@ -56,11 +56,34 @@ const PropertyDetailPage = () => {
   const { settings } = useSettings();
   const businessName = settings.business_name || 'NewHomeDevelopers';
 
-  useEffect(() => {
-    if (property?.title) {
-      document.title = `${property.title} | ${businessName}`;
+  const effectivePrice = property?.pricing?.price;
+  const locAddress = typeof property?.location === 'object' ? property.location.address : property?.location;
+  const locCity = typeof property?.location === 'object' ? property.location.city : 'Delhi NCR';
+  const cleanDesc = property?.description || `Explore ${property?.title} located in ${locCity}. Verified legal title clearance.`;
+  const coverImage = (property?.media?.images?.length > 0)
+    ? property.media.images[0].url
+    : 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80';
+
+  const schemaData = property ? {
+    '@context': 'https://schema.org',
+    '@type': 'RealEstateListing',
+    'name': property.title,
+    'description': cleanDesc,
+    'url': typeof window !== 'undefined' ? window.location.href : '',
+    'image': coverImage,
+    'offers': {
+      '@type': 'Offer',
+      'price': effectivePrice || 0,
+      'priceCurrency': 'INR',
+      'availability': property.status === 'sold' || property.status === 'Sold' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock'
+    },
+    'address': {
+      '@type': 'PostalAddress',
+      'streetAddress': locAddress || '',
+      'addressLocality': locCity || '',
+      'addressCountry': 'IN'
     }
-  }, [property, businessName]);
+  } : null;
 
   if (maintenanceLoading || loading) {
     return (
@@ -108,20 +131,22 @@ const PropertyDetailPage = () => {
     }).format(price);
   };
 
-  // Build Media List (Videos + Images)
+  // Build Media List (Videos + Images + Floor Plans)
   const mediaList = [];
-  const videoUrl = property.videoUrl || (property.videos && property.videos.length > 0 ? (property.videos[0]?.video_url || property.videos[0]?.url || property.videos[0]) : null);
-  if (videoUrl) {
-    mediaList.push({ type: 'video', url: videoUrl });
+  if (property.media?.videos?.length > 0) {
+    property.media.videos.forEach(v => mediaList.push({ type: 'video', url: v.url }));
   }
 
-  if (property.images && property.images.length > 0) {
-    property.images.forEach(img => {
-      const src = typeof img === 'string' ? img : (img?.url || img?.secure_url);
-      if (src) mediaList.push({ type: 'image', url: src });
+  if (property.media?.images?.length > 0) {
+    property.media.images.forEach(img => {
+      if (img.url) mediaList.push({ type: 'image', url: img.url, caption: img.caption });
     });
-  } else if (property.primary_image) {
-    mediaList.push({ type: 'image', url: property.primary_image });
+  }
+
+  if (property.media?.floorPlans && property.media.floorPlans.length > 0) {
+    property.media.floorPlans.forEach(fp => {
+      if (fp.url) mediaList.push({ type: 'image', url: fp.url, caption: fp.title || 'Floor Plan Layout' });
+    });
   }
 
   if (mediaList.length === 0) {
@@ -307,6 +332,9 @@ const PropertyDetailPage = () => {
     </div>
   );
 
+  const effectiveArea = property.specifications?.carpetAreaSqFt;
+  const locationText = [property.location?.locality, property.location?.city].filter(Boolean).join(', ') || property.location?.address || 'Delhi NCR';
+
   // 2. Property Header / Details Card (Title, Price, Badges, Listing ID)
   const headerCard = (
     <div className="detail-header-card">
@@ -335,13 +363,13 @@ const PropertyDetailPage = () => {
 
       <div className="detail-location">
         <MapPin size={16} color="#d49a3f" />
-        <span>{property.location}</span>
+        <span>{locationText}</span>
       </div>
 
       {/* Expected Price Callout */}
       <div className="detail-price-box">
         <span className="detail-price-label">Expected Price</span>
-        <div className="detail-price">{formatPrice(property.price)}</div>
+        <div className="detail-price">{formatPrice(effectivePrice)}</div>
       </div>
 
       <div style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
@@ -403,7 +431,7 @@ const PropertyDetailPage = () => {
       <div className="specs-grid">
         <div className="spec-box">
           <span className="spec-box-label">Total Area</span>
-          <span className="spec-box-val">{property.area} {property.areaUnit || 'Sq. Ft'}</span>
+          <span className="spec-box-val">{effectiveArea ? `${effectiveArea} Sq. Ft` : 'Plots'}</span>
         </div>
 
         <div className="spec-box">
@@ -413,7 +441,7 @@ const PropertyDetailPage = () => {
 
         <div className="spec-box">
           <span className="spec-box-label">Location / City</span>
-          <span className="spec-box-val">{property.location}</span>
+          <span className="spec-box-val">{locationText}</span>
         </div>
 
         <div className="spec-box">
@@ -422,9 +450,61 @@ const PropertyDetailPage = () => {
             {isSold ? 'Sold Out' : 'Available'}
           </span>
         </div>
+
+        {property.specifications?.bedrooms > 0 && (
+          <div className="spec-box">
+            <span className="spec-box-label">Bedrooms</span>
+            <span className="spec-box-val">{property.specifications.bedrooms} BHK</span>
+          </div>
+        )}
+
+        {property.specifications?.bathrooms > 0 && (
+          <div className="spec-box">
+            <span className="spec-box-label">Bathrooms</span>
+            <span className="spec-box-val">{property.specifications.bathrooms}</span>
+          </div>
+        )}
+
+        {property.specifications?.furnishingStatus && (
+          <div className="spec-box">
+            <span className="spec-box-label">Furnishing</span>
+            <span className="spec-box-val">{property.specifications.furnishingStatus}</span>
+          </div>
+        )}
+
+        {property.specifications?.facing && (
+          <div className="spec-box">
+            <span className="spec-box-label">Facing Direction</span>
+            <span className="spec-box-val">{property.specifications.facing}</span>
+          </div>
+        )}
+
+        {property.specifications?.parkingSlots > 0 && (
+          <div className="spec-box">
+            <span className="spec-box-label">Parking</span>
+            <span className="spec-box-val">{property.specifications.parkingSlots} Dedicated Slots</span>
+          </div>
+        )}
       </div>
     </div>
   );
+
+  // 5. Amenities Card
+  const amenitiesCard = property.amenities && property.amenities.length > 0 ? (
+    <div className="detail-card detail-amenities-card" style={{ marginTop: '1.5rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem' }}>
+      <h3 className="detail-card-title" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+        <Sparkles size={18} color="#d49a3f" />
+        <span>Verified Amenities & Infrastructure</span>
+      </h3>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
+        {property.amenities.map((amenity, idx) => (
+          <span key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#1e293b', padding: '0.45rem 0.9rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600 }}>
+            ✓ {amenity}
+          </span>
+        ))}
+      </div>
+    </div>
+  ) : null;
 
   // 5. Description Card
   const descCard = (
@@ -440,6 +520,20 @@ const PropertyDetailPage = () => {
 
   return (
     <div className="property-detail-page">
+      {property && (
+        <Helmet>
+          <title>{`${property.title} in ${property.location?.locality || ''}, ${property.location?.city || ''} | ${businessName}`}</title>
+          <meta name="description" content={cleanDesc} />
+          <meta property="og:title" content={`${property.title} | ${businessName}`} />
+          <meta property="og:description" content={cleanDesc} />
+          <meta property="og:image" content={coverImage} />
+          <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <script type="application/ld+json">
+            {JSON.stringify(schemaData)}
+          </script>
+        </Helmet>
+      )}
       <div className="container-wide">
         {/* Sold / Reserved Alert Notice */}
         {isSold && (
@@ -460,6 +554,7 @@ const PropertyDetailPage = () => {
             {brokerCard}
             <PropertyInquiryAppointmentForms property={property} />
             {specsCard}
+            {amenitiesCard}
             {descCard}
           </div>
         ) : (
@@ -467,6 +562,7 @@ const PropertyDetailPage = () => {
             <div className="detail-left-col">
               {mediaCard}
               {specsCard}
+              {amenitiesCard}
               {descCard}
             </div>
             <div className="sticky-sidebar">
@@ -481,8 +577,8 @@ const PropertyDetailPage = () => {
       <MediaModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        images={property.images} 
-        videoUrl={property.videoUrl} 
+        images={mediaList.filter(m => m.type === 'image').map(m => m.url)} 
+        videoUrl={mediaList.find(m => m.type === 'video')?.url || null} 
       />
     </div>
   );

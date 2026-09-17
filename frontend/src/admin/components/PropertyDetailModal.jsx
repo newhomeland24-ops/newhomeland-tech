@@ -18,6 +18,7 @@ import {
   Edit3
 } from 'lucide-react';
 import { getOptimizedImageUrl, getOptimizedVideoUrl } from '../../utils/cloudinaryOptimizer';
+import PropTypes from 'prop-types';
 
 export default function PropertyDetailModal({ property, isOpen, onClose, onEdit, onMarkSold, onDelete }) {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
@@ -25,20 +26,33 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
   if (!isOpen || !property) return null;
 
   const currentPropertyId = property.propertyId || property._id;
-  const isSold = property.status === 'sold';
+  const isSold = property.status === 'sold' || property.status === 'Sold';
   const isScheduled = new Date(property.publishedAt) > new Date();
 
-  // Media items list
+  // Media items list (videos + images + floorplans)
   const mediaList = [];
-  if (property.videoUrl) {
+  if (property.media?.videos && property.media.videos.length > 0) {
+    property.media.videos.forEach(v => mediaList.push({ type: 'video', url: v.url, title: v.title }));
+  } else if (property.videoUrl) {
     mediaList.push({ type: 'video', url: property.videoUrl });
   }
-  if (property.images && property.images.length > 0) {
+
+  if (property.media?.images && property.media.images.length > 0) {
+    property.media.images.forEach(img => mediaList.push({ type: 'image', url: img.url, caption: img.caption, isFeatured: img.isFeatured }));
+  } else if (property.images && property.images.length > 0) {
     property.images.forEach((img) => {
       const url = typeof img === 'string' ? img : img?.url;
       if (url) mediaList.push({ type: 'image', url });
     });
   }
+
+  if (property.media?.floorPlans && property.media.floorPlans.length > 0) {
+    property.media.floorPlans.forEach(fp => mediaList.push({ type: 'image', url: fp.url, caption: fp.title || 'Floor Plan' }));
+  }
+
+  const effectivePrice = property.pricing?.price;
+  const effectiveArea = property.specifications?.carpetAreaSqFt;
+  const locationText = [property.location?.locality, property.location?.city].filter(Boolean).join(', ') || property.location?.address || 'Delhi NCR';
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-IN', {
@@ -252,14 +266,14 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
             <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Price</div>
               <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#b87d28', marginTop: '0.2rem' }}>
-                {formatPrice(property.price)}
+                {formatPrice(effectivePrice)}
               </div>
             </div>
 
             <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Dimensions / Area</div>
               <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginTop: '0.2rem' }}>
-                {property.area} {property.areaUnit || 'Sq. Ft'}
+                {effectiveArea ? `${effectiveArea} Sq. Ft` : 'Plots'}
               </div>
             </div>
 
@@ -267,7 +281,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Location</div>
               <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#0f172a', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <MapPin size={15} color="#d49a3f" />
-                <span>{property.location}</span>
+                <span>{locationText}</span>
               </div>
             </div>
 
@@ -279,6 +293,49 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
               </div>
             </div>
           </div>
+
+          {/* Specifications Grid if present */}
+          {property.specifications && (property.specifications.bedrooms > 0 || property.specifications.carpetAreaSqFt > 0) && (
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Building size={16} color="#d49a3f" />
+                <span>Property Specifications</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
+                {property.specifications.bedrooms > 0 && (
+                  <div><span style={{ fontSize: '0.75rem', color: '#64748b' }}>Bedrooms:</span> <strong style={{ color: '#0f172a' }}>{property.specifications.bedrooms} BHK</strong></div>
+                )}
+                {property.specifications.bathrooms > 0 && (
+                  <div><span style={{ fontSize: '0.75rem', color: '#64748b' }}>Baths:</span> <strong style={{ color: '#0f172a' }}>{property.specifications.bathrooms}</strong></div>
+                )}
+                {property.specifications.furnishingStatus && (
+                  <div><span style={{ fontSize: '0.75rem', color: '#64748b' }}>Furnishing:</span> <strong style={{ color: '#0f172a' }}>{property.specifications.furnishingStatus}</strong></div>
+                )}
+                {property.specifications.facing && (
+                  <div><span style={{ fontSize: '0.75rem', color: '#64748b' }}>Facing:</span> <strong style={{ color: '#0f172a' }}>{property.specifications.facing}</strong></div>
+                )}
+                {property.specifications.parkingSlots > 0 && (
+                  <div><span style={{ fontSize: '0.75rem', color: '#64748b' }}>Parking:</span> <strong style={{ color: '#0f172a' }}>{property.specifications.parkingSlots} Slots</strong></div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Amenities Grid if present */}
+          {property.amenities && property.amenities.length > 0 && (
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.65rem' }}>
+                Verified Lifestyle Amenities
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {property.amenities.map(a => (
+                  <span key={a} style={{ background: '#f1f5f9', color: '#334155', fontSize: '0.8rem', fontWeight: 600, padding: '4px 10px', borderRadius: '20px' }}>
+                    ✓ {a}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           {property.description && (
@@ -402,3 +459,59 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
     </div>
   );
 }
+
+PropertyDetailModal.propTypes = {
+  property: PropTypes.shape({
+    propertyId: PropTypes.string,
+    _id: PropTypes.string,
+    status: PropTypes.string,
+    propertyType: PropTypes.string,
+    title: PropTypes.string,
+    description: PropTypes.string,
+    publishedAt: PropTypes.string,
+    soldAt: PropTypes.string,
+    location: PropTypes.shape({
+      address: PropTypes.string,
+      locality: PropTypes.string,
+      city: PropTypes.string,
+      state: PropTypes.string,
+      pincode: PropTypes.string,
+      landmark: PropTypes.string
+    }),
+    pricing: PropTypes.shape({
+      price: PropTypes.number
+    }),
+    specifications: PropTypes.shape({
+      carpetAreaSqFt: PropTypes.number,
+      bedrooms: PropTypes.number,
+      bathrooms: PropTypes.number,
+      balconies: PropTypes.number,
+      totalFloors: PropTypes.number,
+      furnishingStatus: PropTypes.string,
+      facing: PropTypes.string,
+      parkingSlots: PropTypes.number,
+      ageOfPropertyYears: PropTypes.number
+    }),
+    amenities: PropTypes.arrayOf(PropTypes.string),
+    media: PropTypes.shape({
+      images: PropTypes.arrayOf(PropTypes.shape({
+        url: PropTypes.string
+      })),
+      videos: PropTypes.arrayOf(PropTypes.shape({
+        url: PropTypes.string
+      })),
+      floorPlans: PropTypes.arrayOf(PropTypes.shape({
+        url: PropTypes.string
+      }))
+    }),
+    meta: PropTypes.shape({
+      isVerified: PropTypes.bool,
+      featuredPriority: PropTypes.number
+    })
+  }),
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onEdit: PropTypes.func,
+  onMarkSold: PropTypes.func,
+  onDelete: PropTypes.func
+};

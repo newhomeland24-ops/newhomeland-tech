@@ -1,9 +1,59 @@
+const { ZodError } = require('zod');
+const logger = require('../utils/logger');
+
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
+  logger.error(err.message, { stack: err.stack, name: err.name });
+
+  // Handle Zod Validation Errors
+  if (err instanceof ZodError) {
+    const formattedErrors = err.errors.map(e => ({
+      path: e.path.join('.'),
+      message: e.message
+    }));
+    return res.status(400).json({
+      success: false,
+      message: 'Validation Error',
+      errors: formattedErrors,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+  }
+
+  // Handle Mongoose CastError (Invalid ID)
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      success: false,
+      message: `Invalid ${err.path}: ${err.value}`,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+  }
+
+  // Handle Mongoose Duplicate Key Error
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue)[0];
+    return res.status(409).json({
+      success: false,
+      message: `Duplicate value for ${field}. Please use another value.`,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+  }
+
+  // Handle Mongoose Validation Error (fallback)
+  if (err.name === 'ValidationError') {
+    const errors = Object.values(err.errors).map(val => val.message);
+    return res.status(400).json({
+      success: false,
+      message: 'Database Validation Error',
+      errors,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+  }
+
+  // Default Error
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode).json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    success: false,
+    message: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 };
 

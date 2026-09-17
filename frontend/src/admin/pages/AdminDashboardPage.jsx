@@ -5,7 +5,6 @@ import { useAdminProperties } from '../hooks/useAdminProperties';
 import axios from 'axios';
 import LandTable from '../components/LandTable';
 import UploadForm from '../components/UploadForm';
-import MaintenanceToggle from '../components/MaintenanceToggle';
 import AdminSidebar from '../components/AdminSidebar';
 import PropertyDetailModal from '../components/PropertyDetailModal';
 import InquiryDetailModal from '../components/InquiryDetailModal';
@@ -24,16 +23,13 @@ import {
   Menu,
   MessageSquare, 
   Calendar, 
-  Settings, 
   ArrowRight, 
-  ExternalLink,
-  Phone,
-  Trash2,
-  CheckCircle2,
-  Clock,
-  XCircle,
-  Users,
-  LogOut
+  Phone, 
+  Trash2, 
+  CheckCircle2, 
+  Clock, 
+  Users, 
+  LogOut 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -285,12 +281,12 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
 
   // Calculate Real Metrics from Database Properties
   const now = new Date();
-  const activeListings = properties.filter(p => p.status === 'published' && new Date(p.publishedAt) <= now).length;
-  const scheduledListings = properties.filter(p => p.status === 'published' && new Date(p.publishedAt) > now).length;
-  const soldListings = properties.filter(p => p.status === 'sold').length;
-  const draftListings = properties.filter(p => p.status === 'draft').length;
+  const activeListings = properties.filter(p => (p.status === 'published' || p.status === 'Available') && new Date(p.publishedAt) <= now).length;
+  const scheduledListings = properties.filter(p => (p.status === 'published' || p.status === 'Available') && new Date(p.publishedAt) > now).length;
+  const soldListings = properties.filter(p => p.status === 'sold' || p.status === 'Sold').length;
+  const draftListings = properties.filter(p => p.status === 'draft' || p.status === 'Under Offer').length;
 
-  const totalValue = properties.reduce((acc, curr) => acc + (Number(curr.price) || 0), 0);
+  const totalValue = properties.reduce((acc, curr) => acc + (Number(curr.pricing?.price || curr.price) || 0), 0);
   const formatPortfolioValue = (val) => {
     if (val >= 10000000) {
       return `₹${(val / 10000000).toFixed(2)} Cr`;

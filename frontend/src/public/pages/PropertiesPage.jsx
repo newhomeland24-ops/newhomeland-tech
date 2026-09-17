@@ -217,13 +217,12 @@ const PropertiesPage = () => {
                   className="w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white transition-all font-medium"
                 >
                   <option value="All">All Property Types</option>
-                  <option value="Plot">Plots & Land</option>
-                  <option value="Residential">Residential Plot</option>
-                  <option value="Commercial">Commercial Plot</option>
-                  <option value="Villa">Luxury Villa</option>
-                  <option value="House">Independent House</option>
                   <option value="Apartment">Apartment</option>
-                  <option value="Builder Floor">Builder Floor</option>
+                  <option value="Villa">Luxury Villa</option>
+                  <option value="Plot">Plots & Land</option>
+                  <option value="Penthouse">Penthouse</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="Independent House">Independent House</option>
                 </select>
               </div>
 

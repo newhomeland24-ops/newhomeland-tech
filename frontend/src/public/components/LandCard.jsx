@@ -13,6 +13,7 @@ import {
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import { getOptimizedImageUrl } from '../../utils/cloudinaryOptimizer';
 import { useSettings } from '../../context/SettingsContext';
+import PropTypes from 'prop-types';
 
 const LandCard = ({ property }) => {
   const navigate = useNavigate();
@@ -22,9 +23,12 @@ const LandCard = ({ property }) => {
 
   const propId = property.propertyId || property._id || property.id;
   const isSold = property.status === 'sold' || property.status === 'Sold';
-  const locationText = property.location || property.location_name || property.city || property.address || 'Delhi NCR';
-  const typeText = property.propertyType || property.property_type || 'Residential';
-  const unitText = property.areaUnit || property.area_unit || 'Sq. Ft';
+  const locationText = [property.location?.locality, property.location?.city].filter(Boolean).join(', ') || property.location?.address || 'Delhi NCR';
+  const typeText = property.propertyType || 'Residential';
+  const unitText = 'Sq. Ft';
+  const effectiveArea = property.specifications?.carpetAreaSqFt;
+  const effectivePrice = property.pricing?.price;
+  const bedroomsCount = property.specifications?.bedrooms;
 
   // Format price
   const formatPrice = (price) => {
@@ -38,17 +42,16 @@ const LandCard = ({ property }) => {
 
   // Build media list with optimized images first
   const mediaList = [];
-  if (property.images && property.images.length > 0) {
-    property.images.forEach(img => {
-      const src = typeof img === 'string' ? img : img?.url;
-      if (src) mediaList.push({ type: 'image', url: src });
+  if (property.media?.images?.length > 0) {
+    property.media.images.forEach(img => {
+      if (img.url) mediaList.push({ type: 'image', url: img.url, isFeatured: img.isFeatured });
     });
-  } else if (property.primary_image) {
-    mediaList.push({ type: 'image', url: property.primary_image });
+    // Sort featured to first
+    mediaList.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
   }
 
   // Check for video walkthrough
-  const videoUrl = property.videoUrl || (property.videos && property.videos.length > 0 ? (property.videos[0]?.video_url || property.videos[0]) : null);
+  const videoUrl = property.media?.videos?.[0]?.url;
   const hasVideo = Boolean(videoUrl);
 
   // Fallback placeholder image if no media found
@@ -116,7 +119,7 @@ const LandCard = ({ property }) => {
     const cleanPhone = phone.replace(/[^\d]/g, '');
     const businessName = settings.business_name || 'NewHomeDevelopers';
     const msg = encodeURIComponent(
-      `Hello ${businessName}, I am interested in property "${property.title}" (ID: ${propId}) located in ${locationText} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
+      `Hello ${businessName}, I am interested in property "${property.title}" (ID: ${propId}) located in ${locationText} listed for ${formatPrice(effectivePrice)}. Please share legal paperwork and site visit details.`
     );
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
@@ -280,12 +283,17 @@ const LandCard = ({ property }) => {
           {property.title}
         </h3>
 
-        {/* Area Specification */}
-        <div style={{ paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9', marginBottom: '1.35rem' }}>
+        {/* Area & Configuration Specification */}
+        <div style={{ paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9', marginBottom: '1.35rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className="flex items-center gap-2 text-slate-700 text-sm font-medium">
             <Maximize2 size={16} color="#64748b" />
-            <span style={{ fontSize: '0.95rem' }}>{property.area} {unitText}</span>
+            <span style={{ fontSize: '0.95rem' }}>{effectiveArea ? `${effectiveArea} ${unitText}` : 'Plots'}</span>
           </div>
+          {bedroomsCount > 0 && (
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', background: '#f1f5f9', padding: '2px 8px', borderRadius: '6px' }}>
+              {bedroomsCount} BHK
+            </span>
+          )}
         </div>
 
         {/* Card Footer: Price & Actions */}
@@ -295,7 +303,7 @@ const LandCard = ({ property }) => {
               EXPECTED PRICE
             </span>
             <span style={{ fontSize: '1.45rem', fontWeight: 800, color: '#b87d28', fontFamily: 'var(--font-heading)' }}>
-              {property.price_display || formatPrice(property.price)}
+              {property.price_display || formatPrice(effectivePrice)}
             </span>
           </div>
 
@@ -346,6 +354,43 @@ const LandCard = ({ property }) => {
       </div>
     </article>
   );
+};
+
+LandCard.propTypes = {
+  property: PropTypes.shape({
+    propertyId: PropTypes.string,
+    _id: PropTypes.string,
+    id: PropTypes.string,
+    status: PropTypes.string,
+    propertyType: PropTypes.string,
+    title: PropTypes.string,
+    price_display: PropTypes.string,
+    location: PropTypes.shape({
+      address: PropTypes.string,
+      locality: PropTypes.string,
+      city: PropTypes.string
+    }),
+    specifications: PropTypes.shape({
+      carpetAreaSqFt: PropTypes.number,
+      bedrooms: PropTypes.number
+    }),
+    pricing: PropTypes.shape({
+      price: PropTypes.number
+    }),
+    media: PropTypes.shape({
+      images: PropTypes.arrayOf(
+        PropTypes.shape({
+          url: PropTypes.string,
+          isFeatured: PropTypes.bool
+        })
+      ),
+      videos: PropTypes.arrayOf(
+        PropTypes.shape({
+          url: PropTypes.string
+        })
+      )
+    })
+  }).isRequired
 };
 
 export default LandCard;

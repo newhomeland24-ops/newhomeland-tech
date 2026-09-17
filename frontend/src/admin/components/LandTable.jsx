@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Trash2, CheckCircle, Clock, Search, Filter, Video, MapPin, Building, ExternalLink, Eye, Edit3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import PropertyDetailModal from './PropertyDetailModal';
+import PropTypes from 'prop-types';
 
 const categories = ['All', 'Residential', 'Commercial', 'Agricultural', 'Industrial'];
 const statusTabs = [
@@ -49,9 +50,11 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
     return properties.filter((item) => {
       // Search matching
       const query = search.trim().toLowerCase();
+      const locStr = `${item.location?.address || ''} ${item.location?.locality || ''} ${item.location?.city || ''}`;
+
       const matchesSearch = !query || 
         item.title?.toLowerCase().includes(query) ||
-        item.location?.toLowerCase().includes(query) ||
+        locStr.toLowerCase().includes(query) ||
         item.propertyId?.toLowerCase().includes(query) ||
         item._id?.toLowerCase().includes(query) ||
         item.description?.toLowerCase().includes(query);
@@ -62,16 +65,18 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
       // Status matching
       const now = new Date();
       const isScheduled = new Date(item.publishedAt) > now;
+      const isSoldStatus = item.status === 'sold' || item.status === 'Sold';
+      const isDraftStatus = item.status === 'draft' || item.status === 'Under Offer';
       let matchesStatus = true;
 
       if (activeTab === 'published') {
-        matchesStatus = item.status === 'published' && !isScheduled;
+        matchesStatus = (item.status === 'published' || item.status === 'Available') && !isScheduled;
       } else if (activeTab === 'scheduled') {
-        matchesStatus = isScheduled && item.status !== 'sold';
+        matchesStatus = isScheduled && !isSoldStatus;
       } else if (activeTab === 'draft') {
-        matchesStatus = item.status === 'draft';
+        matchesStatus = isDraftStatus;
       } else if (activeTab === 'sold') {
-        matchesStatus = item.status === 'sold';
+        matchesStatus = isSoldStatus;
       }
 
       return matchesSearch && matchesCategory && matchesStatus;
@@ -88,11 +93,13 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
             const count = properties.filter((p) => {
               const now = new Date();
               const isSched = new Date(p.publishedAt) > now;
+              const isSoldStatus = p.status === 'sold' || p.status === 'Sold';
+              const isDraftStatus = p.status === 'draft' || p.status === 'Under Offer';
               if (tab.id === 'all') return true;
-              if (tab.id === 'published') return p.status === 'published' && !isSched;
-              if (tab.id === 'scheduled') return isSched && p.status !== 'sold';
-              if (tab.id === 'draft') return p.status === 'draft';
-              if (tab.id === 'sold') return p.status === 'sold';
+              if (tab.id === 'published') return (p.status === 'published' || p.status === 'Available') && !isSched;
+              if (tab.id === 'scheduled') return isSched && !isSoldStatus;
+              if (tab.id === 'draft') return isDraftStatus;
+              if (tab.id === 'sold') return isSoldStatus;
               return true;
             }).length;
 
@@ -167,12 +174,18 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
             {filteredProperties.map((property) => {
               const now = new Date();
               const isScheduled = new Date(property.publishedAt) > now;
-              const hasVideo = !!property.videoUrl;
-              const primaryImg = (property.images && property.images.length > 0)
-                ? (typeof property.images[0] === 'string' ? property.images[0] : property.images[0]?.url)
-                : null;
+              const hasVideo = property.media?.videos?.length > 0;
+              const primaryImg = property.media?.images?.[0]?.url || null;
 
               const currentPropertyId = property.propertyId || property._id;
+              const locationDisplay = [property.location?.locality, property.location?.city].filter(Boolean).join(', ') || property.location?.address || 'Delhi NCR';
+
+              const effectivePrice = property.pricing?.price;
+              const effectiveArea = property.specifications?.carpetAreaSqFt;
+              const bedroomsCount = property.specifications?.bedrooms;
+
+              const isSoldStatus = property.status === 'sold' || property.status === 'Sold';
+              const isDraftStatus = property.status === 'draft' || property.status === 'Under Offer';
 
               return (
                 <tr 
@@ -206,7 +219,7 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#64748b', fontSize: '0.8rem', marginTop: '0.25rem' }}>
                       <MapPin size={13} color="#d49a3f" />
-                      <span>{property.location}</span>
+                      <span>{locationDisplay}</span>
                     </div>
                     <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '0.2rem', fontFamily: 'monospace' }}>
                       ID: #{currentPropertyId}
@@ -219,29 +232,29 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
                       {property.propertyType}
                     </div>
                     <div style={{ fontSize: '0.82rem', color: '#475569', fontWeight: 600, marginTop: '0.3rem' }}>
-                      {property.area} {property.areaUnit || 'Sq. Ft'}
+                      {bedroomsCount ? `${bedroomsCount} BHK • ` : ''}{effectiveArea ? `${effectiveArea} Sq. Ft` : 'Plots'}
                     </div>
                   </td>
 
                   {/* Price */}
                   <td>
                     <div style={{ fontWeight: 800, color: '#b87d28', fontSize: '1.05rem', fontFamily: 'var(--font-heading)' }}>
-                      {formatPrice(property.price)}
+                      {formatPrice(effectivePrice)}
                     </div>
                   </td>
 
                   {/* Status */}
                   <td>
-                    {property.status === 'sold' ? (
+                    {isSoldStatus ? (
                       <span className="badge-status sold">Sold</span>
-                    ) : property.status === 'draft' ? (
-                      <span className="badge-status draft">Draft</span>
+                    ) : isDraftStatus ? (
+                      <span className="badge-status draft">{property.status === 'Under Offer' ? 'Under Offer' : 'Draft'}</span>
                     ) : isScheduled ? (
                       <span className="badge-status scheduled">
                         <Clock size={12} /> Scheduled
                       </span>
                     ) : (
-                      <span className="badge-status published">Published</span>
+                      <span className="badge-status published">{property.status === 'Available' ? 'Available' : 'Published'}</span>
                     )}
 
                     <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginTop: '0.3rem' }}>
@@ -383,6 +396,40 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
       />
     </div>
   );
+};
+
+LandTable.propTypes = {
+  properties: PropTypes.arrayOf(PropTypes.shape({
+    propertyId: PropTypes.string,
+    _id: PropTypes.string,
+    status: PropTypes.string,
+    propertyType: PropTypes.string,
+    title: PropTypes.string,
+    publishedAt: PropTypes.string,
+    location: PropTypes.shape({
+      address: PropTypes.string,
+      locality: PropTypes.string,
+      city: PropTypes.string
+    }),
+    pricing: PropTypes.shape({
+      price: PropTypes.number
+    }),
+    specifications: PropTypes.shape({
+      carpetAreaSqFt: PropTypes.number,
+      bedrooms: PropTypes.number
+    }),
+    media: PropTypes.shape({
+      images: PropTypes.arrayOf(PropTypes.shape({
+        url: PropTypes.string
+      })),
+      videos: PropTypes.arrayOf(PropTypes.shape({
+        url: PropTypes.string
+      }))
+    })
+  })).isRequired,
+  markSold: PropTypes.func.isRequired,
+  deleteProperty: PropTypes.func.isRequired,
+  onEditProperty: PropTypes.func
 };
 
 export default LandTable;

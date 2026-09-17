@@ -9,9 +9,12 @@ const {
   updateProperty,
   markSold,
   deleteProperty,
-  getCloudinarySignature
+  uploadMedia
 } = require('../controllers/propertyController');
 const { publicLimiter } = require('../middleware/rateLimiter');
+const { upload } = require('../middleware/upload');
+const validate = require('../middleware/validate');
+const { propertySchema } = require('../schemas/propertyValidation');
 
 // Public routes
 router.get('/', publicLimiter, getPublicProperties);
@@ -19,14 +22,12 @@ router.get('/:propertyId', publicLimiter, getPublicProperty);
 
 // Admin routes
 router.get('/admin/all', verifyAdmin, getAllAdminProperties);
-router.post('/', verifyAdmin, createProperty);
-router.put('/:propertyId', verifyAdmin, updateProperty);
+router.post('/', verifyAdmin, upload.array('files', 12), validate(propertySchema), createProperty);
+router.put('/:propertyId', verifyAdmin, upload.array('files', 12), validate(propertySchema), updateProperty);
 router.patch('/:propertyId/sold', verifyAdmin, markSold);
 router.delete('/:propertyId', verifyAdmin, deleteProperty);
 
-// Cloudinary upload
-const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 300 * 1024 * 1024 } }); // 300MB
-router.post('/admin/upload', verifyAdmin, upload.array('files', 6), require('../controllers/propertyController').uploadMedia);
+// Dedicated direct media upload endpoint for admin UI
+router.post('/admin/upload', verifyAdmin, upload.array('files', 12), uploadMedia);
 
 module.exports = router;
