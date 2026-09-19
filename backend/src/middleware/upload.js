@@ -29,10 +29,7 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
   storage,
-  fileFilter,
-  limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB max global limit (Video limit)
-  }
+  fileFilter
 });
 
 /**
@@ -47,10 +44,6 @@ const uploadStreamToCloudinary = (filePath, options = {}) => {
           return reject(error);
         }
         let finalUrl = result.secure_url;
-        // Apply optimized streaming flags for video playback
-        if (options.resource_type === 'video' && finalUrl && finalUrl.includes('/upload/') && !finalUrl.includes('/q_auto')) {
-          finalUrl = finalUrl.replace('/upload/', '/upload/c_limit,w_1920,h_1080,q_auto:best,vc_auto,fl_fast_start/');
-        }
         resolve({
           url: finalUrl,
           publicId: result.public_id,
@@ -75,38 +68,20 @@ const uploadMediaBatch = async (files, category = 'auto') => {
       const isPdf = file.mimetype === 'application/pdf';
       const isImage = file.mimetype.startsWith('image/');
 
-      // Enforce strict size limits per type since Multer limit is global 50MB
-      if ((isImage || isPdf || category === 'floorPlan') && file.size > 10 * 1024 * 1024) {
-        throw new Error(`File ${file.originalname} exceeds the 10MB limit for images/floor plans.`);
-      }
-
       let folder = 'newhomeland/properties/images';
       let resource_type = 'image';
-      let transformation = [{ quality: 'auto', fetch_format: 'auto' }];
 
       if (isVideo || category === 'video') {
         folder = 'newhomeland/properties/videos';
         resource_type = 'video';
-        transformation = [
-          {
-            width: 1920,
-            height: 1080,
-            crop: 'limit',
-            quality: 'auto:best',
-            video_codec: 'auto',
-            flags: 'fast_start'
-          }
-        ];
       } else if (category === 'floorPlan') {
         folder = 'newhomeland/properties/floorplans';
         resource_type = isPdf ? 'raw' : 'image';
-        transformation = isPdf ? undefined : [{ quality: 'auto', fetch_format: 'auto' }];
       }
 
       const res = await uploadStreamToCloudinary(file.path, {
         folder,
-        resource_type,
-        transformation
+        resource_type
       });
 
       return {

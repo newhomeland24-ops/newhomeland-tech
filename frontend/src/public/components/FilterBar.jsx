@@ -1,12 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Home, IndianRupee } from 'lucide-react';
+import axios from 'axios';
 
 const FilterBar = ({ onFilterChange }) => {
+  const [propertyTypes, setPropertyTypes] = useState([]);
   const [filters, setFilters] = useState({
     location: 'All',
     propertyType: 'All',
     maxPrice: ''
   });
+
+  useEffect(() => {
+    const fetchActiveTypes = async () => {
+      try {
+        const res = await axios.get('/api/properties/types/active');
+        if (res.data.success) {
+          setPropertyTypes(res.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching active property types:', error);
+      }
+    };
+    fetchActiveTypes();
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -55,7 +71,7 @@ const FilterBar = ({ onFilterChange }) => {
             value={filters.location}
             onChange={handleChange}
             className="search-select"
-            style={{ borderRadius: '12px', borderColor: '#e2e8f0', height: '48px', padding: '0 1rem', fontWeight: 500 }}
+            style={{ borderRadius: '12px', borderColor: '#94a3b8', height: '48px', padding: '0 1rem', fontWeight: 500 }}
           >
             <option value="All">All Locations (NCR)</option>
             <option value="Faridabad">Faridabad</option>
@@ -77,16 +93,12 @@ const FilterBar = ({ onFilterChange }) => {
             value={filters.propertyType}
             onChange={handleChange}
             className="search-select"
-            style={{ borderRadius: '12px', borderColor: '#e2e8f0', height: '48px', padding: '0 1rem', fontWeight: 500 }}
+            style={{ borderRadius: '12px', borderColor: '#94a3b8', height: '48px', padding: '0 1rem', fontWeight: 500 }}
           >
             <option value="All">All Property Types</option>
-            <option value="Plot">Plots & Land</option>
-            <option value="Residential">Residential Plot</option>
-            <option value="Commercial">Commercial Plot</option>
-            <option value="Villa">Luxury Villa</option>
-            <option value="House">Independent House</option>
-            <option value="Apartment">Apartment</option>
-            <option value="Builder Floor">Builder Floor</option>
+            {propertyTypes.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
           </select>
         </div>
 
@@ -101,7 +113,7 @@ const FilterBar = ({ onFilterChange }) => {
             value={filters.maxPrice}
             onChange={handleChange}
             className="search-select"
-            style={{ borderRadius: '12px', borderColor: '#e2e8f0', height: '48px', padding: '0 1rem', fontWeight: 500 }}
+            style={{ borderRadius: '12px', borderColor: '#94a3b8', height: '48px', padding: '0 1rem', fontWeight: 500 }}
           >
             <option value="">Any Budget</option>
             <option value="5000000">Up to ₹ 50 Lakh</option>

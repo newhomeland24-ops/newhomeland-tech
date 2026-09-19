@@ -15,7 +15,8 @@ export const DEFAULT_SETTINGS = {
   about_full: 'We are dedicated to providing the best real estate services, ensuring 100% legal title clearance and securing your future with verified plots, villas, and commercial land.',
   footer_text: '© 2026 NewHomeDevelopers Brokerage. All rights reserved.',
   isMaintenance: false,
-  maintenanceMessage: 'Our website is currently undergoing scheduled maintenance. Please connect with our team directly on WhatsApp for verified properties, floor plans, and site visits.'
+  maintenanceMessage: 'Our website is currently undergoing scheduled maintenance. Please connect with our team directly on WhatsApp for verified properties, floor plans, and site visits.',
+  propertyTypes: []
 };
 
 const SettingsContext = createContext({

@@ -524,6 +524,73 @@ const uploadMedia = asyncHandler(async (req, res) => {
     res.status(200).json({ results });
 });
 
+/**
+ * @desc    Get all distinct property types across all properties (for Admin)
+ * @route   GET /api/properties/admin/types
+ * @access  Private (Admin)
+ */
+const getAllPropertyTypes = async (req, res, next) => {
+  try {
+    const types = await Property.distinct('propertyType');
+    // Filter out empty or null values
+    const validTypes = types.filter(t => t).sort();
+    res.status(200).json({ success: true, data: validTypes });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get active distinct property types (for Public UI)
+ * @route   GET /api/properties/types/active
+ * @access  Public
+ */
+const getActivePropertyTypes = async (req, res, next) => {
+  try {
+    // Return property types only for properties that are published/available
+    const types = await Property.distinct('propertyType', { status: { $in: ['Available', 'published'] } });
+    const validTypes = types.filter(t => t).sort();
+    res.status(200).json({ success: true, data: validTypes });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get all distinct area units across all properties (for Admin)
+ * @route   GET /api/properties/admin/units
+ * @access  Private (Admin)
+ */
+const getAllAreaUnits = async (req, res, next) => {
+  try {
+    const BrokerSetting = require('../models/BrokerSetting');
+    const settings = await BrokerSetting.getSettings();
+    const validUnits = (settings.areaUnits || []).filter(u => u).sort();
+    // Ensure default ones exist if empty
+    if (validUnits.length === 0) validUnits.push('Sq. Ft', 'Sq. Yards', 'Acres', 'Hectares');
+    res.status(200).json({ success: true, data: validUnits });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get all amenities (for Admin)
+ * @route   GET /api/properties/admin/amenities
+ * @access  Private (Admin)
+ */
+const getAllAmenities = async (req, res, next) => {
+  try {
+    const BrokerSetting = require('../models/BrokerSetting');
+    const settings = await BrokerSetting.getSettings();
+    const validAmenities = (settings.amenities || []).filter(u => u).sort();
+    if (validAmenities.length === 0) validAmenities.push('Gated Security', '24/7 Water Supply', 'Power Backup', 'Parking', 'Elevators', 'CCTV Surveillance', 'Children\'s Play Area', 'Gym / Fitness Center');
+    res.status(200).json({ success: true, data: validAmenities });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getPublicProperties,
   getPublicProperty,
@@ -532,5 +599,9 @@ module.exports = {
   updateProperty,
   markSold,
   deleteProperty,
-  uploadMedia
+  uploadMedia,
+  getAllPropertyTypes,
+  getActivePropertyTypes,
+  getAllAreaUnits,
+  getAllAmenities
 };

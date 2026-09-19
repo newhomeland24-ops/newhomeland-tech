@@ -42,10 +42,6 @@ const propertySchema = new mongoose.Schema({
   propertyType: {
     type: String,
     required: [true, 'Property type is required'],
-    enum: {
-      values: ['Apartment', 'Villa', 'Plot', 'Penthouse', 'Commercial', 'Independent House', 'Residential', 'Agricultural', 'Industrial'],
-      message: '{VALUE} is not a valid property type'
-    },
     index: true
   },
   listingType: {
@@ -69,6 +65,11 @@ const propertySchema = new mongoose.Schema({
       min: [0, 'Price cannot be negative'],
       index: true
     },
+    priceType: {
+      type: String,
+      enum: ['Total', 'Per Unit'],
+      required: [true, 'Price type is required']
+    },
     priceNegotiable: {
       type: Boolean,
       default: false
@@ -80,32 +81,16 @@ const propertySchema = new mongoose.Schema({
     }
   },
   specifications: {
-    bedrooms: { type: Number, min: 0, default: 0 },
-    bathrooms: { type: Number, min: 0, default: 0 },
-    balconies: { type: Number, min: 0, default: 0 },
     carpetAreaSqFt: { type: Number, min: 0, default: 0 },
-    superBuiltUpAreaSqFt: { type: Number, min: 0, default: 0 },
-    furnishingStatus: {
-      type: String,
-      enum: ['Unfurnished', 'Semi-Furnished', 'Fully-Furnished'],
-      default: 'Unfurnished'
-    },
-    facing: {
-      type: String,
-      enum: ['North', 'East', 'West', 'South', 'North-East', 'North-West', 'South-East', 'South-West', ''],
-      default: ''
-    },
-    floorNumber: { type: Number, default: 0 },
-    totalFloors: { type: Number, default: 1 },
-    parkingSlots: { type: Number, min: 0, default: 0 },
-    ageOfPropertyYears: { type: Number, min: 0, default: 0 }
+    areaUnit: { type: String, default: '' },
+    bhkType: { type: String, default: '' }
   },
   location: {
     address: { type: String, required: [true, 'Address is required'], trim: true },
-    locality: { type: String, required: [true, 'Locality is required'], trim: true, index: true },
+    locality: { type: String, trim: true, index: true, default: '' },
     city: { type: String, required: [true, 'City is required'], trim: true, index: true },
-    state: { type: String, default: 'Telangana', trim: true },
-    pincode: { type: String, trim: true, default: '' },
+    state: { type: String, required: [true, 'State is required'], trim: true },
+    pincode: { type: String, required: [true, 'Pincode is required'], trim: true },
     landmark: { type: String, trim: true, default: '' },
     coordinates: {
       lat: { type: Number, default: null },
@@ -122,7 +107,7 @@ const propertySchema = new mongoose.Schema({
     floorPlans: [floorPlanSchema]
   },
   meta: {
-    isVerified: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: true },
     featuredPriority: { type: Number, default: 0 }
   },
   publishedAt: {

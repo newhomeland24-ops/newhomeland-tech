@@ -40,7 +40,10 @@ const updateSettings = async (req, res, next) => {
       'about_full',
       'footer_text',
       'isMaintenance',
-      'maintenanceMessage'
+      'maintenanceMessage',
+      'propertyTypes',
+      'areaUnits',
+      'amenities'
     ];
 
     const updateData = {};

@@ -30,6 +30,12 @@ const brokerSettingSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+  social_links: {
+    facebook: { type: String, default: '', trim: true },
+    instagram: { type: String, default: '', trim: true },
+    twitter: { type: String, default: '', trim: true },
+    linkedin: { type: String, default: '', trim: true }
+  },
   address: { 
     type: String, 
     default: 'Plot No. 42, Sector 14, Commercial Complex, Delhi NCR',
@@ -77,6 +83,27 @@ const brokerSettingSchema = new mongoose.Schema({
     type: String, 
     default: 'Our website is currently undergoing scheduled maintenance. Please connect with our team directly on WhatsApp for verified properties, floor plans, and site visits.',
     trim: true
+  },
+  propertyTypes: {
+    type: [String],
+    default: []
+  },
+  areaUnits: {
+    type: [String],
+    default: ['Sq. Ft', 'Sq. Yards', 'Acres', 'Hectares']
+  },
+  amenities: {
+    type: [String],
+    default: [
+      'Gated Security',
+      '24/7 Water Supply',
+      'Power Backup',
+      'Parking',
+      'Elevators',
+      'CCTV Surveillance',
+      'Children\'s Play Area',
+      'Gym / Fitness Center'
+    ]
   },
   updatedAt: { 
     type: Date, 

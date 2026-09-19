@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
   X, 
@@ -19,80 +19,178 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { compressMediaBatch } from '../../utils/imageCompressor';
-
-const PROPERTY_TYPES = [
-  'Apartment', 
-  'Villa', 
-  'Plot', 
-  'Penthouse', 
-  'Commercial', 
-  'Independent House'
-];
+import { useSettings } from '../../context/SettingsContext';
 
 const LISTING_TYPES = ['Sale', 'Rent', 'Lease'];
 const STATUS_OPTIONS = ['Available', 'Under Offer', 'Sold'];
 const FURNISHING_OPTIONS = ['Unfurnished', 'Semi-Furnished', 'Fully-Furnished'];
 const FACING_OPTIONS = ['North', 'East', 'West', 'South', 'North-East', 'North-West', 'South-East', 'South-West'];
 
-const AVAILABLE_AMENITIES = [
-  'Gated Security',
-  '24/7 Water Supply',
-  '100% Power Backup',
-  'Clubhouse',
-  'Swimming Pool',
-  'Fitness Center / Gym',
-  'EV Charging Station',
-  'Children\'s Play Area',
-  'High-Speed Elevators',
-  'Visitor Parking',
-  'Landscaped Gardens',
-  'CCTV Surveillance',
-  'Jogging Track',
-  'Rainwater Harvesting',
-  'Intercom Facility',
-  'Badminton / Tennis Court'
-];
+
 
 const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
   const isEditMode = Boolean(initialData);
+  const { settings } = useSettings(); // Keeping useSettings in case it's used elsewhere, but not for propertyTypes
+  const [propertyTypes, setPropertyTypes] = useState([]);
+  const [areaUnits, setAreaUnits] = useState([]);
 
-  // Active Tab: 'basic' | 'specs' | 'location' | 'amenities' | 'media'
-  const [activeSection, setActiveSection] = useState('basic');
+  const [availableAmenities, setAvailableAmenities] = useState([]);
+
+  useEffect(() => {
+    const fetchPropertyTypes = async () => {
+      try {
+        const res = await axios.get('/api/properties/admin/types', { withCredentials: true });
+        if (res.data.success) {
+          setPropertyTypes(res.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch property types:', error);
+      }
+    };
+    
+    const fetchAreaUnits = async () => {
+      try {
+        const res = await axios.get('/api/properties/admin/units', { withCredentials: true });
+        if (res.data.success) {
+          setAreaUnits(res.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch area units:', error);
+      }
+    };
+
+    const fetchAmenities = async () => {
+      try {
+        const res = await axios.get('/api/properties/admin/amenities', { withCredentials: true });
+        if (res.data.success) {
+          setAvailableAmenities(res.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch amenities:', error);
+      }
+    };
+    
+    fetchPropertyTypes();
+    fetchAreaUnits();
+    fetchAmenities();
+  }, []);
+
+  const [isAddingType, setIsAddingType] = useState(false);
+  const [newPropertyType, setNewPropertyType] = useState('');
+
+  const handleAddPropertyType = async () => {
+    let trimmedType = newPropertyType.trim();
+    if (!trimmedType) {
+      setIsAddingType(false);
+      return;
+    }
+    
+    // Capitalize the first letter
+    const formattedType = trimmedType.charAt(0).toUpperCase() + trimmedType.slice(1);
+
+    if (!propertyTypes.includes(formattedType)) {
+      setPropertyTypes(prev => [...prev, formattedType].sort());
+      toast.success('Property category applied! It will be saved permanently once the property is published.');
+    }
+    
+    setFormData(prev => ({ ...prev, propertyType: formattedType }));
+    setIsAddingType(false);
+    setNewPropertyType('');
+  };
+
+  const [isAddingUnit, setIsAddingUnit] = useState(false);
+  const [newAreaUnit, setNewAreaUnit] = useState('');
+
+  const handleAddAreaUnit = async () => {
+    let trimmedUnit = newAreaUnit.trim();
+    if (!trimmedUnit) {
+      setIsAddingUnit(false);
+      return;
+    }
+    
+    const formattedUnit = trimmedUnit.charAt(0).toUpperCase() + trimmedUnit.slice(1);
+
+    if (!areaUnits.includes(formattedUnit)) {
+      const newUnits = [...areaUnits, formattedUnit].sort();
+      setAreaUnits(newUnits);
+      try {
+        await axios.put('/api/settings', { areaUnits: newUnits }, { withCredentials: true });
+        toast.success('New area unit saved permanently!');
+      } catch (err) {
+        console.error('Failed to save area unit permanently:', err);
+      }
+    }
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      specifications: { ...prev.specifications, areaUnit: formattedUnit }
+    }));
+    setIsAddingUnit(false);
+    setNewAreaUnit('');
+  };
+
+  const [isAddingAmenity, setIsAddingAmenity] = useState(false);
+  const [newAmenity, setNewAmenity] = useState('');
+
+  const handleAddAmenity = async () => {
+    let trimmedAmenity = newAmenity.trim();
+    if (!trimmedAmenity) {
+      setIsAddingAmenity(false);
+      return;
+    }
+    
+    const formattedAmenity = trimmedAmenity.charAt(0).toUpperCase() + trimmedAmenity.slice(1);
+
+    if (!availableAmenities.includes(formattedAmenity)) {
+      const newAmenitiesList = [...availableAmenities, formattedAmenity].sort();
+      setAvailableAmenities(newAmenitiesList);
+      try {
+        await axios.put('/api/settings', { amenities: newAmenitiesList }, { withCredentials: true });
+        toast.success('New amenity saved permanently!');
+      } catch (err) {
+        console.error('Failed to save amenity permanently:', err);
+      }
+    }
+    
+    // Automatically select the newly added amenity
+    if (!formData.amenities.includes(formattedAmenity)) {
+      setFormData(prev => ({
+        ...prev,
+        amenities: [...prev.amenities, formattedAmenity]
+      }));
+    }
+    
+    setIsAddingAmenity(false);
+    setNewAmenity('');
+  };
 
   // Form State
   const [formData, setFormData] = useState({
     propertyId: initialData?.propertyId || '',
     title: initialData?.title || '',
     description: initialData?.description || '',
-    propertyType: initialData?.propertyType || 'Apartment',
-    listingType: initialData?.listingType || 'Sale',
+    propertyType: initialData?.propertyType || '',
+    listingType: initialData?.listingType || '',
     status: initialData?.status || 'Available',
     // Pricing
     pricing: {
       price: initialData?.pricing?.price !== undefined ? initialData.pricing.price : (initialData?.price !== undefined ? initialData.price : ''),
+      priceType: initialData?.pricing?.priceType || '',
       priceNegotiable: Boolean(initialData?.pricing?.priceNegotiable ?? initialData?.priceNegotiable),
       maintenanceCharges: initialData?.pricing?.maintenanceCharges ?? 0
     },
     // Specifications
     specifications: {
-      bedrooms: initialData?.specifications?.bedrooms ?? 0,
-      bathrooms: initialData?.specifications?.bathrooms ?? 0,
-      balconies: initialData?.specifications?.balconies ?? 0,
       carpetAreaSqFt: initialData?.specifications?.carpetAreaSqFt ?? (initialData?.area || ''),
-      superBuiltUpAreaSqFt: initialData?.specifications?.superBuiltUpAreaSqFt ?? '',
-      furnishingStatus: initialData?.specifications?.furnishingStatus || 'Unfurnished',
-      facing: initialData?.specifications?.facing || 'East',
-      floorNumber: initialData?.specifications?.floorNumber ?? 1,
-      totalFloors: initialData?.specifications?.totalFloors ?? 1,
-      parkingSlots: initialData?.specifications?.parkingSlots ?? 1,
-      ageOfPropertyYears: initialData?.specifications?.ageOfPropertyYears ?? 0
+      areaUnit: initialData?.specifications?.areaUnit || '',
+      bhkType: initialData?.specifications?.bhkType || ''
     },
     // Location
     location: {
       address: initialData?.location?.address || (typeof initialData?.location === 'string' ? initialData.location : ''),
       locality: initialData?.location?.locality || '',
-      city: initialData?.location?.city || 'Hyderabad',
-      state: initialData?.location?.state || 'Telangana',
+      city: initialData?.location?.city || '',
+      state: initialData?.location?.state || '',
       pincode: initialData?.location?.pincode || '',
       landmark: initialData?.location?.landmark || ''
     },
@@ -134,6 +232,39 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Pincode Autofill Effect
+  useEffect(() => {
+    const fetchLocationDetails = async () => {
+      const pincode = formData.location.pincode;
+      if (pincode && pincode.length === 6 && /^\d+$/.test(pincode)) {
+        try {
+          const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+          const data = await response.json();
+          if (data && data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
+            const postOffice = data[0].PostOffice[0];
+            setFormData(prev => ({
+              ...prev,
+              location: {
+                ...prev.location,
+                state: postOffice.State || prev.location.state,
+                city: postOffice.District || postOffice.Circle || prev.location.city,
+              }
+            }));
+            toast.success('Location details auto-filled from Pincode!');
+          } else {
+            // Optional: toast.error('Invalid Pincode or no data found.');
+          }
+        } catch (error) {
+          console.error("Pincode fetch error:", error);
+        }
+      }
+    };
+    
+    if (formData.location.pincode?.length === 6) {
+      fetchLocationDetails();
+    }
+  }, [formData.location.pincode]);
+
   // Generic Field Handlers
   const handleTopLevelChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -167,28 +298,28 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
   };
 
   // File selection handlers
-  const handleImageFileChange = (e) => {
+  const handleMediaFileChange = (e) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      const combined = [...selectedImageFiles, ...newFiles];
-      if (combined.length + existingImages.length > 15) {
-        toast.error('Maximum 15 photos allowed per listing.');
-        setSelectedImageFiles(combined.slice(0, 15 - existingImages.length));
-      } else {
-        setSelectedImageFiles(combined);
-      }
-    }
-  };
+      
+      const newImages = newFiles.filter(f => f.type.startsWith('image/'));
+      const newVideos = newFiles.filter(f => f.type.startsWith('video/'));
 
-  const handleVideoFileChange = (e) => {
-    if (e.target.files) {
-      const file = e.target.files[0];
-      if (file) {
-        if (file.size > 300 * 1024 * 1024) {
-          toast.error('Video must be under 300MB.');
-          return;
-        }
-        setSelectedVideoFiles([file]);
+      const totalExisting = existingImages.length + existingVideos.length + selectedImageFiles.length + selectedVideoFiles.length;
+      if (totalExisting + newFiles.length > 6) {
+        toast.error('Maximum 6 media files (images & videos combined) allowed per listing.');
+        const allowedRemaining = 6 - totalExisting;
+        if (allowedRemaining <= 0) return;
+        
+        const allowedFiles = newFiles.slice(0, allowedRemaining);
+        const allowedImages = allowedFiles.filter(f => f.type.startsWith('image/'));
+        const allowedVideos = allowedFiles.filter(f => f.type.startsWith('video/'));
+        
+        setSelectedImageFiles(prev => [...prev, ...allowedImages]);
+        setSelectedVideoFiles(prev => [...prev, ...allowedVideos]);
+      } else {
+        setSelectedImageFiles(prev => [...prev, ...newImages]);
+        setSelectedVideoFiles(prev => [...prev, ...newVideos]);
       }
     }
   };
@@ -244,19 +375,20 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.propertyType) {
+      toast.error('Please select a property category.');
+      return;
+    }
     if (!formData.title.trim()) {
       toast.error('Please provide a property title.');
-      setActiveSection('basic');
       return;
     }
     if (!formData.pricing.price || Number(formData.pricing.price) <= 0) {
       toast.error('Please provide a valid property price.');
-      setActiveSection('pricing');
       return;
     }
     if (!formData.location.locality.trim() || !formData.location.city.trim()) {
       toast.error('Please provide locality and city.');
-      setActiveSection('location');
       return;
     }
 
@@ -359,6 +491,11 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
   return (
     <div className="upload-form-card" style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+      <style>{`
+        .upload-form-card .form-group {
+          margin-bottom: 0 !important;
+        }
+      `}</style>
       {/* Header */}
       <div className="upload-form-header" style={{ padding: '1.25rem 1.75rem', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -372,137 +509,61 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
             <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
               {isEditMode 
                 ? 'Update pricing, specifications, amenities, or media assets.'
-                : 'Production-ready listing with verified specs, high-res gallery, video, and floor plans.'}
+                : 'Enter comprehensive property details, pricing, and high-resolution media to publish a new listing.'}
             </p>
           </div>
         </div>
 
-        <button 
-          type="button" 
-          onClick={onCancel} 
-          className="modal-close-icon-btn"
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
-          aria-label="Close"
-        >
-          <X size={20} />
-        </button>
       </div>
 
-      {/* Navigation Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', background: '#ffffff', overflowX: 'auto' }}>
-        {[
-          { id: 'basic', label: '1. Basic Info', icon: Building },
-          { id: 'pricing', label: '2. Pricing', icon: IndianRupee },
-          { id: 'specs', label: '3. Specifications', icon: Layers },
-          { id: 'location', label: '4. Location', icon: MapPin },
-          { id: 'amenities', label: '5. Amenities', icon: Sparkles },
-          { id: 'media', label: '6. Media Gallery', icon: ImageIcon }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeSection === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveSection(tab.id)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.9rem 1.4rem',
-                fontSize: '0.88rem',
-                fontWeight: isActive ? 700 : 500,
-                color: isActive ? '#b87d28' : '#64748b',
-                borderBottom: isActive ? '3px solid #d49a3f' : '3px solid transparent',
-                background: isActive ? '#fffdf7' : 'transparent',
-                borderTop: 'none',
-                borderLeft: 'none',
-                borderRight: 'none',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              <Icon size={16} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+
 
       {/* Form Content */}
       <form onSubmit={handleSubmit} style={{ padding: '2rem' }}>
-        {/* TAB 1: BASIC INFO */}
-        {activeSection === 'basic' && (
+        {/* SECTION 1: BASIC INFO */}
+        <div style={{ marginBottom: '2.5rem' }}>
+          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>1. Basic Info</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '850px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
               <div className="form-group">
-                <label className="form-label">Custom Property ID {isEditMode ? '(Locked)' : '(Optional)'}</label>
-                <input 
-                  type="text" 
-                  name="propertyId" 
-                  value={formData.propertyId} 
-                  onChange={handleTopLevelChange} 
-                  disabled={isEditMode}
-                  className="form-input" 
-                  placeholder="e.g. HYD-10293 or leave blank to auto-generate" 
-                  style={{ textTransform: 'uppercase', background: isEditMode ? '#f1f5f9' : '#ffffff' }}
-                />
-              </div>
-
-              <div className="form-group">
                 <label className="form-label">Property Category *</label>
-                <select 
-                  name="propertyType" 
-                  value={formData.propertyType} 
-                  onChange={handleTopLevelChange} 
-                  className="form-select"
-                >
-                  {PROPERTY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Property Title *</label>
-              <input 
-                type="text" 
-                required 
-                name="title" 
-                value={formData.title} 
-                onChange={handleTopLevelChange} 
-                className="form-input" 
-                placeholder="e.g. Ultra-Luxury 4 BHK Sky Villa with Private Deck" 
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem' }}>
-              <div className="form-group">
-                <label className="form-label">Listing Type *</label>
-                <select 
-                  name="listingType" 
-                  value={formData.listingType} 
-                  onChange={handleTopLevelChange} 
-                  className="form-select"
-                >
-                  {LISTING_TYPES.map(lt => <option key={lt} value={lt}>{lt}</option>)}
-                </select>
+              {isAddingType ? (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    value={newPropertyType}
+                    onChange={(e) => setNewPropertyType(e.target.value)}
+                    className="form-input"
+                    placeholder="Enter new property type..."
+                    autoFocus
+                  />
+                  <button type="button" className="btn btn-dark" onClick={handleAddPropertyType}>Save</button>
+                  <button type="button" className="btn btn-outline" onClick={() => setIsAddingType(false)}>Cancel</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <select 
+                    name="propertyType" 
+                    value={formData.propertyType} 
+                    onChange={handleTopLevelChange} 
+                    className="form-select"
+                    style={{ flex: 1, color: formData.propertyType ? 'inherit' : '#94a3b8' }}
+                  >
+                    <option value="" disabled style={{ color: '#94a3b8' }}>Select Category</option>
+                    {propertyTypes.map(t => <option key={t} value={t} style={{ color: 'var(--slate-900)' }}>{t}</option>)}
+                  </select>
+                  <button type="button" className="btn btn-outline" onClick={() => setIsAddingType(true)}>+ Add New</button>
+                </div>
+              )}
               </div>
 
               <div className="form-group">
-                <label className="form-label">Current Status *</label>
-                <select 
-                  name="status" 
-                  value={formData.status} 
-                  onChange={handleTopLevelChange} 
-                  className="form-select"
-                >
-                  {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Publish Schedule Date</label>
+                <label className="form-label">
+                  Publish Schedule Date
+                  <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400, marginLeft: '0.5rem' }}>
+                    (Optional - leave blank to publish now)
+                  </span>
+                </label>
                 <input 
                   type="datetime-local" 
                   name="publishedAt" 
@@ -513,6 +574,40 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               </div>
             </div>
 
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem' }}>
+              <div className="form-group">
+                <label className="form-label">Listing Type *</label>
+                <select 
+                  name="listingType" 
+                  value={formData.listingType} 
+                  onChange={handleTopLevelChange} 
+                  required
+                  className="form-select"
+                  style={{ color: formData.listingType ? 'inherit' : '#94a3b8' }}
+                >
+                  <option value="" disabled style={{ color: '#94a3b8' }}>Select Option</option>
+                  <option value="Sale" style={{ color: 'var(--slate-900)' }}>Sale</option>
+                  <option value="Rent" style={{ color: 'var(--slate-900)' }}>Rent</option>
+                  <option value="Lease" style={{ color: 'var(--slate-900)' }}>Lease</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Property Title *</label>
+                <input 
+                  type="text" 
+                  required 
+                  name="title" 
+                  value={formData.title} 
+                  onChange={handleTopLevelChange} 
+                  className="form-input" 
+                  placeholder="Enter Property Title" 
+                />
+              </div>
+            </div>
+
+
+
             <div className="form-group">
               <label className="form-label">Full Property Overview & Description</label>
               <textarea 
@@ -521,31 +616,150 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                 onChange={handleTopLevelChange} 
                 rows={4} 
                 className="form-input" 
-                placeholder="Provide comprehensive details about construction quality, views, legal title status, and surrounding infrastructure..." 
+                placeholder="Enter Full Property Overview & Description" 
               />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginTop: '0.5rem' }}>
-              <input 
-                type="checkbox" 
-                id="isVerifiedCheckbox"
-                checked={formData.meta.isVerified}
-                onChange={(e) => handleNestedChange('meta', 'isVerified', e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: '#d49a3f', cursor: 'pointer' }}
-              />
-              <label htmlFor="isVerifiedCheckbox" style={{ fontSize: '0.92rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-                Mark as Verified Listing (Displays Title Verified badge to buyers)
-              </label>
-            </div>
+
           </div>
-        )}
+        </div>
 
-        {/* TAB 2: PRICING */}
-        {activeSection === 'pricing' && (
+        {/* SECTION 2: SPECIFICATIONS */}
+        <div style={{ marginBottom: '2.5rem' }}>
+          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>2. Specifications</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '850px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
+              {formData.listingType === 'Rent' ? (
+                <div className="form-group">
+                  <label className="form-label">BHK Type *</label>
+                  <select
+                    required
+                    value={formData.specifications.bhkType || ''}
+                    onChange={(e) => handleNestedChange('specifications', 'bhkType', e.target.value)}
+                    className="form-select"
+                  >
+                    <option value="">Select Option</option>
+                    <option value="1 RK">1 RK</option>
+                    <option value="1 BHK">1 BHK</option>
+                    <option value="2 BHK">2 BHK</option>
+                    <option value="3 BHK">3 BHK</option>
+                    <option value="4 BHK">4 BHK</option>
+                    <option value="4+ BHK">4+ BHK</option>
+                  </select>
+                </div>
+              ) : (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Total area size *</label>
+                    <input 
+                      type="number" 
+                      min="0"
+                      required
+                      value={formData.specifications.carpetAreaSqFt} 
+                      onChange={(e) => handleNestedChange('specifications', 'carpetAreaSqFt', e.target.value)} 
+                      className="form-input" 
+                      placeholder="Enter Total area size" 
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Area Unit *</label>
+                    {!isAddingUnit ? (
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <select
+                          required
+                          value={formData.specifications.areaUnit}
+                          onChange={(e) => handleNestedChange('specifications', 'areaUnit', e.target.value)}
+                          className="form-select"
+                          style={{ flex: 1 }}
+                        >
+                          <option value="">Select Option</option>
+                          {areaUnits.map((u, i) => (
+                            <option key={i} value={u}>{u}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingUnit(true)}
+                          style={{
+                            padding: '0 0.8rem',
+                            background: '#f1f5f9',
+                            color: '#334155',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            fontSize: '0.85rem',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={newAreaUnit}
+                          onChange={(e) => setNewAreaUnit(e.target.value)}
+                          placeholder="e.g. Acres, Sq. Meters"
+                          className="form-input"
+                          style={{ flex: 1 }}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddAreaUnit}
+                          style={{
+                            padding: '0 0.8rem',
+                            background: '#1e293b',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsAddingUnit(false);
+                            setNewAreaUnit('');
+                          }}
+                          style={{
+                            padding: '0 0.8rem',
+                            background: 'transparent',
+                            color: '#64748b',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+
+          </div>
+        </div>
+
+        {/* SECTION 3: PRICING */}
+        <div style={{ marginBottom: '2.5rem' }}>
+          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>3. Pricing</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '850px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
               <div className="form-group">
-                <label className="form-label">Total Price in ₹ (INR) *</label>
+                <label className="form-label">Price in ₹ (INR) *</label>
                 <div style={{ position: 'relative' }}>
                   <input 
                     type="number" 
@@ -554,25 +768,41 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                     value={formData.pricing.price} 
                     onChange={(e) => handleNestedChange('pricing', 'price', e.target.value)} 
                     className="form-input" 
-                    placeholder="e.g. 15000000 (₹1.50 Cr)" 
+                    placeholder="Enter Price in ₹ (INR)" 
                   />
                 </div>
                 <span style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.35rem', display: 'block' }}>
-                  {formData.pricing.price ? `Formatted: ₹${Number(formData.pricing.price).toLocaleString('en-IN')}` : 'Enter full numerical price'}
+                  {formData.pricing.price ? `Formatted: ₹${Number(formData.pricing.price).toLocaleString('en-IN')}` : 'Enter numerical price'}
                 </span>
               </div>
 
               <div className="form-group">
-                <label className="form-label">Monthly Maintenance Charges in ₹</label>
-                <input 
-                  type="number" 
-                  min="0"
-                  value={formData.pricing.maintenanceCharges} 
-                  onChange={(e) => handleNestedChange('pricing', 'maintenanceCharges', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 4500 (0 if inclusive)" 
-                />
+                <label className="form-label">Price Type *</label>
+                <select 
+                  required
+                  value={formData.pricing.priceType} 
+                  onChange={(e) => handleNestedChange('pricing', 'priceType', e.target.value)} 
+                  className="form-select"
+                >
+                  <option value="">Select Option</option>
+                  <option value="Total">Total Price</option>
+                  <option value="Per Unit">Per Unit Price</option>
+                </select>
               </div>
+
+              {formData.listingType === 'Rent' && (
+                <div className="form-group">
+                  <label className="form-label">Monthly Maintenance Charges</label>
+                  <input 
+                    type="number" 
+                    min="0"
+                    value={formData.pricing.maintenanceCharges} 
+                    onChange={(e) => handleNestedChange('pricing', 'maintenanceCharges', e.target.value)} 
+                    className="form-input" 
+                    placeholder="Enter Charges" 
+                  />
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
@@ -588,175 +818,34 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               </label>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* TAB 3: SPECIFICATIONS */}
-        {activeSection === 'specs' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '850px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
-              <div className="form-group">
-                <label className="form-label">Bedrooms (BHK)</label>
-                <input 
-                  type="number" 
-                  min="0"
-                  value={formData.specifications.bedrooms} 
-                  onChange={(e) => handleNestedChange('specifications', 'bedrooms', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 3" 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Bathrooms</label>
-                <input 
-                  type="number" 
-                  min="0"
-                  value={formData.specifications.bathrooms} 
-                  onChange={(e) => handleNestedChange('specifications', 'bathrooms', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 3" 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Balconies</label>
-                <input 
-                  type="number" 
-                  min="0"
-                  value={formData.specifications.balconies} 
-                  onChange={(e) => handleNestedChange('specifications', 'balconies', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 2" 
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
-              <div className="form-group">
-                <label className="form-label">Carpet Area (Sq. Ft) *</label>
-                <input 
-                  type="number" 
-                  min="0"
-                  value={formData.specifications.carpetAreaSqFt} 
-                  onChange={(e) => handleNestedChange('specifications', 'carpetAreaSqFt', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 1850" 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Super Built-Up Area (Sq. Ft)</label>
-                <input 
-                  type="number" 
-                  min="0"
-                  value={formData.specifications.superBuiltUpAreaSqFt} 
-                  onChange={(e) => handleNestedChange('specifications', 'superBuiltUpAreaSqFt', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 2400" 
-                />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
-              <div className="form-group">
-                <label className="form-label">Furnishing Status</label>
-                <select 
-                  value={formData.specifications.furnishingStatus} 
-                  onChange={(e) => handleNestedChange('specifications', 'furnishingStatus', e.target.value)} 
-                  className="form-select"
-                >
-                  {FURNISHING_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Facing Direction</label>
-                <select 
-                  value={formData.specifications.facing} 
-                  onChange={(e) => handleNestedChange('specifications', 'facing', e.target.value)} 
-                  className="form-select"
-                >
-                  {FACING_OPTIONS.map(fc => <option key={fc} value={fc}>{fc}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem' }}>
-              <div className="form-group">
-                <label className="form-label">Floor Number</label>
-                <input 
-                  type="number" 
-                  value={formData.specifications.floorNumber} 
-                  onChange={(e) => handleNestedChange('specifications', 'floorNumber', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 14" 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Total Floors</label>
-                <input 
-                  type="number" 
-                  min="1"
-                  value={formData.specifications.totalFloors} 
-                  onChange={(e) => handleNestedChange('specifications', 'totalFloors', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 28" 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Parking Slots</label>
-                <input 
-                  type="number" 
-                  min="0"
-                  value={formData.specifications.parkingSlots} 
-                  onChange={(e) => handleNestedChange('specifications', 'parkingSlots', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 2" 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Age of Property (Years)</label>
-                <input 
-                  type="number" 
-                  min="0"
-                  value={formData.specifications.ageOfPropertyYears} 
-                  onChange={(e) => handleNestedChange('specifications', 'ageOfPropertyYears', e.target.value)} 
-                  className="form-input" 
-                  placeholder="0 for New" 
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: LOCATION */}
-        {activeSection === 'location' && (
+        {/* SECTION 4: LOCATION */}
+        <div style={{ marginBottom: '2.5rem' }}>
+          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>4. Location</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '850px' }}>
             <div className="form-group">
-              <label className="form-label">Street Address / Project Name *</label>
+              <label className="form-label">Full Address *</label>
               <input 
                 type="text" 
                 required 
                 value={formData.location.address} 
                 onChange={(e) => handleNestedChange('location', 'address', e.target.value)} 
                 className="form-input" 
-                placeholder="e.g. Tower C, Financial District Residency" 
+                placeholder="Enter Full Address" 
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
               <div className="form-group">
-                <label className="form-label">Locality / Neighborhood *</label>
+                <label className="form-label">Pincode *</label>
                 <input 
                   type="text" 
-                  required 
-                  value={formData.location.locality} 
-                  onChange={(e) => handleNestedChange('location', 'locality', e.target.value)} 
+                  required
+                  value={formData.location.pincode} 
+                  onChange={(e) => handleNestedChange('location', 'pincode', e.target.value)} 
                   className="form-input" 
-                  placeholder="e.g. Gachibowli / Financial District" 
+                  placeholder="Enter Pincode" 
                 />
               </div>
 
@@ -768,116 +857,79 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                   value={formData.location.city} 
                   onChange={(e) => handleNestedChange('location', 'city', e.target.value)} 
                   className="form-input" 
-                  placeholder="e.g. Hyderabad" 
+                  placeholder="Enter City" 
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">State *</label>
+                <input 
+                  type="text" 
+                  required
+                  value={formData.location.state} 
+                  onChange={(e) => handleNestedChange('location', 'state', e.target.value)} 
+                  className="form-input" 
+                  placeholder="Enter State"
                 />
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
               <div className="form-group">
-                <label className="form-label">State</label>
+                <label className="form-label">Locality / Neighborhood</label>
                 <input 
                   type="text" 
-                  value={formData.location.state} 
-                  onChange={(e) => handleNestedChange('location', 'state', e.target.value)} 
+                  value={formData.location.locality} 
+                  onChange={(e) => handleNestedChange('location', 'locality', e.target.value)} 
                   className="form-input" 
+                  placeholder="Enter Locality / Neighborhood" 
                 />
               </div>
 
               <div className="form-group">
-                <label className="form-label">Pincode</label>
-                <input 
-                  type="text" 
-                  value={formData.location.pincode} 
-                  onChange={(e) => handleNestedChange('location', 'pincode', e.target.value)} 
-                  className="form-input" 
-                  placeholder="e.g. 500032" 
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Prominent Landmark</label>
+                <label className="form-label">Nearby Landmark</label>
                 <input 
                   type="text" 
                   value={formData.location.landmark} 
                   onChange={(e) => handleNestedChange('location', 'landmark', e.target.value)} 
                   className="form-input" 
-                  placeholder="e.g. Near WaveRock SEZ" 
+                  placeholder="Enter Nearby Landmark" 
                 />
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* TAB 5: AMENITIES */}
-        {activeSection === 'amenities' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '850px' }}>
-            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
-              Select all lifestyle amenities and infrastructure features available for this listing:
-            </p>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.85rem' }}>
-              {AVAILABLE_AMENITIES.map((amenity) => {
-                const isSelected = formData.amenities.includes(amenity);
-                return (
-                  <div
-                    key={amenity}
-                    onClick={() => toggleAmenity(amenity)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.65rem',
-                      padding: '0.75rem 1rem',
-                      borderRadius: '10px',
-                      border: isSelected ? '1.5px solid #d49a3f' : '1px solid #e2e8f0',
-                      background: isSelected ? '#fffdf7' : '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      userSelect: 'none'
-                    }}
-                  >
-                    {isSelected ? (
-                      <CheckSquare size={18} color="#d49a3f" />
-                    ) : (
-                      <Square size={18} color="#94a3b8" />
-                    )}
-                    <span style={{ fontSize: '0.88rem', fontWeight: isSelected ? 700 : 500, color: isSelected ? '#0f172a' : '#475569' }}>
-                      {amenity}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
-        {/* TAB 6: MEDIA GALLERY */}
-        {activeSection === 'media' && (
+        {/* SECTION 5: MEDIA GALLERY */}
+        <div style={{ marginBottom: '2.5rem' }}>
+          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>5. Media Gallery (Upload images and video)</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', maxWidth: '850px' }}>
             {/* 1. Image Gallery */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <label className="form-label" style={{ marginBottom: 0 }}>High-Resolution Images (Up to 15)</label>
+                <label className="form-label" style={{ marginBottom: 0 }}>High-Resolution Media (images and videos)</label>
                 <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                  Total Images: {existingImages.length + selectedImageFiles.length} / 15
+                  Total Media: {existingImages.length + existingVideos.length + selectedImageFiles.length + selectedVideoFiles.length} / 6
                 </span>
               </div>
 
-              <label htmlFor="image-files-upload" className="upload-dropzone">
+              <label htmlFor="media-files-upload" className="upload-dropzone">
                 <UploadCloud size={36} color="#d49a3f" style={{ marginBottom: '0.4rem' }} />
                 <div style={{ fontSize: '0.92rem', color: '#334155', fontWeight: 600 }}>
-                  <span style={{ color: '#b87d28' }}>Browse images</span> or drag & drop here
+                  <span style={{ color: '#b87d28' }}>Browse images and videos</span> or drag & drop here
                 </div>
                 <input 
-                  id="image-files-upload" 
+                  id="media-files-upload" 
                   type="file" 
                   style={{ display: 'none' }} 
                   multiple 
-                  accept="image/*" 
-                  onChange={handleImageFileChange} 
+                  accept="image/*,video/mp4,video/webm,video/quicktime" 
+                  onChange={handleMediaFileChange} 
                 />
                 <p style={{ fontSize: '0.76rem', color: '#94a3b8', margin: '0.35rem 0 0 0' }}>
-                  Supports JPG, PNG, WEBP with client-side compression
+                  Supports JPG, PNG, WEBP, MP4, WebM
                 </p>
               </label>
 
@@ -931,16 +983,29 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                 </div>
               )}
 
-              {/* Newly selected image chips */}
-              {selectedImageFiles.length > 0 && (
+              {/* Newly selected media chips */}
+              {(selectedImageFiles.length > 0 || selectedVideoFiles.length > 0) && (
                 <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                   {selectedImageFiles.map((file, i) => (
-                    <div key={i} className="upload-file-chip">
+                    <div key={`img-${i}`} className="upload-file-chip">
                       <ImageIcon size={14} color="#10b981" />
                       <span className="file-name" title={file.name}>{file.name}</span>
                       <button 
                         type="button" 
                         onClick={() => setSelectedImageFiles(prev => prev.filter((_, idx) => idx !== i))}
+                        className="file-remove-btn"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  {selectedVideoFiles.map((file, i) => (
+                    <div key={`vid-${i}`} className="upload-file-chip">
+                      <Video size={14} color="#3b82f6" />
+                      <span className="file-name" title={file.name}>{file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                      <button 
+                        type="button" 
+                        onClick={() => setSelectedVideoFiles(prev => prev.filter((_, idx) => idx !== i))}
                         className="file-remove-btn"
                       >
                         <X size={12} />
@@ -953,35 +1018,16 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
             {/* 2. Walkthrough Video */}
             <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem' }}>
-              <label className="form-label">Virtual Walkthrough Video</label>
+              <label className="form-label">Virtual Walkthrough Video Link</label>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '0.75rem' }}>
-                <div>
-                  <label htmlFor="video-file-upload" className="btn btn-outline btn-sm" style={{ width: '100%', justifyContent: 'center', padding: '0.75rem', cursor: 'pointer' }}>
-                    <Video size={16} />
-                    <span>Upload Video File (MP4, WebM)</span>
-                  </label>
-                  <input 
-                    id="video-file-upload" 
-                    type="file" 
-                    style={{ display: 'none' }} 
-                    accept="video/*" 
-                    onChange={handleVideoFileChange} 
-                  />
-                  {selectedVideoFiles.length > 0 && (
-                    <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#10b981', fontWeight: 600 }}>
-                      Selected: {selectedVideoFiles[0].name} ({(selectedVideoFiles[0].size / (1024 * 1024)).toFixed(1)} MB)
-                    </div>
-                  )}
-                </div>
-
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '0.75rem' }}>
                 <div>
                   <input 
                     type="url" 
                     value={formData.customVideoUrl} 
                     onChange={(e) => setFormData(prev => ({ ...prev, customVideoUrl: e.target.value }))} 
                     className="form-input" 
-                    placeholder="Or paste YouTube / Vimeo link" 
+                    placeholder="Paste YouTube / Vimeo link here" 
                   />
                 </div>
               </div>
@@ -1056,6 +1102,112 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* SECTION 6: AMENITIES (CONDITIONAL) */}
+        {formData.listingType === 'Rent' && (
+          <div style={{ marginBottom: '2.5rem' }}>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>6. Amenities</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', maxWidth: '850px' }}>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
+                Select all lifestyle amenities and infrastructure features available for this listing:
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.85rem' }}>
+                {availableAmenities.map((amenity) => {
+                  const isSelected = formData.amenities.includes(amenity);
+                  return (
+                    <div
+                      key={amenity}
+                      onClick={() => toggleAmenity(amenity)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.65rem',
+                        padding: '0.75rem 1rem',
+                        borderRadius: '10px',
+                        border: isSelected ? '1.5px solid #d49a3f' : '1px solid #e2e8f0',
+                        background: isSelected ? '#fffdf7' : '#ffffff',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                        userSelect: 'none'
+                      }}
+                    >
+                      {isSelected ? (
+                        <CheckSquare size={18} color="#d49a3f" />
+                      ) : (
+                        <Square size={18} color="#94a3b8" />
+                      )}
+                      <span style={{ fontSize: '0.88rem', fontWeight: isSelected ? 700 : 500, color: isSelected ? '#0f172a' : '#475569' }}>
+                        {amenity}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {/* Add Custom Amenity */}
+                {isAddingAmenity ? (
+                  <div style={{ display: 'flex', gap: '0.5rem', gridColumn: '1 / -1', maxWidth: '300px' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      style={{ padding: '0.5rem', fontSize: '0.9rem', flex: 1 }}
+                      placeholder="Custom amenity..."
+                      value={newAmenity}
+                      onChange={(e) => setNewAmenity(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddAmenity();
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <button 
+                      type="button" 
+                      onClick={handleAddAmenity}
+                      style={{
+                        background: '#d49a3f', color: '#fff', border: 'none', borderRadius: '6px',
+                        padding: '0 1rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600
+                      }}
+                    >
+                      Add
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingAmenity(true)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '10px',
+                      border: '1px dashed #cbd5e1',
+                      background: 'transparent',
+                      color: '#64748b',
+                      fontSize: '0.88rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#d49a3f';
+                      e.currentTarget.style.color = '#d49a3f';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                      e.currentTarget.style.color = '#64748b';
+                    }}
+                  >
+                    <Plus size={16} /> Add Amenity
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Footer Actions */}
@@ -1071,36 +1223,6 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {activeSection !== 'basic' && (
-              <button 
-                type="button" 
-                onClick={() => {
-                  const sections = ['basic', 'pricing', 'specs', 'location', 'amenities', 'media'];
-                  const currIdx = sections.indexOf(activeSection);
-                  if (currIdx > 0) setActiveSection(sections[currIdx - 1]);
-                }}
-                className="btn btn-outline"
-                style={{ padding: '0.65rem 1.25rem' }}
-              >
-                Previous Step
-              </button>
-            )}
-
-            {activeSection !== 'media' ? (
-              <button 
-                type="button" 
-                onClick={() => {
-                  const sections = ['basic', 'pricing', 'specs', 'location', 'amenities', 'media'];
-                  const currIdx = sections.indexOf(activeSection);
-                  if (currIdx < sections.length - 1) setActiveSection(sections[currIdx + 1]);
-                }}
-                className="btn btn-dark"
-                style={{ padding: '0.65rem 1.5rem' }}
-              >
-                Next Step
-              </button>
-            ) : null}
-
             <button 
               type="submit" 
               disabled={isSubmitting} 

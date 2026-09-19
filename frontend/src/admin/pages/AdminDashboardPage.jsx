@@ -45,7 +45,13 @@ const AdminDashboardPage = () => {
     navigate('/admin/login');
   };
   
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('adminActiveTab') || 'dashboard';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('adminActiveTab', activeTab);
+  }, [activeTab]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isMaintenanceActive, setIsMaintenanceActive] = useState(false);
   const [previewProperty, setPreviewProperty] = useState(null);
@@ -652,32 +658,7 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
 
           {/* TAB 3: ADD / EDIT PROPERTY */}
           {activeTab === 'add-property' && (
-            <div>
-              <div className="admin-heading-bar">
-                <div>
-                  <h1 className="admin-main-title">
-                    {editingProperty ? `Edit Property (${editingProperty.propertyId || 'Listing'})` : 'Add New Property'}
-                  </h1>
-                  <p className="admin-main-subtitle">
-                    {editingProperty 
-                      ? 'Modify property specifications, pricing, media assets, or listing status.' 
-                      : 'Publish a new luxury land, villa, or commercial listing with high-resolution photos and video.'}
-                  </p>
-                </div>
-                <div className="admin-cta-group">
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      setEditingProperty(null);
-                      setActiveTab('properties');
-                    }}
-                    className="btn btn-outline btn-sm"
-                  >
-                    Cancel & Return to Catalog
-                  </button>
-                </div>
-              </div>
-
+            <div style={{ marginTop: '-1.25rem' }}>
               <UploadForm 
                 initialData={editingProperty}
                 onSuccess={handleSaveProperty} 
