@@ -271,9 +271,11 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
             </div>
 
             <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Dimensions / Area</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>
+                {effectiveArea ? 'Dimensions / Area' : (property.specifications?.bhkType ? 'Configuration' : 'Area')}
+              </div>
               <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginTop: '0.2rem' }}>
-                {effectiveArea ? `${effectiveArea} Sq. Ft` : 'Plots'}
+                {effectiveArea ? `${effectiveArea} ${property.specifications?.areaUnit || property.areaUnit || 'Sq. Ft'}` : (property.specifications?.bhkType || (property.propertyType === 'Land' ? 'Plots' : 'N/A'))}
               </div>
             </div>
 

@@ -63,13 +63,17 @@ export default function PropertyInquiryAppointmentForms({ property }) {
       return;
     }
 
+    const formattedLocation = typeof property?.location === 'object'
+      ? [property.location.locality, property.location.city].filter(Boolean).join(', ') || property.location.address || ''
+      : (property?.location || '');
+
     setEnquiryLoading(true);
     try {
       await axios.post('/api/inquiries', {
         propertyId: propCustomId,
         propertyTitle: property?.title,
-        propertyLocation: property?.location,
-        propertyPrice: property?.price,
+        propertyLocation: formattedLocation,
+        propertyPrice: property?.pricing?.price || property?.price,
         clientName: enquiryData.name,
         phone: enquiryData.phone,
         email: enquiryData.email,
@@ -97,12 +101,16 @@ export default function PropertyInquiryAppointmentForms({ property }) {
       return;
     }
 
+    const formattedLocation = typeof property?.location === 'object'
+      ? [property.location.locality, property.location.city].filter(Boolean).join(', ') || property.location.address || ''
+      : (property?.location || '');
+
     setAppointmentLoading(true);
     try {
       await axios.post('/api/appointments', {
         propertyId: propCustomId,
         propertyTitle: property?.title,
-        propertyLocation: property?.location,
+        propertyLocation: formattedLocation,
         clientName: appointmentData.name,
         phone: appointmentData.phone,
         email: appointmentData.email,
@@ -202,9 +210,16 @@ export default function PropertyInquiryAppointmentForms({ property }) {
             ) : (
               <form onSubmit={handleEnquirySubmit} className="property-form">
                 <div style={{ marginBottom: '1rem' }}>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.2rem 0' }}>
-                    Inquire About This Property
-                  </h4>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap', margin: '0 0 0.2rem 0' }}>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                      Inquire About This Property
+                    </h4>
+                    {propCustomId && (
+                      <span style={{ fontSize: '0.72rem', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                        ID: #{propCustomId}
+                      </span>
+                    )}
+                  </div>
                   <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
                     Receive verified legal paperwork, current price breakdown, and site visit coordinates.
                   </p>
@@ -340,9 +355,16 @@ export default function PropertyInquiryAppointmentForms({ property }) {
             ) : (
               <form onSubmit={handleAppointmentSubmit} className="property-form">
                 <div style={{ marginBottom: '1rem' }}>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.2rem 0' }}>
-                    Schedule a Guided Site Visit
-                  </h4>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap', margin: '0 0 0.2rem 0' }}>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                      Schedule a Guided Site Visit
+                    </h4>
+                    {propCustomId && (
+                      <span style={{ fontSize: '0.72rem', background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                        ID: #{propCustomId}
+                      </span>
+                    )}
+                  </div>
                   <p style={{ fontSize: '0.82rem', color: '#64748b', margin: 0 }}>
                     Inspect boundaries, title papers, and access roads with our principal broker.
                   </p>

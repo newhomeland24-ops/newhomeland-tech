@@ -38,13 +38,15 @@ const validate = (schema) => {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const formattedErrors = error.errors.map(err => ({
-          path: err.path.join('.'),
+        const issues = error.issues || error.errors || [];
+        const formattedErrors = issues.map(err => ({
+          path: Array.isArray(err.path) ? err.path.join('.') : String(err.path || ''),
           message: err.message
         }));
         
         return res.status(400).json({
           success: false,
+          message: formattedErrors.length > 0 ? formattedErrors.map(e => e.message).join(', ') : 'Validation failed',
           errors: formattedErrors
         });
       }

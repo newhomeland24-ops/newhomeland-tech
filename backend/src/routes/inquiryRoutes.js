@@ -25,7 +25,7 @@ router.post('/', async (req, res, next) => {
     }
 
     const inquiry = new Inquiry({
-      propertyId: propertyId || null,
+      propertyId: propertyId ? String(propertyId).trim().toUpperCase() : null,
       propertyTitle: propertyTitle || '',
       propertyLocation: propertyLocation || '',
       propertyPrice: propertyPrice ? Number(propertyPrice) : undefined,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { 
   X, 
@@ -18,7 +18,6 @@ import {
   Square
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { compressMediaBatch } from '../../utils/imageCompressor';
 import { useSettings } from '../../context/SettingsContext';
 
 const LISTING_TYPES = ['Sale', 'Rent', 'Lease'];
@@ -175,7 +174,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
     // Pricing
     pricing: {
       price: initialData?.pricing?.price !== undefined ? initialData.pricing.price : (initialData?.price !== undefined ? initialData.price : ''),
-      priceType: initialData?.pricing?.priceType || '',
+      priceType: initialData?.pricing?.priceType || 'Total',
       priceNegotiable: Boolean(initialData?.pricing?.priceNegotiable ?? initialData?.priceNegotiable),
       maintenanceCharges: initialData?.pricing?.maintenanceCharges ?? 0
     },
@@ -232,37 +231,43 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Pincode Autofill Effect
+  const lastFetchedPincode = useRef(initialData?.location?.pincode || '');
+
+  // Pincode Autofill Effect (runs only when user enters a new pincode, never on initial edit load)
   useEffect(() => {
+    const pincode = formData.location.pincode;
+    if (!pincode || pincode.length !== 6 || !/^\d+$/.test(pincode)) {
+      return;
+    }
+
+    // Do not re-fetch or show popups for existing saved pincode when editing
+    if (pincode === lastFetchedPincode.current) {
+      return;
+    }
+
     const fetchLocationDetails = async () => {
-      const pincode = formData.location.pincode;
-      if (pincode && pincode.length === 6 && /^\d+$/.test(pincode)) {
-        try {
-          const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-          const data = await response.json();
-          if (data && data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
-            const postOffice = data[0].PostOffice[0];
-            setFormData(prev => ({
-              ...prev,
-              location: {
-                ...prev.location,
-                state: postOffice.State || prev.location.state,
-                city: postOffice.District || postOffice.Circle || prev.location.city,
-              }
-            }));
-            toast.success('Location details auto-filled from Pincode!');
-          } else {
-            // Optional: toast.error('Invalid Pincode or no data found.');
-          }
-        } catch (error) {
-          console.error("Pincode fetch error:", error);
+      try {
+        const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        const data = await response.json();
+        if (data && data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
+          const postOffice = data[0].PostOffice[0];
+          setFormData(prev => ({
+            ...prev,
+            location: {
+              ...prev.location,
+              state: postOffice.State || prev.location.state,
+              city: postOffice.District || postOffice.Circle || prev.location.city,
+            }
+          }));
+          lastFetchedPincode.current = pincode;
+          toast.success('Location details auto-filled from Pincode!');
         }
+      } catch (error) {
+        console.error("Pincode fetch error:", error);
       }
     };
     
-    if (formData.location.pincode?.length === 6) {
-      fetchLocationDetails();
-    }
+    fetchLocationDetails();
   }, [formData.location.pincode]);
 
   // Generic Field Handlers
@@ -305,21 +310,29 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       const newImages = newFiles.filter(f => f.type.startsWith('image/'));
       const newVideos = newFiles.filter(f => f.type.startsWith('video/'));
 
-      const totalExisting = existingImages.length + existingVideos.length + selectedImageFiles.length + selectedVideoFiles.length;
-      if (totalExisting + newFiles.length > 6) {
-        toast.error('Maximum 6 media files (images & videos combined) allowed per listing.');
-        const allowedRemaining = 6 - totalExisting;
-        if (allowedRemaining <= 0) return;
-        
-        const allowedFiles = newFiles.slice(0, allowedRemaining);
-        const allowedImages = allowedFiles.filter(f => f.type.startsWith('image/'));
-        const allowedVideos = allowedFiles.filter(f => f.type.startsWith('video/'));
-        
-        setSelectedImageFiles(prev => [...prev, ...allowedImages]);
-        setSelectedVideoFiles(prev => [...prev, ...allowedVideos]);
-      } else {
-        setSelectedImageFiles(prev => [...prev, ...newImages]);
-        setSelectedVideoFiles(prev => [...prev, ...newVideos]);
+      const currentImages = existingImages.length + selectedImageFiles.length;
+      const currentVideos = existingVideos.length + selectedVideoFiles.length;
+
+      let imagesToAdd = newImages;
+      let videosToAdd = newVideos;
+
+      if (currentImages + newImages.length > 4) {
+        toast.error('Maximum 4 images allowed per listing.');
+        const remainingImages = Math.max(0, 4 - currentImages);
+        imagesToAdd = newImages.slice(0, remainingImages);
+      }
+
+      if (currentVideos + newVideos.length > 2) {
+        toast.error('Maximum 2 videos allowed per listing.');
+        const remainingVideos = Math.max(0, 2 - currentVideos);
+        videosToAdd = newVideos.slice(0, remainingVideos);
+      }
+
+      if (imagesToAdd.length > 0) {
+        setSelectedImageFiles(prev => [...prev, ...imagesToAdd]);
+      }
+      if (videosToAdd.length > 0) {
+        setSelectedVideoFiles(prev => [...prev, ...videosToAdd]);
       }
     }
   };
@@ -327,7 +340,16 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
   const handleFloorPlanFileChange = (e) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setSelectedFloorPlanFiles(prev => [...prev, ...newFiles].slice(0, 5));
+      const currentTotal = existingFloorPlans.length + selectedFloorPlanFiles.length;
+      if (currentTotal + newFiles.length > 3) {
+        toast.error('Maximum 3 floor plan files allowed per listing.');
+        const remaining = Math.max(0, 3 - currentTotal);
+        if (remaining > 0) {
+          setSelectedFloorPlanFiles(prev => [...prev, ...newFiles.slice(0, remaining)]);
+        }
+      } else {
+        setSelectedFloorPlanFiles(prev => [...prev, ...newFiles]);
+      }
     }
   };
 
@@ -391,6 +413,10 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       toast.error('Please provide locality and city.');
       return;
     }
+    if (existingImages.length + selectedImageFiles.length + existingVideos.length + selectedVideoFiles.length === 0) {
+      toast.error('Please upload at least one image or video in High-Resolution Media.');
+      return;
+    }
 
     setIsSubmitting(true);
 
@@ -410,12 +436,13 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
       const propertyDataPayload = {
         title: formData.title.trim(),
-        description: formData.description.trim() || `${formData.title.trim()} located in ${formData.location.locality}, ${formData.location.city}.`,
+        description: formData.description.trim() || `${formData.title.trim()} located in ${[formData.location.locality, formData.location.city].filter(Boolean).join(', ')}.`,
         propertyType: formData.propertyType,
         listingType: formData.listingType,
         status: formData.status,
         pricing: {
           price: Number(formData.pricing.price),
+          priceType: formData.pricing.priceType || 'Total',
           priceNegotiable: Boolean(formData.pricing.priceNegotiable),
           maintenanceCharges: Number(formData.pricing.maintenanceCharges) || 0
         },
@@ -425,6 +452,8 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
           balconies: Number(formData.specifications.balconies) || 0,
           carpetAreaSqFt: Number(formData.specifications.carpetAreaSqFt) || 0,
           superBuiltUpAreaSqFt: Number(formData.specifications.superBuiltUpAreaSqFt) || 0,
+          areaUnit: formData.specifications.areaUnit || '',
+          bhkType: formData.specifications.bhkType || '',
           furnishingStatus: formData.specifications.furnishingStatus,
           facing: formData.specifications.facing,
           floorNumber: Number(formData.specifications.floorNumber) || 0,
@@ -433,7 +462,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
           ageOfPropertyYears: Number(formData.specifications.ageOfPropertyYears) || 0
         },
         location: {
-          address: formData.location.address.trim() || `${formData.location.locality}, ${formData.location.city}`,
+          address: formData.location.address.trim() || [formData.location.locality, formData.location.city].filter(Boolean).join(', ') || formData.location.city.trim(),
           locality: formData.location.locality.trim(),
           city: formData.location.city.trim(),
           state: formData.location.state.trim() || 'Telangana',
@@ -458,32 +487,41 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       formDataObj.append('data', JSON.stringify(propertyDataPayload));
 
       if (selectedImageFiles.length > 0) {
-        toast.loading('Optimizing image files...', { id: 'upload' });
-        const compressed = await compressMediaBatch(selectedImageFiles, (p) => {
-          toast.loading(`Optimizing images (${p}%)...`, { id: 'upload' });
-        });
-        compressed.forEach(file => formDataObj.append('files', file));
+        selectedImageFiles.forEach(file => formDataObj.append('images', file));
       }
 
       if (selectedVideoFiles.length > 0) {
-        selectedVideoFiles.forEach(file => formDataObj.append('files', file));
+        selectedVideoFiles.forEach(file => formDataObj.append('videos', file));
       }
 
       if (selectedFloorPlanFiles.length > 0) {
-        selectedFloorPlanFiles.forEach(file => formDataObj.append('files', file));
+        selectedFloorPlanFiles.forEach(file => formDataObj.append('floorPlans', file));
       }
 
+      const totalFilesCount = selectedImageFiles.length + selectedVideoFiles.length + selectedFloorPlanFiles.length;
       toast.loading(isEditMode ? 'Updating listing...' : 'Publishing listing...', { id: 'upload' });
-      const result = await onSuccess(formDataObj);
+
+      const onProgress = (percent) => {
+        if (totalFilesCount > 0) {
+          if (percent < 100) {
+            toast.loading(`Uploading ${totalFilesCount} media file${totalFilesCount > 1 ? 's' : ''} (${percent}%)...`, { id: 'upload' });
+          } else {
+            toast.loading('Processing on Cloudinary & saving listing...', { id: 'upload' });
+          }
+        } else {
+          toast.loading('Saving property details...', { id: 'upload' });
+        }
+      };
+
+      const result = await onSuccess(formDataObj, onProgress);
       if (result && result.success === false) {
         throw new Error(result.message || 'Failed to save property listing');
       }
 
-      toast.success(isEditMode ? 'Property details updated successfully!' : 'Property listing published successfully!');
+      toast.success(isEditMode ? 'Property details updated successfully!' : 'Property listing published successfully!', { id: 'upload' });
     } catch (error) {
       console.error('Submit error:', error);
-      toast.dismiss('upload');
-      toast.error(error.message || 'Failed to process property listing');
+      toast.error(error.message || 'Failed to process property listing', { id: 'upload' });
     } finally {
       setIsSubmitting(false);
     }
@@ -876,7 +914,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
               <div className="form-group">
-                <label className="form-label">Locality / Neighborhood</label>
+                <label className="form-label">Locality / Neighborhood (Optional)</label>
                 <input 
                   type="text" 
                   value={formData.location.locality} 
@@ -909,9 +947,9 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
             {/* 1. Image Gallery */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <label className="form-label" style={{ marginBottom: 0 }}>High-Resolution Media (images and videos)</label>
+                <label className="form-label" style={{ marginBottom: 0 }}>High-Resolution Media (MAX 4 Images and 2 Videos) *</label>
                 <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                  Total Media: {existingImages.length + existingVideos.length + selectedImageFiles.length + selectedVideoFiles.length} / 6
+                  Images: {existingImages.length + selectedImageFiles.length}/4 &bull; Videos: {existingVideos.length + selectedVideoFiles.length}/2
                 </span>
               </div>
 
@@ -1016,90 +1054,96 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               )}
             </div>
 
-            {/* 2. Walkthrough Video */}
-            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem' }}>
-              <label className="form-label">Virtual Walkthrough Video Link</label>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', marginBottom: '0.75rem' }}>
-                <div>
+            {/* 2. Walkthrough Video & 3. Floor Plans side-by-side */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem' }}>
+              {/* Walkthrough Video */}
+              <div>
+                <label className="form-label">Walkthrough Video Link</label>
+                
+                <div style={{ marginBottom: '0.75rem' }}>
                   <input 
                     type="url" 
                     value={formData.customVideoUrl} 
                     onChange={(e) => setFormData(prev => ({ ...prev, customVideoUrl: e.target.value }))} 
                     className="form-input" 
-                    placeholder="Paste YouTube / Vimeo link here" 
+                    placeholder="Paste YouTube / Video link here" 
                   />
                 </div>
+
+                {existingVideos.length > 0 && (
+                  <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#0f172a' }}>
+                      <Video size={16} color="#d49a3f" />
+                      <span style={{ fontWeight: 600 }}>Current Cloud Video:</span>
+                      <a href={existingVideos[0].url} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>
+                        View Video Asset
+                      </a>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeExistingVideo(0)}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                    >
+                      Remove Video
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {existingVideos.length > 0 && (
-                <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#0f172a' }}>
-                    <Video size={16} color="#d49a3f" />
-                    <span style={{ fontWeight: 600 }}>Current Cloud Video:</span>
-                    <a href={existingVideos[0].url} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>
-                      View Video Asset
-                    </a>
+              {/* Floor Plans */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                  <label className="form-label" style={{ marginBottom: 0 }}>Floor Plans & Architectural Blueprints (Max 3)</label>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                    Floor Plans: {existingFloorPlans.length + selectedFloorPlanFiles.length}/3
+                  </span>
+                </div>
+                
+                <label htmlFor="floorplan-file-upload" className="btn btn-outline btn-sm" style={{ display: 'inline-flex', padding: '0.65rem 1.25rem', cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
+                  <FileText size={16} />
+                  <span>Upload Floor Plan Blueprint (Images / PDF)</span>
+                </label>
+                <input 
+                  id="floorplan-file-upload" 
+                  type="file" 
+                  style={{ display: 'none' }} 
+                  multiple 
+                  accept="image/*,application/pdf" 
+                  onChange={handleFloorPlanFileChange} 
+                />
+
+                {existingFloorPlans.length > 0 && (
+                  <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+                    {existingFloorPlans.map((fp, i) => (
+                      <div key={i} style={{ padding: '0.5rem 0.85rem', borderRadius: '8px', background: '#f1f5f9', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem' }}>
+                        <FileText size={14} color="#64748b" />
+                        <span>{fp.title || `Plan ${i + 1}`}</span>
+                        <button type="button" onClick={() => removeExistingFloorPlan(i)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeExistingVideo(0)}
-                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
-                  >
-                    Remove Video
-                  </button>
-                </div>
-              )}
-            </div>
+                )}
 
-            {/* 3. Floor Plans */}
-            <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem' }}>
-              <label className="form-label">Floor Plans & Architectural Blueprints</label>
-              
-              <label htmlFor="floorplan-file-upload" className="btn btn-outline btn-sm" style={{ display: 'inline-flex', padding: '0.65rem 1.25rem', cursor: 'pointer' }}>
-                <FileText size={16} />
-                <span>Upload Floor Plan Blueprint (Images / PDF)</span>
-              </label>
-              <input 
-                id="floorplan-file-upload" 
-                type="file" 
-                style={{ display: 'none' }} 
-                multiple 
-                accept="image/*,application/pdf" 
-                onChange={handleFloorPlanFileChange} 
-              />
-
-              {existingFloorPlans.length > 0 && (
-                <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
-                  {existingFloorPlans.map((fp, i) => (
-                    <div key={i} style={{ padding: '0.5rem 0.85rem', borderRadius: '8px', background: '#f1f5f9', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem' }}>
-                      <FileText size={14} color="#64748b" />
-                      <span>{fp.title || `Plan ${i + 1}`}</span>
-                      <button type="button" onClick={() => removeExistingFloorPlan(i)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {selectedFloorPlanFiles.length > 0 && (
-                <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {selectedFloorPlanFiles.map((file, i) => (
-                    <div key={i} className="upload-file-chip">
-                      <FileText size={14} color="#3b82f6" />
-                      <span className="file-name">{file.name}</span>
-                      <button 
-                        type="button" 
-                        onClick={() => setSelectedFloorPlanFiles(prev => prev.filter((_, idx) => idx !== i))}
-                        className="file-remove-btn"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                {selectedFloorPlanFiles.length > 0 && (
+                  <div style={{ marginTop: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {selectedFloorPlanFiles.map((file, i) => (
+                      <div key={i} className="upload-file-chip">
+                        <FileText size={14} color="#3b82f6" />
+                        <span className="file-name">{file.name}</span>
+                        <button 
+                          type="button" 
+                          onClick={() => setSelectedFloorPlanFiles(prev => prev.filter((_, idx) => idx !== i))}
+                          className="file-remove-btn"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

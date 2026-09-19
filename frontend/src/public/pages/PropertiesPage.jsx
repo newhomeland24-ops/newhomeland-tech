@@ -14,6 +14,7 @@ import {
 import { useProperties } from '../hooks/useProperties';
 import { useSettings } from '../../context/SettingsContext';
 import LandCard from '../components/LandCard';
+import axios from 'axios';
 
 const PropertiesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -27,6 +28,32 @@ const PropertiesPage = () => {
     status: searchParams.get('status') || 'All',
     sortBy: searchParams.get('sort') || 'newest'
   });
+
+  const [propertyTypes, setPropertyTypes] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [budgetOptions, setBudgetOptions] = useState([
+    { value: '5000000', label: 'Up to ₹ 50 Lakh' },
+    { value: '10000000', label: 'Up to ₹ 1 Crore' },
+    { value: '20000000', label: 'Up to ₹ 2 Crore' },
+    { value: '30000000', label: 'Up to ₹ 3 Crore' },
+    { value: '40000000', label: 'Up to ₹ 4 Crore' }
+  ]);
+
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        const res = await axios.get('/api/properties/filter-options');
+        if (res.data?.success && res.data?.data) {
+          if (Array.isArray(res.data.data.locations)) setLocations(res.data.data.locations);
+          if (Array.isArray(res.data.data.propertyTypes)) setPropertyTypes(res.data.data.propertyTypes);
+          if (Array.isArray(res.data.data.budgets) && res.data.data.budgets.length > 0) setBudgetOptions(res.data.data.budgets);
+        }
+      } catch (err) {
+        console.error('Error fetching filter options:', err);
+      }
+    };
+    fetchFilterOptions();
+  }, []);
 
   const { properties, loading, error } = useProperties(filters);
   const { settings } = useSettings();
@@ -194,14 +221,12 @@ const PropertiesPage = () => {
                   name="location"
                   value={filters.location}
                   onChange={handleFilterChange}
-                  className="w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white transition-all font-medium"
+                  className="form-select w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white transition-all font-medium"
                 >
-                  <option value="All">All Locations (NCR)</option>
-                  <option value="Faridabad">Faridabad</option>
-                  <option value="Gurgaon">Gurgaon</option>
-                  <option value="Noida">Noida</option>
-                  <option value="Greater Noida">Greater Noida</option>
-                  <option value="Delhi">Delhi</option>
+                  <option value="All">All Locations</option>
+                  {locations.map((loc) => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
                 </select>
               </div>
 
@@ -214,15 +239,12 @@ const PropertiesPage = () => {
                   name="propertyType"
                   value={filters.propertyType}
                   onChange={handleFilterChange}
-                  className="w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white transition-all font-medium"
+                  className="form-select w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white transition-all font-medium"
                 >
                   <option value="All">All Property Types</option>
-                  <option value="Apartment">Apartment</option>
-                  <option value="Villa">Luxury Villa</option>
-                  <option value="Plot">Plots & Land</option>
-                  <option value="Penthouse">Penthouse</option>
-                  <option value="Commercial">Commercial</option>
-                  <option value="Independent House">Independent House</option>
+                  {propertyTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
                 </select>
               </div>
 
@@ -235,14 +257,12 @@ const PropertiesPage = () => {
                   name="maxPrice"
                   value={filters.maxPrice}
                   onChange={handleFilterChange}
-                  className="w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white transition-all font-medium"
+                  className="form-select w-full h-11 px-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white transition-all font-medium"
                 >
                   <option value="">Any Budget</option>
-                  <option value="5000000">Up to ₹ 50 Lakh</option>
-                  <option value="10000000">Up to ₹ 1 Crore</option>
-                  <option value="20000000">Up to ₹ 2 Crore</option>
-                  <option value="50000000">Up to ₹ 5 Crore</option>
-                  <option value="100000000">Up to ₹ 10 Crore</option>
+                  {budgetOptions.map((tier) => (
+                    <option key={tier.value} value={tier.value}>{tier.label}</option>
+                  ))}
                 </select>
               </div>
             </div>

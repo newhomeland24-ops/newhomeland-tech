@@ -6,13 +6,14 @@ const errorHandler = (err, req, res, next) => {
 
   // Handle Zod Validation Errors
   if (err instanceof ZodError) {
-    const formattedErrors = err.errors.map(e => ({
-      path: e.path.join('.'),
+    const issues = err.issues || err.errors || [];
+    const formattedErrors = issues.map(e => ({
+      path: Array.isArray(e.path) ? e.path.join('.') : String(e.path || ''),
       message: e.message
     }));
     return res.status(400).json({
       success: false,
-      message: 'Validation Error',
+      message: formattedErrors.length > 0 ? formattedErrors.map(e => e.message).join(', ') : 'Validation Error',
       errors: formattedErrors,
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });
@@ -42,7 +43,7 @@ const errorHandler = (err, req, res, next) => {
     const errors = Object.values(err.errors).map(val => val.message);
     return res.status(400).json({
       success: false,
-      message: 'Database Validation Error',
+      message: errors.length > 0 ? errors.join(', ') : 'Database Validation Error',
       errors,
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
     });

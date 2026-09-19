@@ -232,7 +232,7 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
                       {property.propertyType}
                     </div>
                     <div style={{ fontSize: '0.82rem', color: '#475569', fontWeight: 600, marginTop: '0.3rem' }}>
-                      {bedroomsCount ? `${bedroomsCount} BHK • ` : ''}{effectiveArea ? `${effectiveArea} Sq. Ft` : 'Plots'}
+                      {(property.specifications?.bhkType || bedroomsCount) ? `${property.specifications?.bhkType || `${bedroomsCount} BHK`} • ` : ''}{effectiveArea ? `${effectiveArea} ${property.specifications?.areaUnit || property.areaUnit || 'Sq. Ft'}` : (property.propertyType === 'Land' ? 'Plots' : (property.listingType ? `For ${property.listingType}` : property.propertyType || 'Standard'))}
                     </div>
                   </td>
 

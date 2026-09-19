@@ -213,14 +213,18 @@ export default function InquiryDetailModal({
                     <Building2 size={18} />
                   </div>
                   <div>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
-                      {inquiry.propertyTitle || 'Property Listing'}
+                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span>{inquiry.propertyTitle || 'Property Listing'}</span>
+                      {inquiry.propertyId && (
+                        <span style={{ fontSize: '0.72rem', background: '#fef3c7', color: '#92400e', padding: '1px 7px', borderRadius: '4px', fontWeight: 700 }}>
+                          ID: #{inquiry.propertyId}
+                        </span>
+                      )}
                     </div>
                     {inquiry.propertyLocation && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8rem', color: '#64748b', marginTop: '2px' }}>
                         <MapPin size={12} color="#ef4444" />
-                        <span>{inquiry.propertyLocation}</span>
-                        {inquiry.propertyId && <span>• ID: #{inquiry.propertyId}</span>}
+                        <span>{typeof inquiry.propertyLocation === 'object' ? ([inquiry.propertyLocation.locality, inquiry.propertyLocation.city].filter(Boolean).join(', ') || inquiry.propertyLocation.address || '') : inquiry.propertyLocation}</span>
                       </div>
                     )}
                   </div>
@@ -357,7 +361,7 @@ export default function InquiryDetailModal({
             type="button"
             onClick={() => {
               if (onConnectWhatsApp) {
-                onConnectWhatsApp(inquiry.phone, inquiry.clientName, inquiry.propertyTitle);
+                onConnectWhatsApp(inquiry.phone, inquiry.clientName, inquiry.propertyTitle, inquiry.propertyId);
               }
             }}
             className="btn btn-gold btn-sm"

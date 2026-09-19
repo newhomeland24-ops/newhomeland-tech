@@ -4,6 +4,14 @@ import axios from 'axios';
 
 const FilterBar = ({ onFilterChange }) => {
   const [propertyTypes, setPropertyTypes] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [budgetOptions, setBudgetOptions] = useState([
+    { value: '5000000', label: 'Up to ₹ 50 Lakh' },
+    { value: '10000000', label: 'Up to ₹ 1 Crore' },
+    { value: '20000000', label: 'Up to ₹ 2 Crore' },
+    { value: '30000000', label: 'Up to ₹ 3 Crore' },
+    { value: '40000000', label: 'Up to ₹ 4 Crore' }
+  ]);
   const [filters, setFilters] = useState({
     location: 'All',
     propertyType: 'All',
@@ -11,17 +19,25 @@ const FilterBar = ({ onFilterChange }) => {
   });
 
   useEffect(() => {
-    const fetchActiveTypes = async () => {
+    const fetchFilterOptions = async () => {
       try {
-        const res = await axios.get('/api/properties/types/active');
-        if (res.data.success) {
-          setPropertyTypes(res.data.data);
+        const res = await axios.get('/api/properties/filter-options');
+        if (res.data?.success && res.data?.data) {
+          if (Array.isArray(res.data.data.locations)) {
+            setLocations(res.data.data.locations);
+          }
+          if (Array.isArray(res.data.data.propertyTypes)) {
+            setPropertyTypes(res.data.data.propertyTypes);
+          }
+          if (Array.isArray(res.data.data.budgets) && res.data.data.budgets.length > 0) {
+            setBudgetOptions(res.data.data.budgets);
+          }
         }
       } catch (error) {
-        console.error('Error fetching active property types:', error);
+        console.error('Error fetching dynamic filter options:', error);
       }
     };
-    fetchActiveTypes();
+    fetchFilterOptions();
   }, []);
 
   useEffect(() => {
@@ -30,6 +46,7 @@ const FilterBar = ({ onFilterChange }) => {
       const appliedFilters = {
         propertyType: filters.propertyType,
         maxPrice: filters.maxPrice,
+        location: filters.location !== 'All' ? filters.location : '',
         search: filters.location !== 'All' ? filters.location : ''
       };
       if (onFilterChange) {
@@ -50,6 +67,7 @@ const FilterBar = ({ onFilterChange }) => {
     const appliedFilters = {
       propertyType: filters.propertyType,
       maxPrice: filters.maxPrice,
+      location: filters.location !== 'All' ? filters.location : '',
       search: filters.location !== 'All' ? filters.location : ''
     };
     if (onFilterChange) {
@@ -71,14 +89,12 @@ const FilterBar = ({ onFilterChange }) => {
             value={filters.location}
             onChange={handleChange}
             className="search-select"
-            style={{ borderRadius: '12px', borderColor: '#94a3b8', height: '48px', padding: '0 1rem', fontWeight: 500 }}
+            style={{ borderRadius: '12px', borderColor: '#94a3b8', height: '48px', padding: '0 2.5rem 0 1rem', fontWeight: 500 }}
           >
-            <option value="All">All Locations (NCR)</option>
-            <option value="Faridabad">Faridabad</option>
-            <option value="Gurgaon">Gurgaon</option>
-            <option value="Noida">Noida</option>
-            <option value="Greater Noida">Greater Noida</option>
-            <option value="Delhi">Delhi</option>
+            <option value="All">All Locations</option>
+            {locations.map((loc) => (
+              <option key={loc} value={loc}>{loc}</option>
+            ))}
           </select>
         </div>
 
@@ -93,7 +109,7 @@ const FilterBar = ({ onFilterChange }) => {
             value={filters.propertyType}
             onChange={handleChange}
             className="search-select"
-            style={{ borderRadius: '12px', borderColor: '#94a3b8', height: '48px', padding: '0 1rem', fontWeight: 500 }}
+            style={{ borderRadius: '12px', borderColor: '#94a3b8', height: '48px', padding: '0 2.5rem 0 1rem', fontWeight: 500 }}
           >
             <option value="All">All Property Types</option>
             {propertyTypes.map((type) => (
@@ -113,14 +129,12 @@ const FilterBar = ({ onFilterChange }) => {
             value={filters.maxPrice}
             onChange={handleChange}
             className="search-select"
-            style={{ borderRadius: '12px', borderColor: '#94a3b8', height: '48px', padding: '0 1rem', fontWeight: 500 }}
+            style={{ borderRadius: '12px', borderColor: '#94a3b8', height: '48px', padding: '0 2.5rem 0 1rem', fontWeight: 500 }}
           >
             <option value="">Any Budget</option>
-            <option value="5000000">Up to ₹ 50 Lakh</option>
-            <option value="10000000">Up to ₹ 1 Crore</option>
-            <option value="20000000">Up to ₹ 2 Crore</option>
-            <option value="50000000">Up to ₹ 5 Crore</option>
-            <option value="100000000">Up to ₹ 10 Crore</option>
+            {budgetOptions.map((tier) => (
+              <option key={tier.value} value={tier.value}>{tier.label}</option>
+            ))}
           </select>
         </div>
 

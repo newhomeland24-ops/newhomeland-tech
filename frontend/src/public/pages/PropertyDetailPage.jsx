@@ -59,6 +59,9 @@ const PropertyDetailPage = () => {
   const effectivePrice = property?.pricing?.price;
   const locAddress = typeof property?.location === 'object' ? property.location.address : property?.location;
   const locCity = typeof property?.location === 'object' ? property.location.city : 'Delhi NCR';
+  const locationText = typeof property?.location === 'object'
+    ? [property.location.address, property.location.locality, property.location.city, property.location.state, property.location.zipCode].filter(Boolean).join(', ')
+    : (locAddress || locCity);
   const cleanDesc = property?.description || `Explore ${property?.title} located in ${locCity}. Verified legal title clearance.`;
   const coverImage = (property?.media?.images?.length > 0)
     ? property.media.images[0].url
@@ -205,7 +208,7 @@ const PropertyDetailPage = () => {
   const cleanPhone = rawPhone.replace(/[^\d+]/g, '');
 
   const whatsappMessage = encodeURIComponent(
-    `Hello ${businessName}, I am interested in property "${property.title}" (ID: ${property.propertyId || property._id}) located in ${property.location} listed for ${formatPrice(property.price)}. Please share legal paperwork and site visit details.`
+    `Hello ${businessName}, I am interested in property "${property.title}" (ID: ${property.propertyId || property._id}) located in ${locationText} listed for ${formatPrice(effectivePrice || property.price)}. Please share legal paperwork and site visit details.`
   );
 
   const handleShare = () => {
@@ -333,7 +336,6 @@ const PropertyDetailPage = () => {
   );
 
   const effectiveArea = property.specifications?.carpetAreaSqFt;
-  const locationText = [property.location?.locality, property.location?.city].filter(Boolean).join(', ') || property.location?.address || 'Delhi NCR';
 
   // 2. Property Header / Details Card (Title, Price, Badges, Listing ID)
   const headerCard = (
@@ -430,8 +432,8 @@ const PropertyDetailPage = () => {
 
       <div className="specs-grid">
         <div className="spec-box">
-          <span className="spec-box-label">Total Area</span>
-          <span className="spec-box-val">{effectiveArea ? `${effectiveArea} Sq. Ft` : 'Plots'}</span>
+          <span className="spec-box-label">{effectiveArea ? 'Total Area' : (property.specifications?.bhkType ? 'Configuration' : 'Area')}</span>
+          <span className="spec-box-val">{effectiveArea ? `${effectiveArea} ${property.specifications?.areaUnit || property.areaUnit || 'Sq. Ft'}` : (property.specifications?.bhkType || (property.propertyType === 'Land' ? 'Plots' : 'N/A'))}</span>
         </div>
 
         <div className="spec-box">

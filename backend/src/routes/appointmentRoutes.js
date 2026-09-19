@@ -26,7 +26,7 @@ router.post('/', async (req, res, next) => {
     }
 
     const appointment = new Appointment({
-      propertyId: propertyId || null,
+      propertyId: propertyId ? String(propertyId).trim().toUpperCase() : null,
       propertyTitle: propertyTitle || '',
       propertyLocation: propertyLocation || '',
       clientName: finalName,

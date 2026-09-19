@@ -20,23 +20,39 @@ export const useAdminProperties = () => {
     }
   }, []);
 
-  const createProperty = async (data) => {
+  const createProperty = async (data, onProgress) => {
     try {
-      const res = await axios.post('/api/properties', data);
+      const res = await axios.post('/api/properties', data, {
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(percentCompleted);
+          }
+        }
+      });
       setProperties(prev => [res.data, ...prev]);
       return { success: true, data: res.data };
     } catch (err) {
-      return { success: false, message: err.response?.data?.message || 'Failed to create property' };
+      const errorMsg = err.response?.data?.message || (Array.isArray(err.response?.data?.errors) ? err.response.data.errors.join(', ') : 'Failed to create property');
+      return { success: false, message: errorMsg };
     }
   };
 
-  const updateProperty = async (propertyId, data) => {
+  const updateProperty = async (propertyId, data, onProgress) => {
     try {
-      const res = await axios.put(`/api/properties/${propertyId}`, data);
+      const res = await axios.put(`/api/properties/${propertyId}`, data, {
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onProgress(percentCompleted);
+          }
+        }
+      });
       setProperties(prev => prev.map(p => (p.propertyId === propertyId || p._id === propertyId) ? res.data : p));
       return { success: true, data: res.data };
     } catch (err) {
-      return { success: false, message: err.response?.data?.message || 'Failed to update property' };
+      const errorMsg = err.response?.data?.message || (Array.isArray(err.response?.data?.errors) ? err.response.data.errors.join(', ') : 'Failed to update property');
+      return { success: false, message: errorMsg };
     }
   };
 

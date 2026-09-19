@@ -1,19 +1,19 @@
 const Property = require('../models/Property');
 const { uploadMediaBatch, deleteCloudinaryAssets } = require('../middleware/upload');
 
-// Generate prefix from location string (locality or city)
-const getLocationPrefix = (seed = 'LOC') => {
-  const lettersOnly = (seed || '').replace(/[^a-zA-Z]/g, '').toUpperCase();
+// Generate prefix from city string (first 3 letters of the city)
+const getLocationPrefix = (city = '') => {
+  const lettersOnly = (city || '').replace(/[^a-zA-Z]/g, '').toUpperCase();
   let prefix = lettersOnly.slice(0, 3);
   if (prefix.length < 3) {
-    prefix = (prefix + 'LOC').slice(0, 3);
+    prefix = (prefix + 'PRP').slice(0, 3);
   }
   return prefix;
 };
 
-// Generate unique propertyId in format "{LOC}-XXXXX"
-const generateUniquePropertyId = async (seed = '') => {
-  const prefix = getLocationPrefix(seed);
+// Generate unique propertyId in format "{CITY}-XXXXX"
+const generateUniquePropertyId = async (city = '') => {
+  const prefix = getLocationPrefix(city);
   let isUnique = false;
   let customId = '';
   while (!isUnique) {
@@ -37,12 +37,14 @@ const normalizePropertyPayload = (body) => {
   if (body.pricing) {
     payload.pricing = {
       price: Number(body.pricing.price) || 0,
+      priceType: body.pricing.priceType || 'Total',
       priceNegotiable: Boolean(body.pricing.priceNegotiable),
       maintenanceCharges: Number(body.pricing.maintenanceCharges) || 0
     };
   } else if (body.price !== undefined) {
     payload.pricing = {
       price: Number(body.price) || 0,
+      priceType: body.priceType || 'Total',
       priceNegotiable: Boolean(body.priceNegotiable),
       maintenanceCharges: Number(body.maintenanceCharges) || 0
     };
@@ -63,8 +65,8 @@ const normalizePropertyPayload = (body) => {
     const parts = body.location.split(',').map(s => s.trim());
     payload.location = {
       address: body.location,
-      locality: parts[0] || 'Prime Area',
-      city: parts[1] || parts[0] || 'Hyderabad',
+      locality: parts.length > 1 ? parts[0] : 'Prime Area',
+      city: parts.length > 1 ? parts[parts.length - 1] : parts[0] || 'Hyderabad',
       state: 'Telangana',
       pincode: '',
       landmark: '',
@@ -80,6 +82,8 @@ const normalizePropertyPayload = (body) => {
       balconies: Number(body.specifications.balconies) || 0,
       carpetAreaSqFt: Number(body.specifications.carpetAreaSqFt) || Number(body.area) || 0,
       superBuiltUpAreaSqFt: Number(body.specifications.superBuiltUpAreaSqFt) || 0,
+      areaUnit: (body.specifications.areaUnit || body.areaUnit || '').trim(),
+      bhkType: (body.specifications.bhkType || body.bhkType || '').trim(),
       furnishingStatus: body.specifications.furnishingStatus || 'Unfurnished',
       facing: body.specifications.facing || '',
       floorNumber: Number(body.specifications.floorNumber) || 0,
@@ -87,13 +91,15 @@ const normalizePropertyPayload = (body) => {
       parkingSlots: Number(body.specifications.parkingSlots) || 0,
       ageOfPropertyYears: Number(body.specifications.ageOfPropertyYears) || 0
     };
-  } else if (body.area !== undefined) {
+  } else if (body.area !== undefined || body.areaUnit !== undefined) {
     payload.specifications = {
       bedrooms: Number(body.bedrooms) || 0,
       bathrooms: Number(body.bathrooms) || 0,
       balconies: Number(body.balconies) || 0,
       carpetAreaSqFt: Number(body.area) || 0,
       superBuiltUpAreaSqFt: Number(body.superBuiltUpAreaSqFt) || 0,
+      areaUnit: (body.areaUnit || '').trim(),
+      bhkType: (body.bhkType || '').trim(),
       furnishingStatus: body.furnishingStatus || 'Unfurnished',
       facing: body.facing || '',
       floorNumber: Number(body.floorNumber) || 0,
@@ -332,7 +338,7 @@ const createProperty = asyncHandler(async (req, res) => {
       }
       payload.propertyId = customPropertyId;
     } else {
-      payload.propertyId = await generateUniquePropertyId(payload.location?.locality || payload.location?.city);
+      payload.propertyId = await generateUniquePropertyId(payload.location?.city || payload.location?.locality || '');
     }
 
     const property = await Property.create(payload);
@@ -591,6 +597,65 @@ const getAllAmenities = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get dynamic filter options based on available properties
+ * @route   GET /api/properties/filter-options
+ * @access  Public
+ */
+const getFilterOptions = asyncHandler(async (req, res) => {
+  const query = {
+    status: { $in: ['Available', 'published'] },
+    publishedAt: { $lte: new Date() }
+  };
+
+  // 1. Locations: only cities where published/available properties exist
+  const rawCities = await Property.distinct('location.city', query);
+  const locations = rawCities
+    .filter(c => c && typeof c === 'string' && c.trim())
+    .map(c => c.trim())
+    .sort((a, b) => a.localeCompare(b));
+
+  // 2. Property Types: only types where published/available properties exist
+  const rawTypes = await Property.distinct('propertyType', query);
+  const propertyTypes = rawTypes
+    .filter(t => t && typeof t === 'string' && t.trim())
+    .map(t => t.trim())
+    .sort((a, b) => a.localeCompare(b));
+
+  // 3. Dynamic Budget Options (max budget 4 Crore)
+  const baseTiers = [
+    { value: '5000000', label: 'Up to ₹ 50 Lakh', amount: 5000000 },
+    { value: '10000000', label: 'Up to ₹ 1 Crore', amount: 10000000 },
+    { value: '20000000', label: 'Up to ₹ 2 Crore', amount: 20000000 },
+    { value: '30000000', label: 'Up to ₹ 3 Crore', amount: 30000000 },
+    { value: '40000000', label: 'Up to ₹ 4 Crore', amount: 40000000 }
+  ];
+
+  const rawPrices = await Property.distinct('pricing.price', query);
+  const validPrices = rawPrices.filter(p => typeof p === 'number' && p > 0);
+
+  let budgets = baseTiers;
+  if (validPrices.length > 0) {
+    const maxListedPrice = Math.max(...validPrices);
+    budgets = baseTiers.filter((tier, index) => {
+      // Exclude higher tiers if a previous tier already encompasses all listed properties
+      if (index > 0 && baseTiers[index - 1].amount >= maxListedPrice) {
+        return false;
+      }
+      return true;
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      locations,
+      propertyTypes,
+      budgets: budgets.map(({ value, label }) => ({ value, label }))
+    }
+  });
+});
+
 module.exports = {
   getPublicProperties,
   getPublicProperty,
@@ -603,5 +668,6 @@ module.exports = {
   getAllPropertyTypes,
   getActivePropertyTypes,
   getAllAreaUnits,
-  getAllAmenities
+  getAllAmenities,
+  getFilterOptions
 };

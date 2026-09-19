@@ -8,7 +8,8 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Home
 } from 'lucide-react';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import { getOptimizedImageUrl } from '../../utils/cloudinaryOptimizer';
@@ -25,10 +26,11 @@ const LandCard = ({ property }) => {
   const isSold = property.status === 'sold' || property.status === 'Sold';
   const locationText = [property.location?.locality, property.location?.city].filter(Boolean).join(', ') || property.location?.address || 'Delhi NCR';
   const typeText = property.propertyType || 'Residential';
-  const unitText = 'Sq. Ft';
+  const unitText = property.specifications?.areaUnit || property.areaUnit || 'Sq. Ft';
   const effectiveArea = property.specifications?.carpetAreaSqFt;
   const effectivePrice = property.pricing?.price;
   const bedroomsCount = property.specifications?.bedrooms;
+  const bhkText = property.specifications?.bhkType || (bedroomsCount > 0 ? `${bedroomsCount} BHK` : '');
 
   // Format price
   const formatPrice = (price) => {
@@ -286,14 +288,34 @@ const LandCard = ({ property }) => {
         {/* Area & Configuration Specification */}
         <div style={{ paddingTop: '0.65rem', borderTop: '1px solid #f1f5f9', marginBottom: '1.35rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className="flex items-center gap-2 text-slate-700 text-sm font-medium">
-            <Maximize2 size={16} color="#64748b" />
-            <span style={{ fontSize: '0.95rem' }}>{effectiveArea ? `${effectiveArea} ${unitText}` : 'Plots'}</span>
+            {effectiveArea ? (
+              <>
+                <Maximize2 size={16} color="#64748b" />
+                <span style={{ fontSize: '0.95rem' }}>{effectiveArea} {unitText}</span>
+              </>
+            ) : bhkText ? (
+              <>
+                <Home size={16} color="#64748b" />
+                <span style={{ fontSize: '0.95rem', fontWeight: 600, color: '#1e293b' }}>{bhkText}</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 size={16} color="#64748b" />
+                <span style={{ fontSize: '0.95rem' }}>
+                  {property.propertyType === 'Land' ? 'Plots' : (property.listingType ? `For ${property.listingType}` : property.propertyType || 'Standard')}
+                </span>
+              </>
+            )}
           </div>
-          {bedroomsCount > 0 && (
+          {effectiveArea && bhkText ? (
             <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#334155', background: '#f1f5f9', padding: '2px 8px', borderRadius: '6px' }}>
-              {bedroomsCount} BHK
+              {bhkText}
             </span>
-          )}
+          ) : (!effectiveArea && bhkText && property.listingType) ? (
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#b87d28', background: '#fdf6eb', padding: '2px 8px', borderRadius: '6px' }}>
+              For {property.listingType}
+            </span>
+          ) : null}
         </div>
 
         {/* Card Footer: Price & Actions */}

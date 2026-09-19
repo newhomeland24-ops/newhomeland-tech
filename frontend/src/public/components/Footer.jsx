@@ -1,10 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, Phone, Mail, MapPin, Clock, Shield } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
+import axios from 'axios';
 
 export default function Footer() {
   const { settings } = useSettings();
+  const [propertyTypes, setPropertyTypes] = useState([]);
+
+  useEffect(() => {
+    const fetchActiveTypes = async () => {
+      try {
+        const res = await axios.get('/api/properties/types/active');
+        if (res.data?.success && Array.isArray(res.data?.data)) {
+          setPropertyTypes(res.data.data);
+        }
+      } catch (err) {
+        console.error('Error fetching property types for footer:', err);
+      }
+    };
+    fetchActiveTypes();
+  }, []);
 
   const rawPhone = settings.phone || '+91 98765 43210';
   const cleanPhone = rawPhone.replace(/[^\d+]/g, '');
@@ -43,10 +59,19 @@ export default function Footer() {
           <div>
             <h4 className="footer-col-title">Property Types</h4>
             <ul className="footer-links">
-              <li><Link to="/properties" className="footer-link">Residential Plots</Link></li>
-              <li><Link to="/properties" className="footer-link">Commercial Plots</Link></li>
-              <li><Link to="/properties" className="footer-link">Luxury Villas</Link></li>
-              <li><Link to="/properties" className="footer-link">Agricultural & Industrial Land</Link></li>
+              {propertyTypes.length > 0 ? (
+                propertyTypes.map((type) => (
+                  <li key={type}>
+                    <Link to={`/properties?property_type=${encodeURIComponent(type)}`} className="footer-link">
+                      {type}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <li>
+                  <Link to="/properties" className="footer-link">All Properties</Link>
+                </li>
+              )}
             </ul>
           </div>
 

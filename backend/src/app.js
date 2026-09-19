@@ -68,8 +68,8 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-app.use(express.json({ limit: '50kb' })); // limit payload size
-app.use(express.urlencoded({ extended: true, limit: '50kb' }));
+app.use(express.json({ limit: '10mb' })); // safe payload size for listing data
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // Lightweight Health Check (Instant 200 OK for Render & UptimeRobot pings without DB dependency)

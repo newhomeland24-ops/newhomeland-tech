@@ -134,10 +134,10 @@ const AdminDashboardPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSaveProperty = async (data) => {
+  const handleSaveProperty = async (data, onProgress) => {
     if (editingProperty) {
       const propId = editingProperty.propertyId || editingProperty._id;
-      const res = await updateProperty(propId, data);
+      const res = await updateProperty(propId, data, onProgress);
       if (res && res.success === false) {
         return res;
       }
@@ -146,7 +146,7 @@ const AdminDashboardPage = () => {
       setActiveTab('properties');
       return { success: true };
     } else {
-      const res = await createProperty(data);
+      const res = await createProperty(data, onProgress);
       if (res && res.success === false) {
         return res;
       }
@@ -202,7 +202,7 @@ const AdminDashboardPage = () => {
 Your site visit booking with *${businessName}* has been *CONFIRMED*! ✅
 
 📋 *Booking Details:*
-• Property: ${app.propertyTitle || 'Property Inspection'} ${app.propertyLocation ? `(${app.propertyLocation})` : ''}
+• Property: ${app.propertyTitle || 'Property Inspection'} ${app.propertyId ? `[ID: #${app.propertyId}]` : ''} ${app.propertyLocation ? `(${app.propertyLocation})` : ''}
 • Date: ${app.preferredDate}
 • Time Slot: ${app.preferredTime}
 • Visitors: ${app.visitorsCount || '1-2 people'}
@@ -241,14 +241,14 @@ Thank you for choosing ${businessName}!`;
 This is a reminder regarding your *CONFIRMED* site visit booking with *${businessName}*! ✅
 
 📋 *Booking Details:*
-• Property: ${app.propertyTitle || 'Property Inspection'} ${app.propertyLocation ? `(${app.propertyLocation})` : ''}
+• Property: ${app.propertyTitle || 'Property Inspection'} ${app.propertyId ? `[ID: #${app.propertyId}]` : ''} ${app.propertyLocation ? `(${app.propertyLocation})` : ''}
 • Date: ${app.preferredDate}
 • Time Slot: ${app.preferredTime}
 • Visitors: ${app.visitorsCount || '1-2 people'}
 
 Our property advisor is ready to assist you. Contact us at ${brokerPhone} for any inquiries.`;
     } else {
-      msgText = `Hello ${app.clientName}, this is ${businessName} following up on your requested site visit for "${app.propertyTitle || 'our property'}" on ${app.preferredDate} (${app.preferredTime}). How may we assist you today?`;
+      msgText = `Hello ${app.clientName}, this is ${businessName} following up on your requested site visit for "${app.propertyTitle || 'our property'}"${app.propertyId ? ` (ID: #${app.propertyId})` : ''} on ${app.preferredDate} (${app.preferredTime}). How may we assist you today?`;
     }
 
     window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msgText)}`, '_blank', 'noopener,noreferrer');
@@ -267,10 +267,11 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
   };
 
   // WhatsApp Connect Helper for Inquiries
-  const handleConnectWhatsApp = (phone, name, subject = '') => {
+  const handleConnectWhatsApp = (phone, name, subject = '', propertyId = '') => {
     const cleanPhone = phone.replace(/[^\d]/g, '');
     const businessName = settings.business_name || 'NewHomeDevelopers';
-    const msg = encodeURIComponent(`Hello ${name}, this is ${businessName} following up on your property inquiry${subject ? ` regarding "${subject}"` : ''}. How may we assist you today?`);
+    const propIdText = propertyId ? ` (ID: #${propertyId})` : '';
+    const msg = encodeURIComponent(`Hello ${name}, this is ${businessName} following up on your property inquiry${subject ? ` regarding "${subject}"${propIdText}` : ''}. How may we assist you today?`);
     window.open(`https://wa.me/${cleanPhone}?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
@@ -305,6 +306,15 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
 
   const formatPrice = (val) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
+  };
+
+  const formatLocation = (loc) => {
+    if (!loc) return 'N/A';
+    if (typeof loc === 'string') return loc;
+    if (typeof loc === 'object') {
+      return [loc.locality, loc.city].filter(Boolean).join(', ') || loc.address || 'N/A';
+    }
+    return 'N/A';
   };
 
   return (
@@ -599,13 +609,13 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
                               <div style={{ fontWeight: 700, color: '#0f172a' }}>{p.title}</div>
                             </td>
                             <td>
-                              <span style={{ color: '#64748b', fontSize: '0.86rem' }}>{p.location}</span>
+                              <span style={{ color: '#64748b', fontSize: '0.86rem' }}>{formatLocation(p.location)}</span>
                             </td>
                             <td>
                               <span className="badge-type-pill">{p.propertyType}</span>
                             </td>
                             <td>
-                              <span style={{ fontWeight: 700, color: '#b87d28' }}>{formatPrice(p.price)}</span>
+                              <span style={{ fontWeight: 700, color: '#b87d28' }}>{formatPrice(p.pricing?.price ?? p.price ?? 0)}</span>
                             </td>
                             <td>
                               <span className={`badge-status ${p.status}`}>
@@ -744,9 +754,22 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
                               <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.88rem' }}>
                                 {inq.propertyTitle || 'General Inquiry'}
                               </div>
-                              {inq.propertyLocation && (
-                                <div style={{ fontSize: '0.76rem', color: '#64748b' }}>{inq.propertyLocation}</div>
-                              )}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
+                                {inq.propertyId && (
+                                  <a
+                                    href={`/property/${inq.propertyId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ fontSize: '0.72rem', background: '#fef3c7', color: '#92400e', padding: '1px 6px', borderRadius: '4px', fontWeight: 700, textDecoration: 'none' }}
+                                    title="View Property Page"
+                                  >
+                                    ID: #{inq.propertyId}
+                                  </a>
+                                )}
+                                {inq.propertyLocation && (
+                                  <span style={{ fontSize: '0.76rem', color: '#64748b' }}>{formatLocation(inq.propertyLocation)}</span>
+                                )}
+                              </div>
                             </td>
                             <td>
                               <div 
@@ -802,7 +825,7 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleConnectWhatsApp(inq.phone, inq.clientName, inq.propertyTitle)}
+                                  onClick={() => handleConnectWhatsApp(inq.phone, inq.clientName, inq.propertyTitle, inq.propertyId)}
                                   className="btn-action-icon"
                                   style={{ color: '#16a34a', background: '#f0fdf4', borderColor: '#bbf7d0' }}
                                   title="Chat on WhatsApp"
@@ -911,9 +934,22 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
                               <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.88rem' }}>
                                 {app.propertyTitle || 'Scheduled Property Inspection'}
                               </div>
-                              {app.propertyLocation && (
-                                <div style={{ fontSize: '0.76rem', color: '#64748b' }}>{app.propertyLocation}</div>
-                              )}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
+                                {app.propertyId && (
+                                  <a
+                                    href={`/property/${app.propertyId}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ fontSize: '0.72rem', background: '#fef3c7', color: '#92400e', padding: '1px 6px', borderRadius: '4px', fontWeight: 700, textDecoration: 'none' }}
+                                    title="View Property Page"
+                                  >
+                                    ID: #{app.propertyId}
+                                  </a>
+                                )}
+                                {app.propertyLocation && (
+                                  <span style={{ fontSize: '0.76rem', color: '#64748b' }}>{formatLocation(app.propertyLocation)}</span>
+                                )}
+                              </div>
                             </td>
                             <td>
                               <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem' }}>
