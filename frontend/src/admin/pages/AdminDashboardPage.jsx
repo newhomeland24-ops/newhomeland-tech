@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../hooks/useAdminAuth';
 import { useAdminProperties } from '../hooks/useAdminProperties';
@@ -8,6 +8,9 @@ import UploadForm from '../components/UploadForm';
 import AdminSidebar from '../components/AdminSidebar';
 import PropertyDetailModal from '../components/PropertyDetailModal';
 import InquiryDetailModal from '../components/InquiryDetailModal';
+import LeadNotificationPopup from '../components/LeadNotificationPopup';
+import LeadNotificationBell from '../components/LeadNotificationBell';
+import { playLeadNotificationChime } from '../../utils/notificationSound';
 import AdminSettings from './AdminSettings';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import { useSettings } from '../../context/SettingsContext';
@@ -65,6 +68,26 @@ const AdminDashboardPage = () => {
   const [appointments, setAppointments] = useState([]);
   const [appointmentsLoading, setAppointmentsLoading] = useState(false);
 
+  // Lead Notification Popups, Mobile Push & Audio State
+  const [leadPopups, setLeadPopups] = useState([]);
+  const [recentLeads, setRecentLeads] = useState([]);
+  const [bellUnreadCount, setBellUnreadCount] = useState(0);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    return localStorage.getItem('adminLeadSound') !== 'false';
+  });
+  const knownInquiryIdsRef = useRef(new Set());
+  const knownAppointmentIdsRef = useRef(new Set());
+  const hasInitializedLeadsRef = useRef(false);
+
+  // Register Service Worker for Mobile OS Lockscreen & Status Bar Notifications
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.warn('Service worker registration note:', err);
+      });
+    }
+  }, []);
+
   useEffect(() => {
     document.title = `Operations Console | ${settings.business_name || 'Admin'}`;
   }, [settings.business_name]);
@@ -75,12 +98,181 @@ const AdminDashboardPage = () => {
     }
   }, [isAuthenticated, authLoading, navigate]);
 
+  // Mobile OS Status Bar & Lock Screen Notification Delivery
+  const triggerOsPushNotification = useCallback((title, body, tag = 'lead_alert') => {
+    // 1. Device Vibration (Haptic feedback for phones like incoming messages)
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate([300, 150, 300, 150, 300]);
+      } catch (e) {}
+    }
+
+    // 2. Mobile Service Worker Notification (Shows in Mobile Notification Panel & Lockscreen)
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && Notification.permission === 'granted') {
+      navigator.serviceWorker.ready.then((reg) => {
+        reg.showNotification(title, {
+          body,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          tag,
+          renotify: true,
+          requireInteraction: true,
+          vibrate: [300, 150, 300, 150, 300],
+          data: { url: '/admin/dashboard' }
+        });
+      }).catch(() => {
+        try {
+          new Notification(title, { body, icon: '/favicon.ico' });
+        } catch (e) {}
+      });
+    } else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(title, { body, icon: '/favicon.ico' });
+      } catch (e) {}
+    }
+  }, []);
+
+  // Trigger Lead Notification Popup & Sound
+  const triggerLeadAlert = useCallback((leadData) => {
+    if (!leadData) return;
+
+    const popupItem = {
+      id: leadData.id || leadData._id || 'lead_' + Date.now() + '_' + Math.random(),
+      type: leadData.type || 'enquiry',
+      clientName: leadData.clientName || 'Interested Client',
+      phone: leadData.phone || '',
+      propertyTitle: leadData.propertyTitle || 'Property',
+      propertyId: leadData.propertyId || '',
+      message: leadData.message || '',
+      preferredDate: leadData.preferredDate || '',
+      preferredTime: leadData.preferredTime || '',
+      visitorsCount: leadData.visitorsCount || '',
+      timestamp: Date.now(),
+      rawLead: leadData
+    };
+
+    // Play chime if enabled
+    if (soundEnabled) {
+      playLeadNotificationChime(popupItem.type);
+    }
+
+    // Trigger Mobile OS notification in phone's notification panel & lockscreen
+    const title = popupItem.type === 'enquiry'
+      ? `🔔 New Inquiry: ${popupItem.clientName}`
+      : `📅 New Site Visit: ${popupItem.clientName}`;
+    const body = popupItem.type === 'enquiry'
+      ? `Interested in ${popupItem.propertyTitle}. Contact: ${popupItem.phone}`
+      : `Site visit for ${popupItem.propertyTitle} on ${popupItem.preferredDate} (${popupItem.preferredTime})`;
+
+    triggerOsPushNotification(title, body, popupItem.id);
+
+    // Increment unread count badge for the bell icon
+    setBellUnreadCount((prev) => prev + 1);
+
+    // Add to floating popups queue (max 4 on screen)
+    setLeadPopups((prev) => {
+      if (prev.some((p) => p.id === popupItem.id)) return prev;
+      return [popupItem, ...prev].slice(0, 4);
+    });
+
+    // Add to bell dropdown feed (max 25)
+    setRecentLeads((prev) => {
+      if (prev.some((l) => (l._id || l.id) === popupItem.id)) return prev;
+      return [{ ...popupItem, isNew: true }, ...prev].slice(0, 25);
+    });
+  }, [soundEnabled, triggerOsPushNotification]);
+
+  const handleDismissPopup = useCallback((id) => {
+    setLeadPopups((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  // Single-toast sound toggle (prevents duplicate toast info)
+  const handleToggleSound = () => {
+    const next = !soundEnabled;
+    setSoundEnabled(next);
+    localStorage.setItem('adminLeadSound', String(next));
+    if (next) {
+      playLeadNotificationChime('test');
+      toast.success('Alert chime enabled', { id: 'admin-sound-toggle-toast' });
+    } else {
+      toast('Alert chime muted', { icon: '🔇', id: 'admin-sound-toggle-toast' });
+    }
+  };
+
+  // Clear unread bell count when the admin opens and sees the notification bell
+  const handleOpenBell = () => {
+    setBellUnreadCount(0);
+    setRecentLeads((prev) => prev.map((l) => ({ ...l, isNew: false })));
+  };
+
+  const handleClearAllLeads = () => {
+    setRecentLeads([]);
+    setBellUnreadCount(0);
+  };
+
+  const handleTestAlert = () => {
+    const isEnquiry = Math.random() > 0.5;
+    const testLead = isEnquiry ? {
+      id: 'test_' + Date.now(),
+      type: 'enquiry',
+      clientName: 'Vikram Malhotra',
+      phone: '+91 98765 43210',
+      propertyTitle: 'Sunset Boulevard Luxury Villa #12',
+      propertyId: 'PROP-104',
+      message: 'Hello, I want to review the registry paperwork and schedule an inspection this weekend.',
+      isTest: true
+    } : {
+      id: 'test_' + Date.now(),
+      type: 'appointment',
+      clientName: 'Pooja Kashyap',
+      phone: '+91 98112 34567',
+      propertyTitle: 'Greenwood Heights Penthouse #402',
+      propertyId: 'PROP-208',
+      preferredDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      preferredTime: '10:00 AM - 12:00 PM',
+      visitorsCount: '2 people',
+      isTest: true
+    };
+
+    triggerLeadAlert(testLead);
+
+    // If permission not granted, request permission so mobile lockscreen alerts work
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission().then((perm) => {
+        if (perm === 'granted') {
+          triggerOsPushNotification(
+            isEnquiry ? '🔔 New Inquiry: Vikram Malhotra' : '📅 New Site Visit: Pooja Kashyap',
+            'Mobile push notification active in notification panel!'
+          );
+        }
+      });
+    }
+
+    toast.success('Test notification triggered!', { id: 'test-notification-toast' });
+  };
+
+  const handleViewLead = (lead) => {
+    if (lead.type === 'enquiry') {
+      setActiveTab('enquiries');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const found = inquiries.find((i) => i._id === lead.id || i._id === lead._id);
+      setSelectedInquiry(found || lead.rawLead || lead);
+    } else {
+      setActiveTab('appointments');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const fetchInquiries = useCallback(async () => {
     try {
       setInquiriesLoading(true);
       const res = await axios.get('/api/inquiries');
       if (res.data?.data) {
         setInquiries(res.data.data);
+        // Register known IDs on first load
+        if (!hasInitializedLeadsRef.current) {
+          res.data.data.forEach((inq) => knownInquiryIdsRef.current.add(inq._id));
+        }
       }
     } catch (err) {
       console.error('Failed to fetch inquiries:', err);
@@ -95,6 +287,10 @@ const AdminDashboardPage = () => {
       const res = await axios.get('/api/appointments');
       if (res.data?.data) {
         setAppointments(res.data.data);
+        // Register known IDs on first load
+        if (!hasInitializedLeadsRef.current) {
+          res.data.data.forEach((app) => knownAppointmentIdsRef.current.add(app._id));
+        }
       }
     } catch (err) {
       console.error('Failed to fetch appointments:', err);
@@ -103,11 +299,13 @@ const AdminDashboardPage = () => {
     }
   }, []);
 
+  // Initial Data Fetch
   useEffect(() => {
     if (isAuthenticated) {
       fetchProperties();
-      fetchInquiries();
-      fetchAppointments();
+      Promise.all([fetchInquiries(), fetchAppointments()]).then(() => {
+        hasInitializedLeadsRef.current = true;
+      });
 
       // Fetch portal maintenance status
       axios.get('/api/settings')
@@ -119,6 +317,117 @@ const AdminDashboardPage = () => {
         .catch(() => {});
     }
   }, [isAuthenticated, fetchProperties, fetchInquiries, fetchAppointments]);
+
+  // Background Polling Engine (Every 10 seconds)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const [inqRes, appRes] = await Promise.all([
+          axios.get('/api/inquiries').catch(() => null),
+          axios.get('/api/appointments').catch(() => null)
+        ]);
+
+        if (inqRes?.data?.data) {
+          const freshInqs = inqRes.data.data;
+          setInquiries(freshInqs);
+
+          if (hasInitializedLeadsRef.current) {
+            freshInqs.forEach((inq) => {
+              if (!knownInquiryIdsRef.current.has(inq._id)) {
+                knownInquiryIdsRef.current.add(inq._id);
+                triggerLeadAlert({
+                  type: 'enquiry',
+                  id: inq._id,
+                  clientName: inq.clientName,
+                  phone: inq.phone,
+                  email: inq.email,
+                  propertyTitle: inq.propertyTitle,
+                  propertyId: inq.propertyId,
+                  message: inq.message,
+                  rawLead: inq
+                });
+              }
+            });
+          }
+        }
+
+        if (appRes?.data?.data) {
+          const freshApps = appRes.data.data;
+          setAppointments(freshApps);
+
+          if (hasInitializedLeadsRef.current) {
+            freshApps.forEach((app) => {
+              if (!knownAppointmentIdsRef.current.has(app._id)) {
+                knownAppointmentIdsRef.current.add(app._id);
+                triggerLeadAlert({
+                  type: 'appointment',
+                  id: app._id,
+                  clientName: app.clientName,
+                  phone: app.phone,
+                  email: app.email,
+                  propertyTitle: app.propertyTitle,
+                  propertyId: app.propertyId,
+                  preferredDate: app.preferredDate,
+                  preferredTime: app.preferredTime,
+                  visitorsCount: app.visitorsCount,
+                  rawLead: app
+                });
+              }
+            });
+          }
+        }
+      } catch (err) {
+        // Silent polling catch
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, triggerLeadAlert]);
+
+  // Zero-Latency Instant Cross-Tab Broadcast Listener
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleIncomingLeadMessage = (leadPayload) => {
+      if (!leadPayload || !leadPayload.id) return;
+
+      if (leadPayload.type === 'enquiry') {
+        knownInquiryIdsRef.current.add(leadPayload.id);
+        fetchInquiries();
+      } else {
+        knownAppointmentIdsRef.current.add(leadPayload.id);
+        fetchAppointments();
+      }
+
+      triggerLeadAlert(leadPayload);
+    };
+
+    let bc = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      bc = new BroadcastChannel('newhome_leads_channel');
+      bc.onmessage = (event) => {
+        handleIncomingLeadMessage(event.data);
+      };
+    }
+
+    const handleStorageEvent = (event) => {
+      if (event.key === 'newhome_lead_event' && event.newValue) {
+        try {
+          const data = JSON.parse(event.newValue);
+          handleIncomingLeadMessage(data);
+        } catch (e) {}
+      }
+    };
+
+    window.addEventListener('storage', handleStorageEvent);
+
+    return () => {
+      if (bc) bc.close();
+      window.removeEventListener('storage', handleStorageEvent);
+    };
+  }, [isAuthenticated, triggerLeadAlert, fetchInquiries, fetchAppointments]);
 
   // Tab change handler
   const handleTabChange = (tab) => {
@@ -293,6 +602,10 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
   const soldListings = properties.filter(p => p.status === 'sold' || p.status === 'Sold').length;
   const draftListings = properties.filter(p => p.status === 'draft' || p.status === 'Under Offer').length;
 
+  const newInquiriesCount = inquiries.filter(i => i.status === 'NEW').length;
+  const pendingAppointmentsCount = appointments.filter(a => a.status === 'PENDING').length;
+  const totalUnreadLeads = newInquiriesCount + pendingAppointmentsCount;
+
   const totalValue = properties.reduce((acc, curr) => acc + (Number(curr.pricing?.price || curr.price) || 0), 0);
   const formatPortfolioValue = (val) => {
     if (val >= 10000000) {
@@ -319,12 +632,22 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
 
   return (
     <div className="admin-dashboard-layout">
+      {/* Real-Time Floating Lead Notification Popups */}
+      <LeadNotificationPopup
+        notifications={leadPopups}
+        onDismiss={handleDismissPopup}
+        onViewLead={handleViewLead}
+        businessName={settings.business_name}
+      />
+
       {/* Left Sidebar */}
       <AdminSidebar
         activeTab={activeTab}
         onTabChange={handleTabChange}
         isOpen={mobileSidebarOpen}
         onClose={() => setMobileSidebarOpen(false)}
+        enquiriesBadgeCount={newInquiriesCount}
+        appointmentsBadgeCount={pendingAppointmentsCount}
       />
 
       {/* Main Area */}
@@ -344,6 +667,16 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
             <span>{settings.business_name || 'NewHomeDevelopers'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <LeadNotificationBell
+              unreadCount={bellUnreadCount}
+              recentLeads={recentLeads}
+              soundEnabled={soundEnabled}
+              onToggleSound={handleToggleSound}
+              onTestAlert={handleTestAlert}
+              onSelectLead={handleViewLead}
+              onClearAll={handleClearAllLeads}
+              onOpen={handleOpenBell}
+            />
             <div className="portal-status-badge">
               <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />
               <span>{isMaintenanceActive ? 'Maint' : 'Live'}</span>
@@ -378,6 +711,16 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
             {settings.business_name || 'NewHomeDevelopers'} Management Portal
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <LeadNotificationBell
+              unreadCount={bellUnreadCount}
+              recentLeads={recentLeads}
+              soundEnabled={soundEnabled}
+              onToggleSound={handleToggleSound}
+              onTestAlert={handleTestAlert}
+              onSelectLead={handleViewLead}
+              onClearAll={handleClearAllLeads}
+              onOpen={handleOpenBell}
+            />
             <div className="portal-status-badge">
               <span>Portal Status:</span>
               <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />

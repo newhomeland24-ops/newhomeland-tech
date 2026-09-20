@@ -18,7 +18,9 @@ export default function AdminSidebar({
   onAddProperty = () => {},
   onToggleMaintenance = () => {},
   isOpen = false,
-  onClose = () => {}
+  onClose = () => {},
+  enquiriesBadgeCount = 0,
+  appointmentsBadgeCount = 0
 }) {
   const { settings } = useSettings();
 
@@ -143,6 +145,12 @@ export default function AdminSidebar({
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
+            const badgeCount = item.id === 'enquiries' 
+              ? enquiriesBadgeCount 
+              : item.id === 'appointments' 
+                ? appointmentsBadgeCount 
+                : 0;
+
             return (
               <button
                 key={item.id}
@@ -152,6 +160,11 @@ export default function AdminSidebar({
               >
                 <Icon size={18} className="sidebar-nav-icon" />
                 <span className="sidebar-nav-label">{item.label}</span>
+                {badgeCount > 0 && (
+                  <span className={`sidebar-badge-count ${item.id === 'enquiries' ? 'enquiry' : 'appointment'}`}>
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
               </button>
             );
           })}

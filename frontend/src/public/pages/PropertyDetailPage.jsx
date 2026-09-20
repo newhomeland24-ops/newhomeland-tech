@@ -24,6 +24,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import toast from 'react-hot-toast';
 
 const PropertyDetailPage = () => {
   const params = useParams();
@@ -404,15 +405,27 @@ const PropertyDetailPage = () => {
         </a>
 
         {cleanWhatsapp && (
-          <a
-            href={`https://wa.me/${cleanWhatsapp}?text=${whatsappMessage}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => {
+              const formEl = document.getElementById('inquiry-form-section');
+              if (formEl) {
+                formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const nameInput = formEl.querySelector('input[type="text"]');
+                if (nameInput) {
+                  nameInput.focus();
+                }
+              }
+              toast.error('Please enter your name and phone number below to chat on WhatsApp.', {
+                duration: 4500,
+                id: 'whatsapp-mandatory-toast'
+              });
+            }}
             className="btn-whatsapp-action"
           >
             <WhatsAppIcon size={18} />
             <span>Chat on WhatsApp</span>
-          </a>
+          </button>
         )}
         
         <p className="text-xs text-center text-gray-400 mt-4">
