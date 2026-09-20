@@ -149,7 +149,7 @@
 .hero-section {
   position: relative;
   margin-top: -80px;
-  min-height: 700px;
+  min-height: 100vh;
   background-color: var(--slate-900);
   color: #ffffff;
   display: flex;
@@ -693,7 +693,7 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   color: #cbd5e1;
-  padding: 4.5rem 0 2rem 0;
+  padding: 4.5rem 0 calc(2rem + env(safe-area-inset-bottom, 0px)) 0;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -795,7 +795,6 @@
   color: #e5b364;
 }
 
-/* Floating WhatsApp / Phone Widget */
 .floating-actions {
   position: fixed;
   bottom: 2rem;
@@ -804,6 +803,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.floating-actions.hide-on-scroll {
+  transform: translateY(150px);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .float-btn {

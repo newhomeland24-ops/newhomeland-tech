@@ -4,7 +4,7 @@
 
 .property-detail-page {
   padding: 2.5rem 0 5rem 0;
-  background: var(--bg-light);
+  background: #ffffff;
 }
 
 /* Breadcrumb */
@@ -27,7 +27,7 @@
   border-radius: 20px;
   padding: 1.65rem;
   margin-bottom: 0;
-  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
   border: 1px solid var(--slate-200);
 }
 
@@ -111,8 +111,7 @@
   background: #ffffff;
   border-radius: 20px;
   padding: 1.25rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
   border: 1px solid var(--slate-200);
   user-select: none;
 }
@@ -368,8 +367,13 @@
     margin-bottom: 0;
   }
 
-  .detail-description-card {
+  .detail-amenities-card {
     order: 5;
+    margin-bottom: 0;
+  }
+
+  .detail-description-card {
+    order: 6;
     margin-bottom: 0;
   }
 }
@@ -567,8 +571,7 @@
   background: #ffffff;
   border-radius: var(--radius-lg);
   padding: 2rem;
-  margin-bottom: 2rem;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
   border: 1px solid var(--slate-200);
 }
 
@@ -691,7 +694,7 @@
   background: #ffffff;
   border-radius: var(--radius-lg);
   padding: 2rem;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
   border: 1px solid var(--slate-200);
 }
 
@@ -1011,3 +1014,37 @@
 }
 
 
+
+/* Combined Mobile Card */
+.combined-mobile-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+  border: 1px solid var(--slate-200);
+  overflow: hidden;
+}
+
+.combined-mobile-card .detail-media-card,
+.combined-mobile-card .detail-header-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  margin-bottom: 0;
+}
+
+.combined-mobile-card .detail-media-card {
+  padding: 0.75rem;
+  padding-bottom: 0.25rem;
+}
+
+.combined-mobile-card .detail-header-card {
+  padding: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .property-detail-page .container-wide {
+    padding: 0 0.5rem;
+  }
+}

@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Phone } from 'lucide-react';
 import WhatsAppIcon from './components/WhatsAppIcon';
 import ErrorBoundary from './public/components/ErrorBoundary';
 import Header from './public/components/Header';
 import Footer from './public/components/Footer';
-import BottomStickyBar from './public/components/BottomStickyBar';
+
 import HomePage from './public/pages/HomePage';
 import PropertyDetailPage from './public/pages/PropertyDetailPage';
 import PropertiesPage from './public/pages/PropertiesPage';
@@ -23,6 +23,28 @@ function PublicApp() {
   const cleanPhone = rawPhone.replace(/[^\d+]/g, '');
   const cleanWhatsapp = rawWhatsapp.replace(/[^\d]/g, '');
   const businessName = settings.business_name || 'NewHomeDevelopers';
+
+  const [isScrollingDown, setIsScrollingDown] = useState(false);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (window.innerWidth <= 768) {
+        if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+          setIsScrollingDown(true);
+        } else if (currentScrollY < lastScrollY.current) {
+          setIsScrollingDown(false);
+        }
+      } else {
+        setIsScrollingDown(false);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const path = location.pathname;
@@ -51,7 +73,7 @@ function PublicApp() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen w-full max-w-full bg-gray-50">
         <Header />
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -62,10 +84,9 @@ function PublicApp() {
           <Route path="/properties/:propertyId" element={<PropertyDetailPage />} />
         </Routes>
         <Footer />
-        <BottomStickyBar />
 
         {/* Floating Action Buttons */}
-        <div className="floating-actions">
+        <div className={`floating-actions ${isScrollingDown ? 'hide-on-scroll' : ''}`}>
           {cleanWhatsapp && (
             <a
               href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Hello ${businessName}, I would like to inquire about available properties and plots.`)}`}

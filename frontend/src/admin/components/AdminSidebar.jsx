@@ -8,7 +8,8 @@ import {
   Calendar, 
   Settings, 
   ExternalLink, 
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 
@@ -20,7 +21,9 @@ export default function AdminSidebar({
   isOpen = false,
   onClose = () => {},
   enquiriesBadgeCount = 0,
-  appointmentsBadgeCount = 0
+  appointmentsBadgeCount = 0,
+  isMaintenanceActive = false,
+  onLogout = () => {}
 }) {
   const { settings } = useSettings();
 
@@ -97,7 +100,7 @@ export default function AdminSidebar({
         <div className="sidebar-brand-wrap">
           <div className="sidebar-brand-box">
             <div className="sidebar-brand-icon-box">
-              <Shield size={22} className="sidebar-shield-icon" />
+              <Building2 size={22} className="sidebar-shield-icon" />
             </div>
             <div 
               className="sidebar-brand-text" 
@@ -185,6 +188,37 @@ export default function AdminSidebar({
             <ExternalLink size={17} className="sidebar-nav-icon" />
             <span className="sidebar-nav-label">View Public Site</span>
           </a>
+
+          <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <div className="portal-status-badge" style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.8rem', color: '#94a3b8' }}>
+              <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />
+              <span style={{ color: isMaintenanceActive ? '#d97706' : '#10b981', fontWeight: 600 }}>{isMaintenanceActive ? 'Maint' : 'Live'}</span>
+            </div>
+            
+            <button
+              type="button"
+              onClick={onLogout}
+              className="sidebar-signout-btn"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.35rem 0.65rem',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: '#ef4444',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              title="Sign Out of Admin Console"
+            >
+              <LogOut size={14} />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
 
         {/* Bottom Copyright Section */}

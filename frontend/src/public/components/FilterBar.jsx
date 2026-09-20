@@ -77,7 +77,7 @@ const FilterBar = ({ onFilterChange }) => {
 
   return (
     <div className="hero-search-card" style={{ width: '100%', maxWidth: '1100px', margin: '2.5rem auto 0 auto' }}>
-      <form onSubmit={handleSubmit} className="search-form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr)) 160px', alignItems: 'flex-end', gap: '1.25rem' }}>
+      <form onSubmit={handleSubmit} className="search-form-grid">
         {/* Location / City */}
         <div className="search-field">
           <label className="search-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#b87d28', fontWeight: 600, fontSize: '0.8rem', letterSpacing: '0.5px' }}>

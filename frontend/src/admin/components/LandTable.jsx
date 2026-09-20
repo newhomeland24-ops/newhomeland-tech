@@ -159,7 +159,7 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
 
       {/* Table Container */}
       <div className="admin-table-container">
-        <table className="admin-table">
+        <table className="admin-table responsive-card-table md:min-w-[800px]">
           <thead>
             <tr>
               <th style={{ width: '70px' }}>Media</th>
@@ -188,14 +188,14 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
               const isDraftStatus = property.status === 'draft' || property.status === 'Under Offer';
 
               return (
-                <tr 
-                  key={currentPropertyId}
-                  onClick={() => setSelectedProperty(property)}
-                  style={{ cursor: 'pointer' }}
-                  title="Click to view full property details"
-                >
+                <tr key={currentPropertyId}>
                   {/* Thumbnail */}
-                  <td>
+                  <td 
+                    data-label="Media"
+                    onClick={() => setSelectedProperty(property)}
+                    style={{ cursor: 'pointer' }}
+                    title="Click to view full property details"
+                  >
                     <div className="table-thumb-wrap">
                       {primaryImg ? (
                         <img src={primaryImg} alt={property.title} className="table-thumb-img" />
@@ -213,7 +213,12 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
                   </td>
 
                   {/* Title & Location */}
-                  <td>
+                  <td 
+                    data-label="Property"
+                    onClick={() => setSelectedProperty(property)}
+                    style={{ cursor: 'pointer' }}
+                    title="Click to view full property details"
+                  >
                     <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.96rem', lineHeight: 1.3 }}>
                       {property.title}
                     </div>
@@ -227,7 +232,7 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
                   </td>
 
                   {/* Type & Dimensions */}
-                  <td>
+                  <td data-label="Type & Details">
                     <div className="badge-type-pill">
                       {property.propertyType}
                     </div>
@@ -237,14 +242,14 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
                   </td>
 
                   {/* Price */}
-                  <td>
+                  <td data-label="Price">
                     <div style={{ fontWeight: 800, color: '#b87d28', fontSize: '1.05rem', fontFamily: 'var(--font-heading)' }}>
                       {formatPrice(effectivePrice)}
                     </div>
                   </td>
 
                   {/* Status */}
-                  <td>
+                  <td data-label="Status">
                     {isSoldStatus ? (
                       <span className="badge-status sold">Sold</span>
                     ) : isDraftStatus ? (
@@ -267,81 +272,29 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
                   </td>
 
                   {/* Actions */}
-                  <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                    <div className="action-btn-group" style={{ justifyContent: 'flex-end', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      {/* Open Admin Details Modal */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedProperty(property);
-                        }}
-                        className="btn-action-icon view"
-                        title="View Property Details"
-                      >
-                        <Eye size={19} />
-                      </button>
-
+                  <td data-label="Actions" style={{ textAlign: 'right' }}>
+                    <div className="action-btn-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
                       {/* Edit Property Button */}
                       {onEditProperty && (
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEditProperty(property);
-                          }}
-                          className="btn-action-icon"
-                          title="Edit Property Details"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '11px',
-                            border: '1.5px solid #bfdbfe',
-                            background: '#eff6ff',
-                            color: '#2563eb'
-                          }}
+                          onClick={() => onEditProperty(property)}
+                          className="btn-text-action"
+                          style={{ color: '#2563eb', fontWeight: 600, fontSize: '0.85rem', padding: '0.4rem 0.6rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
                         >
-                          <Edit3 size={18} />
+                          Edit
                         </button>
                       )}
-
-                      {/* View Live Public Page */}
-                      <a
-                        href={`/properties/${currentPropertyId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-action-icon"
-                        title="Open Public Listing Page"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '44px',
-                          height: '44px',
-                          borderRadius: '11px',
-                          border: '1.5px solid #e2e8f0',
-                          background: '#ffffff',
-                          color: '#475569'
-                        }}
-                      >
-                        <ExternalLink size={18} />
-                      </a>
 
                       {/* Mark Sold */}
                       {property.status !== 'sold' && (
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMarkSold(currentPropertyId, property.title);
-                          }}
-                          className="btn-action-icon sold"
-                          title="Mark as Sold"
+                          onClick={() => handleMarkSold(currentPropertyId, property.title)}
+                          className="btn-text-action"
+                          style={{ color: '#059669', fontWeight: 600, fontSize: '0.85rem', padding: '0.4rem 0.6rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
                         >
-                          <CheckCircle size={20} />
+                          Mark Sold
                         </button>
                       )}
 
@@ -349,10 +302,10 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
                       <button
                         type="button"
                         onClick={() => handleDelete(currentPropertyId, property.title)}
-                        className="btn-action-icon delete"
-                        title="Permanently Delete"
+                        className="btn-text-action"
+                        style={{ color: '#dc2626', fontWeight: 600, fontSize: '0.85rem', padding: '0.4rem 0.6rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
                       >
-                        <Trash2 size={20} />
+                        Delete
                       </button>
                     </div>
                   </td>

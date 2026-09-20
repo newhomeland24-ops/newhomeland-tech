@@ -648,6 +648,8 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
         onClose={() => setMobileSidebarOpen(false)}
         enquiriesBadgeCount={newInquiriesCount}
         appointmentsBadgeCount={pendingAppointmentsCount}
+        onLogout={handleAdminLogout}
+        isMaintenanceActive={isMaintenanceActive}
       />
 
       {/* Main Area */}
@@ -677,31 +679,6 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
               onClearAll={handleClearAllLeads}
               onOpen={handleOpenBell}
             />
-            <div className="portal-status-badge">
-              <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />
-              <span>{isMaintenanceActive ? 'Maint' : 'Live'}</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleAdminLogout}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                padding: '0.35rem 0.65rem',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                color: '#f87171',
-                background: 'rgba(239, 68, 68, 0.12)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-              }}
-              title="Sign Out of Admin Console"
-            >
-              <LogOut size={13} />
-              <span>Exit</span>
-            </button>
           </div>
         </div>
 
@@ -721,43 +698,6 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
               onClearAll={handleClearAllLeads}
               onOpen={handleOpenBell}
             />
-            <div className="portal-status-badge">
-              <span>Portal Status:</span>
-              <span className={`portal-status-dot ${isMaintenanceActive ? 'maintenance' : ''}`} />
-              <span style={{ color: isMaintenanceActive ? '#d97706' : '#10b981', fontWeight: 700 }}>
-                {isMaintenanceActive ? 'Maintenance Active' : 'Live'}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleAdminLogout}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.45rem',
-                padding: '0.45rem 0.95rem',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                color: '#ef4444',
-                background: 'rgba(239, 68, 68, 0.08)',
-                border: '1px solid rgba(239, 68, 68, 0.25)',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.18)';
-                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
-                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.25)';
-              }}
-              title="Sign Out of Admin Console"
-            >
-              <LogOut size={15} />
-              <span>Logout</span>
-            </button>
           </div>
         </header>
 

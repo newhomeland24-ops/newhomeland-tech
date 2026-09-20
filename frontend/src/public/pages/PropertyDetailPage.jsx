@@ -21,7 +21,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import toast from 'react-hot-toast';
@@ -33,6 +34,8 @@ const PropertyDetailPage = () => {
   const { property, loading, error } = usePropertyDetails(propertyId);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState('enquiry');
 
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -236,7 +239,7 @@ const PropertyDetailPage = () => {
       onTouchEnd={handleTouchEnd}
     >
       <div 
-        className="detail-media-viewer"
+        className="detail-media-viewer aspect-video w-full relative overflow-hidden bg-black rounded-2xl"
         onClick={() => setIsModalOpen(true)}
         style={{ cursor: 'pointer' }}
         title="Click to enlarge photo/video"
@@ -375,8 +378,36 @@ const PropertyDetailPage = () => {
         <div className="detail-price">{formatPrice(effectivePrice)}</div>
       </div>
 
-      <div style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
-        Listing ID: #{property.propertyId || property._id}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+        <div style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 600 }}>
+          Listing ID: #{property.propertyId || property._id}
+        </div>
+
+        {/* Mobile Quick Action Buttons (Opens Form Modal) */}
+        <div className="lg:hidden flex items-center gap-2 w-full mt-2">
+          <button 
+            type="button" 
+            onClick={() => {
+              setModalTab('enquiry');
+              setIsFormModalOpen(true);
+            }}
+            className="btn btn-dark btn-sm flex-1"
+            style={{ padding: '0.6rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px', background: '#0f172a', color: '#ffffff', display: 'flex', justifyContent: 'center' }}
+          >
+            Send Enquiry
+          </button>
+          <button 
+            type="button" 
+            onClick={() => {
+              setModalTab('appointment');
+              setIsFormModalOpen(true);
+            }}
+            className="btn btn-primary btn-sm flex-1"
+            style={{ padding: '0.6rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px', display: 'flex', justifyContent: 'center' }}
+          >
+            Book Site Visit
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -443,7 +474,7 @@ const PropertyDetailPage = () => {
         <span>Property Specifications & Dimensions</span>
       </h3>
 
-      <div className="specs-grid">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full mt-4">
         <div className="spec-box">
           <span className="spec-box-label">{effectiveArea ? 'Total Area' : (property.specifications?.bhkType ? 'Configuration' : 'Area')}</span>
           <span className="spec-box-val">{effectiveArea ? `${effectiveArea} ${property.specifications?.areaUnit || property.areaUnit || 'Sq. Ft'}` : (property.specifications?.bhkType || (property.propertyType === 'Land' ? 'Plots' : 'N/A'))}</span>
@@ -506,7 +537,7 @@ const PropertyDetailPage = () => {
 
   // 5. Amenities Card
   const amenitiesCard = property.amenities && property.amenities.length > 0 ? (
-    <div className="detail-card detail-amenities-card" style={{ marginTop: '1.5rem', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '1.5rem' }}>
+    <div className="detail-card detail-amenities-card">
       <h3 className="detail-card-title" style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
         <Sparkles size={18} color="#d49a3f" />
         <span>Verified Amenities & Infrastructure</span>
@@ -522,16 +553,16 @@ const PropertyDetailPage = () => {
   ) : null;
 
   // 5. Description Card
-  const descCard = (
+  const descCard = property.description && property.description.trim() ? (
     <div className="detail-card detail-description-card">
       <h3 className="detail-card-title">
         <span>About this Property</span>
       </h3>
       <div className="property-description-text whitespace-pre-wrap" style={{ color: '#475569', fontSize: '0.98rem', lineHeight: '1.75' }}>
-        {property.description || "No detailed description provided for this property listing."}
+        {property.description}
       </div>
     </div>
-  );
+  ) : null;
 
   return (
     <div className="property-detail-page">
@@ -563,26 +594,25 @@ const PropertyDetailPage = () => {
         {/* Layout: On mobile -> 1. Video/Image slider, 2. Details card (price/title), 3. Broker, 4. Inquiry & Appointment Forms, 5. Specs, 6. Description
                     On desktop -> Left column (Media, Specs, Description), Right column (Sticky Details + Broker + Forms) */}
         {isMobile ? (
-          <div className="detail-mobile-layout">
-            {mediaCard}
-            {headerCard}
-            {brokerCard}
-            <PropertyInquiryAppointmentForms property={property} />
+          <div className="flex flex-col gap-4 w-full">
+            <div className="combined-mobile-card">
+              {mediaCard}
+              {headerCard}
+            </div>
             {specsCard}
             {amenitiesCard}
             {descCard}
           </div>
         ) : (
-          <div className="detail-layout-grid">
-            <div className="detail-left-col">
+          <div className="flex flex-col lg:flex-row gap-6 w-full">
+            <div className="flex-1 min-w-0 flex flex-col gap-6">
               {mediaCard}
               {specsCard}
               {amenitiesCard}
               {descCard}
             </div>
-            <div className="sticky-sidebar">
+            <div className="w-full lg:w-[400px] flex flex-col gap-6 sticky top-24 self-start">
               {headerCard}
-              {brokerCard}
               <PropertyInquiryAppointmentForms property={property} />
             </div>
           </div>
@@ -595,6 +625,26 @@ const PropertyDetailPage = () => {
         images={mediaList.filter(m => m.type === 'image').map(m => m.url)} 
         videoUrl={mediaList.find(m => m.type === 'video')?.url || null} 
       />
+
+      {/* Mobile Form Modal */}
+      {isFormModalOpen && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto relative animate-slideUp sm:animate-fadeIn shadow-2xl">
+            <div className="sticky top-0 bg-white z-10 border-b border-gray-100 p-4 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 text-lg">Property Inquiry</h3>
+              <button 
+                onClick={() => setIsFormModalOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-4 sm:p-6 pb-8">
+              <PropertyInquiryAppointmentForms property={property} initialTab={modalTab} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -70,35 +70,12 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
 
   return (
     <div 
-      className="admin-modal-overlay"
+      className="admin-modal-overlay fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm"
       onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(15, 23, 42, 0.7)',
-        backdropFilter: 'blur(6px)',
-        zIndex: 1100,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1.25rem'
-      }}
     >
       <div 
-        className="admin-modal-card"
+        className="admin-modal-card max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4 bg-white rounded-2xl flex flex-col shadow-2xl border border-slate-200"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: '#ffffff',
-          borderRadius: '20px',
-          width: '100%',
-          maxWidth: '850px',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          overflow: 'hidden',
-          border: '1px solid #e2e8f0'
-        }}
       >
         {/* Modal Header */}
         <div style={{

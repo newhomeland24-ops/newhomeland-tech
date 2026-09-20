@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAdminAuth } from '../hooks/useAdminAuth';
 import { useSettings } from '../../context/SettingsContext';
-import { Shield, Mail, KeyRound, AlertCircle, ArrowRight, ArrowLeft, CheckCircle2, RotateCw } from 'lucide-react';
+import { Shield, Mail, KeyRound, AlertCircle, ArrowRight, ArrowLeft, CheckCircle2, RotateCw, Building2 } from 'lucide-react';
 
 const AdminLoginPage = () => {
   const { settings } = useSettings();
@@ -16,6 +16,35 @@ const AdminLoginPage = () => {
   const [infoMessage, setInfoMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const inputRefs = useRef([]);
+
+  const handleOtpChange = (index, value) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
+    const newOtp = otp.split('');
+    newOtp[index] = digit;
+    const finalOtp = newOtp.join('');
+    setOtp(finalOtp);
+
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text/plain').replace(/\D/g, '').slice(0, 6);
+    if (pastedData) {
+      setOtp(pastedData);
+      const focusIndex = Math.min(pastedData.length, 5);
+      inputRefs.current[focusIndex]?.focus();
+    }
+  };
 
   useEffect(() => {
     document.title = `Admin Portal Secure Login | ${settings.business_name || 'Admin'}`;
@@ -70,6 +99,7 @@ const AdminLoginPage = () => {
       navigate('/admin/dashboard');
     } else {
       setError(result.message || 'Invalid or expired verification code.');
+      setInfoMessage('');
       setIsSubmitting(false);
     }
   };
@@ -85,12 +115,18 @@ const AdminLoginPage = () => {
     <div className="admin-login-wrap">
       <div className="admin-login-card">
         <div className="admin-login-header">
-          <div className="brand-icon" style={{ width: '54px', height: '54px', margin: '0 auto' }}>
-            <Shield size={28} />
-          </div>
+          <Link to="/" className="brand-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1rem', textDecoration: 'none' }}>
+            <div className="brand-icon" style={{ width: '54px', height: '54px' }}>
+              <Building2 size={28} />
+            </div>
+            <div className="brand-text" style={{ textAlign: 'left' }}>
+              <span className="brand-title" style={{ fontSize: '1.4rem', fontWeight: 'bold', color: '#0f172a', display: 'block' }}>{settings.business_name || 'NewHomeDevelopers'}</span>
+              <span className="brand-subtitle" style={{ fontSize: '0.85rem', color: '#64748b' }}>{settings.tagline || 'Your Ground. Your Future.'}</span>
+            </div>
+          </Link>
           <h2>Admin Portal</h2>
           <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-            {settings.business_name || 'NewHomeDevelopers'} Management Dashboard
+            Management Dashboard
           </p>
         </div>
 
@@ -136,7 +172,7 @@ const AdminLoginPage = () => {
           /* Step 1: Admin Email Form */
           <form onSubmit={handleSendOtp}>
             <div className="form-group">
-              <label className="form-label">Administrator Email</label>
+              <label className="form-label">Admin Email</label>
               <div style={{ position: 'relative' }}>
                 <input
                   type="email"
@@ -144,7 +180,7 @@ const AdminLoginPage = () => {
                   autoFocus
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@newhomedevelopers.in"
+                  placeholder="Enter admin email"
                   className="form-input"
                   style={{ paddingLeft: '2.5rem' }}
                 />
@@ -160,7 +196,7 @@ const AdminLoginPage = () => {
                 />
               </div>
               <span style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.35rem', display: 'block' }}>
-                A 6-digit one-time code will be dispatched to your authorized inbox.
+                A 6-digit one-time code will be dispatched to admin email.
               </span>
             </div>
 
@@ -177,53 +213,43 @@ const AdminLoginPage = () => {
         ) : (
           /* Step 2: 6-Digit OTP Form */
           <form onSubmit={handleVerifyOtp}>
-            <div style={{ marginBottom: '1.25rem', textAlign: 'center' }}>
-              <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                Verification code sent to <br />
-                <strong style={{ color: '#0f172a' }}>{email}</strong>
-              </span>
-            </div>
 
             <div className="form-group">
-              <label className="form-label" style={{ textAlign: 'center', display: 'block' }}>
+              <label className="form-label" style={{ display: 'block', textAlign: 'left' }}>
                 6-Digit Security Code
               </label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  required
-                  autoFocus
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="------"
-                  className="form-input"
-                  style={{
-                    paddingLeft: '2.5rem',
-                    textAlign: 'center',
-                    fontSize: '1.4rem',
-                    letterSpacing: '0.35em',
-                    fontWeight: 700,
-                  }}
-                />
-                <KeyRound
-                  size={17}
-                  color="#94a3b8"
-                  style={{
-                    position: 'absolute',
-                    left: '0.85rem',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                  }}
-                />
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between', marginTop: '0.5rem' }} onPaste={handleOtpPaste}>
+                {[...Array(6)].map((_, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    autoFocus={index === 0}
+                    maxLength={2} // Allow 2 characters so we can grab the last typed digit easily
+                    value={otp[index] || ''}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    className="form-input"
+                    style={{
+                      padding: '0.5rem',
+                      textAlign: 'center',
+                      fontSize: '1.4rem',
+                      fontWeight: 700,
+                      width: '45px',
+                      height: '50px'
+                    }}
+                  />
+                ))}
               </div>
               <span
                 style={{
                   fontSize: '0.78rem',
                   color: '#64748b',
-                  marginTop: '0.35rem',
+                  marginTop: '0.75rem',
                   display: 'block',
-                  textAlign: 'center',
+                  textAlign: 'left',
                 }}
               >
                 Code expires in 5 minutes.
@@ -243,29 +269,12 @@ const AdminLoginPage = () => {
             <div
               style={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 alignItems: 'center',
                 marginTop: '1.25rem',
                 fontSize: '0.82rem',
               }}
             >
-              <button
-                type="button"
-                onClick={handleBackToEmail}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#64748b',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  padding: 0,
-                }}
-              >
-                <ArrowLeft size={14} />
-                <span>Use Different Email</span>
-              </button>
 
               <button
                 type="button"

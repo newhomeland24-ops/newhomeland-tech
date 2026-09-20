@@ -337,7 +337,7 @@ const PropertiesPage = () => {
 
           {/* Properties Grid */}
           {loading ? (
-            <div className="property-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
               {[1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="bg-white rounded-2xl shadow-sm h-[400px] animate-pulse border border-gray-100">
                   <div className="h-[250px] bg-gray-200 rounded-t-2xl"></div>
@@ -373,7 +373,7 @@ const PropertiesPage = () => {
               )}
             </div>
           ) : (
-            <div className="property-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
               {properties.map(property => (
                 <LandCard key={property.propertyId || property._id || property.id} property={property} />
               ))}

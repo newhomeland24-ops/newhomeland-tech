@@ -86,7 +86,16 @@
 
 @media (max-width: 480px) {
   .hero-title {
-    font-size: 1.95rem;
+    font-size: 1.7rem;
+    line-height: 1.25;
+  }
+
+  .hero-tag {
+    font-size: 0.65rem;
+    padding: 0.35rem 0.8rem;
+    letter-spacing: 0.5px;
+    gap: 0.35rem;
+    line-height: 1.4;
   }
 
   .hero-search-card {

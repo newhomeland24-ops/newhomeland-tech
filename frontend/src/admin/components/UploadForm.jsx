@@ -612,7 +612,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.25rem' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="form-label">Listing Type *</label>
                 <select 
@@ -666,7 +666,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         <div style={{ marginBottom: '2.5rem' }}>
           <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>2. Specifications</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '850px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {formData.listingType === 'Rent' ? (
                 <div className="form-group">
                   <label className="form-label">BHK Type *</label>
@@ -795,7 +795,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         <div style={{ marginBottom: '2.5rem' }}>
           <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>3. Pricing</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '850px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="form-group">
                 <label className="form-label">Price in ₹ (INR) *</label>
                 <div style={{ position: 'relative' }}>
@@ -874,7 +874,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="form-group">
                 <label className="form-label">Pincode *</label>
                 <input 

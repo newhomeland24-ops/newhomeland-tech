@@ -16,12 +16,12 @@ import WhatsAppIcon from '../../components/WhatsAppIcon';
 import toast from 'react-hot-toast';
 import { useSettings } from '../../context/SettingsContext';
 
-export default function PropertyInquiryAppointmentForms({ property }) {
+export default function PropertyInquiryAppointmentForms({ property, initialTab = 'enquiry' }) {
   const { settings } = useSettings();
   const businessName = settings.business_name || 'NewHomeDevelopers';
   const brokerPhone = (settings.whatsapp || import.meta.env.VITE_WHATSAPP_NUMBER || '916005707121').replace(/[^\d]/g, '');
 
-  const [activeTab, setActiveTab] = useState('enquiry'); // 'enquiry' | 'appointment'
+  const [activeTab, setActiveTab] = useState(initialTab); // 'enquiry' | 'appointment'
 
   const propCustomId = property?.propertyId || property?._id || '';
 

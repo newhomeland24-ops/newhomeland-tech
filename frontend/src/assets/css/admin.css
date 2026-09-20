@@ -2106,3 +2106,63 @@
   color: #ffffff;
 }
 
+
+@media (max-width: 768px) {
+  .admin-table.responsive-card-table,
+  .admin-table.responsive-card-table tbody,
+  .admin-table.responsive-card-table th,
+  .admin-table.responsive-card-table td,
+  .admin-table.responsive-card-table tr {
+    display: block;
+    width: 100%;
+  }
+  
+  .admin-table.responsive-card-table thead {
+    display: none;
+  }
+  
+  .admin-table.responsive-card-table tr {
+    margin-bottom: 1.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: #fff;
+    overflow: hidden;
+  }
+  
+  .admin-table.responsive-card-table td {
+    position: relative;
+    padding: 1rem 1rem 1rem 40% !important;
+    text-align: right !important;
+    border-bottom: 1px solid #f1f5f9;
+    min-height: 50px;
+  }
+  
+  .admin-table.responsive-card-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-table.responsive-card-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 35%;
+    text-align: left;
+    font-weight: 700;
+    color: #64748b;
+    font-size: 0.85rem;
+  }
+  
+  .admin-table.responsive-card-table td > div {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .admin-table.responsive-card-table td .action-btn-group {
+    flex-direction: row !important;
+    justify-content: flex-end !important;
+  }
+}

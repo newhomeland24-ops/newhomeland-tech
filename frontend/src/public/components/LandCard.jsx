@@ -225,7 +225,7 @@ const LandCard = ({ property }) => {
         )}
 
         {/* Status Badge (Top Left) */}
-        <div className="card-badge-top-left">
+        <div className="absolute top-3 left-3 z-10 pointer-events-none">
           <span
             className="badge-status"
             style={{
@@ -246,7 +246,7 @@ const LandCard = ({ property }) => {
 
         {/* Property Type Badge (Top Right) */}
         <div
-          className="card-badge-top-right"
+          className="absolute top-3 right-3 z-10 pointer-events-none"
           style={{
             background: '#1e293b',
             color: '#ffffff',
@@ -272,7 +272,7 @@ const LandCard = ({ property }) => {
 
         {/* Title */}
         <h3
-          className="card-title"
+          className="card-title truncate"
           title={property.title}
           style={{
             fontSize: '1.35rem',

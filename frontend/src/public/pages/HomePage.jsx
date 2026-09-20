@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight, ShieldCheck, MapPin, BadgePercent } from 'lucide-react';
+import { Sparkles, ArrowRight, ShieldCheck, MapPin, BadgePercent, Banknote } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FilterBar from '../components/FilterBar';
 import LandCard from '../components/LandCard';
@@ -58,7 +58,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <main className="flex-grow bg-gray-50 py-12 pb-24 md:pb-12">
+      <main className="flex-grow bg-gray-50 pt-8 pb-24 md:pt-10 md:pb-12">
         <div className="container">
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
@@ -90,7 +90,7 @@ const HomePage = () => {
           )}
 
           {propertiesLoading ? (
-            <div className="property-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
               {[1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="bg-white rounded-2xl shadow-sm h-[400px] animate-pulse border border-gray-100">
                   <div className="h-[250px] bg-gray-200 rounded-t-2xl"></div>
@@ -111,7 +111,7 @@ const HomePage = () => {
               <p className="text-gray-500">Try adjusting your filters or search terms.</p>
             </div>
           ) : (
-            <div className="property-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
               {properties.map(property => (
                 <LandCard key={property.propertyId || property._id || property.id} property={property} />
               ))}
@@ -119,7 +119,8 @@ const HomePage = () => {
           )}
 
           {/* Section: Why Buy Through {settings.business_name} */}
-          <div style={{ marginTop: '5rem', padding: '3rem 2rem', background: '#ffffff', borderRadius: '20px', border: '1px solid #f1f5f9', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+          <hr className="border-t border-slate-200 mt-12 mb-8 md:hidden" />
+          <div className="md:mt-20 py-4 md:p-12 md:bg-white md:rounded-[20px] md:border md:border-slate-100 md:shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
             <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 2.5rem auto' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#d49a3f', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 Exclusive Broker Guarantee
@@ -132,34 +133,44 @@ const HomePage = () => {
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.75rem' }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-7">
               <div style={{ padding: '1.75rem', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(212, 154, 63, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d49a3f', marginBottom: '1rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(212, 154, 63, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d49a3f', margin: '0 auto 1rem auto' }}>
                   <ShieldCheck size={24} />
                 </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>100% Legal Title Clear</h3>
-                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem', textAlign: 'center' }}>100% Legal Title Clear</h3>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0, textAlign: 'center' }}>
                   Every listed plot, villa, and commercial asset undergoes thorough legal vetting, title deeds verification, and registry check.
                 </p>
               </div>
 
               <div style={{ padding: '1.75rem', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb', marginBottom: '1rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb', margin: '0 auto 1rem auto' }}>
                   <MapPin size={24} />
                 </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>Free Guided Site Visits</h3>
-                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem', textAlign: 'center' }}>Free Guided Site Visits</h3>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0, textAlign: 'center' }}>
                   Book personalized chauffeur-assisted site tours to inspect demarcations, road widths, and surrounding infrastructure.
                 </p>
               </div>
 
               <div style={{ padding: '1.75rem', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', marginBottom: '1rem' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', margin: '0 auto 1rem auto' }}>
                   <BadgePercent size={24} />
                 </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem' }}>Transparent Pricing</h3>
-                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0 }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem', textAlign: 'center' }}>Transparent Pricing</h3>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0, textAlign: 'center' }}>
                   Zero hidden brokerage premiums. Direct negotiation support with landowners and developers for clear terms.
+                </p>
+              </div>
+
+              <div style={{ padding: '1.75rem', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(139, 92, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b5cf6', margin: '0 auto 1rem auto' }}>
+                  <Banknote size={24} />
+                </div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem', textAlign: 'center' }}>EMI Facility Available</h3>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', lineHeight: '1.5', margin: 0, textAlign: 'center' }}>
+                  Easy financing options through leading bank partners to help you secure your dream property with flexible EMIs.
                 </p>
               </div>
             </div>

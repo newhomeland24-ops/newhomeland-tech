@@ -28,7 +28,7 @@ export default function Header() {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="nav-links">
+        <nav className="nav-links hidden md:flex items-center gap-6">
           <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end>
             Home
           </NavLink>
@@ -44,7 +44,7 @@ export default function Header() {
         </nav>
 
         {/* Action Buttons */}
-        <div className="nav-actions">
+        <div className="nav-actions hidden md:flex items-center gap-4">
           {cleanWhatsapp && (
             <a
               href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Hello ${settings.business_name || 'Broker'}, I am inquiring about available properties.`)}`}
@@ -65,7 +65,7 @@ export default function Header() {
 
           {/* Mobile Menu Toggle Button */}
           <button
-            className="mobile-menu-btn"
+            className="mobile-menu-btn md:hidden block"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle Navigation Menu"
           >

@@ -11,7 +11,7 @@ function App() {
     <SettingsProvider>
       <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
       <Router>
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center w-full max-w-full overflow-x-hidden">Loading...</div>}>
           <Routes>
             <Route path="/admin/*" element={<AdminApp />} />
             <Route path="/*" element={<PublicApp />} />
