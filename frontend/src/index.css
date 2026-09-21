@@ -8,4 +8,39 @@
     font-family: 'Inter', sans-serif;
     overflow-x: clip;
   }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]), textarea, select, button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input, textarea, select {
+    line-height: normal;
+  }
+
+  select {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%2364748b"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.2em;
+    padding-right: 2.5rem !important;
+  }
+
+  @media screen and (max-width: 768px) {
+    input[type="text"], input[type="number"], input[type="email"], input[type="password"], textarea, select {
+      font-size: 16px !important;
+    }
+  }
 }

@@ -24,6 +24,7 @@ import {
   ShieldAlert,
   Shield, 
   Menu,
+  X,
   MessageSquare, 
   Calendar, 
   ArrowRight, 
@@ -56,6 +57,19 @@ const AdminDashboardPage = () => {
     localStorage.setItem('adminActiveTab', activeTab);
   }, [activeTab]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  
+  // Prevent background scrolling when mobile sidebar is open
+  useEffect(() => {
+    if (mobileSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileSidebarOpen]);
+
   const [isMaintenanceActive, setIsMaintenanceActive] = useState(false);
   const [previewProperty, setPreviewProperty] = useState(null);
   const [editingProperty, setEditingProperty] = useState(null);
@@ -655,18 +669,31 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
       {/* Main Area */}
       <div className="admin-main-area">
         {/* Mobile Header Bar */}
-        <div className="admin-mobile-header">
+        <div className="admin-mobile-header" style={{ height: '64px' }}>
           <button 
             type="button" 
             className="admin-mobile-menu-trigger"
-            onClick={() => setMobileSidebarOpen(true)}
-            aria-label="Open navigation menu"
+            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+            aria-label={mobileSidebarOpen ? "Close navigation menu" : "Open navigation menu"}
+            style={{ 
+              transition: 'transform 0.3s ease',
+              transform: mobileSidebarOpen ? 'rotate(90deg)' : 'rotate(0deg)'
+            }}
           >
-            <Menu size={22} />
+            {mobileSidebarOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
-          <div className="admin-mobile-brand">
-            <Shield size={18} color="#d49a3f" />
-            <span>{settings.business_name || 'NewHomeDevelopers'}</span>
+          <div className="sidebar-brand-box" style={{ background: 'transparent', border: 'none', padding: 0, margin: '0 auto 0 10px', transform: 'scale(0.85)', transformOrigin: 'left center', gap: '0.6rem' }}>
+            <div className="sidebar-brand-icon-box">
+              <Building2 size={22} className="sidebar-shield-icon" />
+            </div>
+            <div className="sidebar-brand-text" style={{ minWidth: 0, overflow: 'hidden', textAlign: 'left' }}>
+              <span className="sidebar-company-title" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '1.25rem' }}>
+                {settings.business_name || 'NewHomeDevelopers'}
+              </span>
+              <span className="sidebar-company-subtitle" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {settings.tagline || 'YOUR HOME. YOUR FUTURE.'}
+              </span>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <LeadNotificationBell

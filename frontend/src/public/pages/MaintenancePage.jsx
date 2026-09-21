@@ -6,7 +6,7 @@ const MaintenancePage = () => {
   const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent('Hello NewHomeDevelopers, I would like to inquire about available properties and schedule a visit.')}`;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
       <div className="max-w-lg w-full bg-white p-10 rounded-3xl shadow-2xl border border-gray-100">
         <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
           <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">

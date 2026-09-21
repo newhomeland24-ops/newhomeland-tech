@@ -17,7 +17,7 @@ const HomePage = () => {
 
   if (settingsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
@@ -28,7 +28,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen min-h-[100dvh]">
       {/* 1. HERO SECTION */}
       <section className="hero-section" style={{ marginTop: '-80px', paddingTop: 'calc(80px + 3.5rem)', paddingBottom: '4.5rem' }}>
         <div

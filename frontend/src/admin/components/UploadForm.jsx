@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { 
-  X, 
-  UploadCloud, 
-  Plus, 
-  Video, 
-  Image as ImageIcon, 
-  FileText, 
-  Check, 
-  Edit3, 
-  Building, 
-  IndianRupee, 
-  MapPin, 
-  Sparkles, 
-  Layers, 
+import {
+  X,
+  UploadCloud,
+  Plus,
+  Video,
+  Image as ImageIcon,
+  FileText,
+  Check,
+  Edit3,
+  Building,
+  IndianRupee,
+  MapPin,
+  Sparkles,
+  Layers,
   CheckSquare,
   Square
 } from 'lucide-react';
@@ -46,7 +46,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         console.error('Failed to fetch property types:', error);
       }
     };
-    
+
     const fetchAreaUnits = async () => {
       try {
         const res = await axios.get('/api/properties/admin/units', { withCredentials: true });
@@ -68,7 +68,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         console.error('Failed to fetch amenities:', error);
       }
     };
-    
+
     fetchPropertyTypes();
     fetchAreaUnits();
     fetchAmenities();
@@ -83,7 +83,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       setIsAddingType(false);
       return;
     }
-    
+
     // Capitalize the first letter
     const formattedType = trimmedType.charAt(0).toUpperCase() + trimmedType.slice(1);
 
@@ -91,7 +91,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       setPropertyTypes(prev => [...prev, formattedType].sort());
       toast.success('Property category applied! It will be saved permanently once the property is published.');
     }
-    
+
     setFormData(prev => ({ ...prev, propertyType: formattedType }));
     setIsAddingType(false);
     setNewPropertyType('');
@@ -106,7 +106,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       setIsAddingUnit(false);
       return;
     }
-    
+
     const formattedUnit = trimmedUnit.charAt(0).toUpperCase() + trimmedUnit.slice(1);
 
     if (!areaUnits.includes(formattedUnit)) {
@@ -119,9 +119,9 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         console.error('Failed to save area unit permanently:', err);
       }
     }
-    
-    setFormData(prev => ({ 
-      ...prev, 
+
+    setFormData(prev => ({
+      ...prev,
       specifications: { ...prev.specifications, areaUnit: formattedUnit }
     }));
     setIsAddingUnit(false);
@@ -137,7 +137,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       setIsAddingAmenity(false);
       return;
     }
-    
+
     const formattedAmenity = trimmedAmenity.charAt(0).toUpperCase() + trimmedAmenity.slice(1);
 
     if (!availableAmenities.includes(formattedAmenity)) {
@@ -150,7 +150,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         console.error('Failed to save amenity permanently:', err);
       }
     }
-    
+
     // Automatically select the newly added amenity
     if (!formData.amenities.includes(formattedAmenity)) {
       setFormData(prev => ({
@@ -158,7 +158,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         amenities: [...prev.amenities, formattedAmenity]
       }));
     }
-    
+
     setIsAddingAmenity(false);
     setNewAmenity('');
   };
@@ -200,20 +200,21 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       isVerified: Boolean(initialData?.meta?.isVerified ?? true),
       featuredPriority: initialData?.meta?.featuredPriority || 0
     },
+
     // Custom Video URL (e.g. YouTube)
     customVideoUrl: initialData?.media?.videos?.[0]?.url || initialData?.videoUrl || '',
-    publishedAt: initialData?.publishedAt 
-      ? new Date(initialData.publishedAt).toISOString().slice(0, 16) 
+    publishedAt: initialData?.publishedAt
+      ? new Date(initialData.publishedAt).toISOString().slice(0, 16)
       : new Date().toISOString().slice(0, 16)
   });
 
   // Media Collections
   const [existingImages, setExistingImages] = useState(
-    Array.isArray(initialData?.media?.images) 
-      ? initialData.media.images 
-      : (Array.isArray(initialData?.images) 
-          ? initialData.images.map((img, i) => typeof img === 'string' ? { url: img, publicId: initialData?.cloudinaryPublicIds?.[i] || '', caption: '', isFeatured: i === 0 } : img)
-          : [])
+    Array.isArray(initialData?.media?.images)
+      ? initialData.media.images
+      : (Array.isArray(initialData?.images)
+        ? initialData.images.map((img, i) => typeof img === 'string' ? { url: img, publicId: initialData?.cloudinaryPublicIds?.[i] || '', caption: '', isFeatured: i === 0 } : img)
+        : [])
   );
 
   const [existingVideos, setExistingVideos] = useState(
@@ -226,7 +227,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
   // New selected files to upload
   const [selectedImageFiles, setSelectedImageFiles] = useState([]);
-  const [selectedVideoFiles, setSelectedVideoFiles] = useState([]);
+
   const [selectedFloorPlanFiles, setSelectedFloorPlanFiles] = useState([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -266,7 +267,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         console.error("Pincode fetch error:", error);
       }
     };
-    
+
     fetchLocationDetails();
   }, [formData.location.pincode]);
 
@@ -295,7 +296,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       const exists = prev.amenities.includes(amenity);
       return {
         ...prev,
-        amenities: exists 
+        amenities: exists
           ? prev.amenities.filter(a => a !== amenity)
           : [...prev.amenities, amenity]
       };
@@ -306,33 +307,21 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
   const handleMediaFileChange = (e) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      
+
       const newImages = newFiles.filter(f => f.type.startsWith('image/'));
-      const newVideos = newFiles.filter(f => f.type.startsWith('video/'));
 
       const currentImages = existingImages.length + selectedImageFiles.length;
-      const currentVideos = existingVideos.length + selectedVideoFiles.length;
 
       let imagesToAdd = newImages;
-      let videosToAdd = newVideos;
 
-      if (currentImages + newImages.length > 4) {
-        toast.error('Maximum 4 images allowed per listing.');
-        const remainingImages = Math.max(0, 4 - currentImages);
+      if (currentImages + newImages.length > 5) {
+        toast.error('Maximum 5 images allowed per listing.');
+        const remainingImages = Math.max(0, 5 - currentImages);
         imagesToAdd = newImages.slice(0, remainingImages);
-      }
-
-      if (currentVideos + newVideos.length > 2) {
-        toast.error('Maximum 2 videos allowed per listing.');
-        const remainingVideos = Math.max(0, 2 - currentVideos);
-        videosToAdd = newVideos.slice(0, remainingVideos);
       }
 
       if (imagesToAdd.length > 0) {
         setSelectedImageFiles(prev => [...prev, ...imagesToAdd]);
-      }
-      if (videosToAdd.length > 0) {
-        setSelectedVideoFiles(prev => [...prev, ...videosToAdd]);
       }
     }
   };
@@ -409,12 +398,12 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       toast.error('Please provide a valid property price.');
       return;
     }
-    if (!formData.location.locality.trim() || !formData.location.city.trim()) {
-      toast.error('Please provide locality and city.');
+    if (!formData.location.city.trim()) {
+      toast.error('Please provide a city.');
       return;
     }
-    if (existingImages.length + selectedImageFiles.length + existingVideos.length + selectedVideoFiles.length === 0) {
-      toast.error('Please upload at least one image or video in High-Resolution Media.');
+    if (existingImages.length + selectedImageFiles.length === 0) {
+      toast.error('Please upload at least one image in High-Resolution Media.');
       return;
     }
 
@@ -433,10 +422,14 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
           title: 'Walkthrough Video'
         });
       }
+      const cap = (str) => {
+        if (!str) return '';
+        return str.replace(/(^\w|\s\w)/g, m => m.toUpperCase());
+      };
 
       const propertyDataPayload = {
-        title: formData.title.trim(),
-        description: formData.description.trim() || `${formData.title.trim()} located in ${[formData.location.locality, formData.location.city].filter(Boolean).join(', ')}.`,
+        title: cap(formData.title.trim()),
+        description: formData.description.trim(),
         propertyType: formData.propertyType,
         listingType: formData.listingType,
         status: formData.status,
@@ -462,12 +455,12 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
           ageOfPropertyYears: Number(formData.specifications.ageOfPropertyYears) || 0
         },
         location: {
-          address: formData.location.address.trim() || [formData.location.locality, formData.location.city].filter(Boolean).join(', ') || formData.location.city.trim(),
-          locality: formData.location.locality.trim(),
-          city: formData.location.city.trim(),
-          state: formData.location.state.trim() || 'Telangana',
+          address: cap(formData.location.address.trim()) || [cap(formData.location.locality), cap(formData.location.city)].filter(Boolean).join(', ') || cap(formData.location.city.trim()),
+          locality: cap(formData.location.locality.trim()),
+          city: cap(formData.location.city.trim()),
+          state: cap(formData.location.state.trim()),
           pincode: formData.location.pincode.trim(),
-          landmark: formData.location.landmark.trim()
+          landmark: cap(formData.location.landmark.trim())
         },
         amenities: formData.amenities,
         media: {
@@ -490,15 +483,13 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         selectedImageFiles.forEach(file => formDataObj.append('images', file));
       }
 
-      if (selectedVideoFiles.length > 0) {
-        selectedVideoFiles.forEach(file => formDataObj.append('videos', file));
-      }
+
 
       if (selectedFloorPlanFiles.length > 0) {
         selectedFloorPlanFiles.forEach(file => formDataObj.append('floorPlans', file));
       }
 
-      const totalFilesCount = selectedImageFiles.length + selectedVideoFiles.length + selectedFloorPlanFiles.length;
+      const totalFilesCount = selectedImageFiles.length + selectedFloorPlanFiles.length;
       toast.loading(isEditMode ? 'Updating listing...' : 'Publishing listing...', { id: 'upload' });
 
       const onProgress = (percent) => {
@@ -545,7 +536,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               {isEditMode ? `Edit Property (${formData.propertyId || 'Listing'})` : 'Create New Real Estate Listing'}
             </h3>
             <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
-              {isEditMode 
+              {isEditMode
                 ? 'Update pricing, specifications, amenities, or media assets.'
                 : 'Enter comprehensive property details, pricing, and high-resolution media to publish a new listing.'}
             </p>
@@ -565,34 +556,34 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
               <div className="form-group">
                 <label className="form-label">Property Category *</label>
-              {isAddingType ? (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <input
-                    type="text"
-                    value={newPropertyType}
-                    onChange={(e) => setNewPropertyType(e.target.value)}
-                    className="form-input"
-                    placeholder="Enter new property type..."
-                    autoFocus
-                  />
-                  <button type="button" className="btn btn-dark" onClick={handleAddPropertyType}>Save</button>
-                  <button type="button" className="btn btn-outline" onClick={() => setIsAddingType(false)}>Cancel</button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <select 
-                    name="propertyType" 
-                    value={formData.propertyType} 
-                    onChange={handleTopLevelChange} 
-                    className="form-select"
-                    style={{ flex: 1, color: formData.propertyType ? 'inherit' : '#94a3b8' }}
-                  >
-                    <option value="" disabled style={{ color: '#94a3b8' }}>Select Category</option>
-                    {propertyTypes.map(t => <option key={t} value={t} style={{ color: 'var(--slate-900)' }}>{t}</option>)}
-                  </select>
-                  <button type="button" className="btn btn-outline" onClick={() => setIsAddingType(true)}>+ Add New</button>
-                </div>
-              )}
+                {isAddingType ? (
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <input
+                      type="text"
+                      value={newPropertyType}
+                      onChange={(e) => setNewPropertyType(e.target.value)}
+                      className="form-input"
+                      placeholder="Enter new property type..."
+                      autoFocus
+                    />
+                    <button type="button" className="btn btn-dark" onClick={handleAddPropertyType}>Save</button>
+                    <button type="button" className="btn btn-outline" onClick={() => setIsAddingType(false)}>Cancel</button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <select
+                      name="propertyType"
+                      value={formData.propertyType}
+                      onChange={handleTopLevelChange}
+                      className="form-select"
+                      style={{ flex: 1, color: formData.propertyType ? 'inherit' : '#94a3b8' }}
+                    >
+                      <option value="" disabled style={{ color: '#94a3b8' }}>Select Category</option>
+                      {propertyTypes.map(t => <option key={t} value={t} style={{ color: 'var(--slate-900)' }}>{t}</option>)}
+                    </select>
+                    <button type="button" className="btn btn-outline" onClick={() => setIsAddingType(true)}>+ Add New</button>
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -602,12 +593,12 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                     (Optional - leave blank to publish now)
                   </span>
                 </label>
-                <input 
-                  type="datetime-local" 
-                  name="publishedAt" 
-                  value={formData.publishedAt} 
-                  onChange={handleTopLevelChange} 
-                  className="form-input" 
+                <input
+                  type="datetime-local"
+                  name="publishedAt"
+                  value={formData.publishedAt}
+                  onChange={handleTopLevelChange}
+                  className="form-input"
                 />
               </div>
             </div>
@@ -615,10 +606,10 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="form-label">Listing Type *</label>
-                <select 
-                  name="listingType" 
-                  value={formData.listingType} 
-                  onChange={handleTopLevelChange} 
+                <select
+                  name="listingType"
+                  value={formData.listingType}
+                  onChange={handleTopLevelChange}
                   required
                   className="form-select"
                   style={{ color: formData.listingType ? 'inherit' : '#94a3b8' }}
@@ -632,14 +623,14 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
               <div className="form-group">
                 <label className="form-label">Property Title *</label>
-                <input 
-                  type="text" 
-                  required 
-                  name="title" 
-                  value={formData.title} 
-                  onChange={handleTopLevelChange} 
-                  className="form-input" 
-                  placeholder="Enter Property Title" 
+                <input
+                  type="text"
+                  required
+                  name="title"
+                  value={formData.title}
+                  onChange={handleTopLevelChange}
+                  className="form-input"
+                  placeholder="Enter Property Title"
                 />
               </div>
             </div>
@@ -648,13 +639,13 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
             <div className="form-group">
               <label className="form-label">Full Property Overview & Description</label>
-              <textarea 
-                name="description" 
-                value={formData.description} 
-                onChange={handleTopLevelChange} 
-                rows={4} 
-                className="form-input" 
-                placeholder="Enter Full Property Overview & Description" 
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleTopLevelChange}
+                rows={4}
+                className="form-input"
+                placeholder="Enter Full Property Overview & Description"
               />
             </div>
 
@@ -689,14 +680,14 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                 <>
                   <div className="form-group">
                     <label className="form-label">Total area size *</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       min="0"
                       required
-                      value={formData.specifications.carpetAreaSqFt} 
-                      onChange={(e) => handleNestedChange('specifications', 'carpetAreaSqFt', e.target.value)} 
-                      className="form-input" 
-                      placeholder="Enter Total area size" 
+                      value={formData.specifications.carpetAreaSqFt}
+                      onChange={(e) => handleNestedChange('specifications', 'carpetAreaSqFt', e.target.value)}
+                      className="form-input"
+                      placeholder="Enter Total area size"
                     />
                   </div>
 
@@ -799,14 +790,14 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               <div className="form-group">
                 <label className="form-label">Price in ₹ (INR) *</label>
                 <div style={{ position: 'relative' }}>
-                  <input 
-                    type="number" 
-                    required 
+                  <input
+                    type="number"
+                    required
                     min="0"
-                    value={formData.pricing.price} 
-                    onChange={(e) => handleNestedChange('pricing', 'price', e.target.value)} 
-                    className="form-input" 
-                    placeholder="Enter Price in ₹ (INR)" 
+                    value={formData.pricing.price}
+                    onChange={(e) => handleNestedChange('pricing', 'price', e.target.value)}
+                    className="form-input"
+                    placeholder="Enter Price in ₹ (INR)"
                   />
                 </div>
                 <span style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.35rem', display: 'block' }}>
@@ -816,10 +807,10 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
               <div className="form-group">
                 <label className="form-label">Price Type *</label>
-                <select 
+                <select
                   required
-                  value={formData.pricing.priceType} 
-                  onChange={(e) => handleNestedChange('pricing', 'priceType', e.target.value)} 
+                  value={formData.pricing.priceType}
+                  onChange={(e) => handleNestedChange('pricing', 'priceType', e.target.value)}
                   className="form-select"
                 >
                   <option value="">Select Option</option>
@@ -831,21 +822,21 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               {formData.listingType === 'Rent' && (
                 <div className="form-group">
                   <label className="form-label">Monthly Maintenance Charges</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     min="0"
-                    value={formData.pricing.maintenanceCharges} 
-                    onChange={(e) => handleNestedChange('pricing', 'maintenanceCharges', e.target.value)} 
-                    className="form-input" 
-                    placeholder="Enter Charges" 
+                    value={formData.pricing.maintenanceCharges}
+                    onChange={(e) => handleNestedChange('pricing', 'maintenanceCharges', e.target.value)}
+                    className="form-input"
+                    placeholder="Enter Charges"
                   />
                 </div>
               )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 id="priceNegotiableCheckbox"
                 checked={formData.pricing.priceNegotiable}
                 onChange={(e) => handleNestedChange('pricing', 'priceNegotiable', e.target.checked)}
@@ -864,49 +855,49 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '850px' }}>
             <div className="form-group">
               <label className="form-label">Full Address *</label>
-              <input 
-                type="text" 
-                required 
-                value={formData.location.address} 
-                onChange={(e) => handleNestedChange('location', 'address', e.target.value)} 
-                className="form-input" 
-                placeholder="Enter Full Address" 
+              <input
+                type="text"
+                required
+                value={formData.location.address}
+                onChange={(e) => handleNestedChange('location', 'address', e.target.value)}
+                className="form-input"
+                placeholder="Enter Full Address"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="form-group">
                 <label className="form-label">Pincode *</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
-                  value={formData.location.pincode} 
-                  onChange={(e) => handleNestedChange('location', 'pincode', e.target.value)} 
-                  className="form-input" 
-                  placeholder="Enter Pincode" 
+                  value={formData.location.pincode}
+                  onChange={(e) => handleNestedChange('location', 'pincode', e.target.value)}
+                  className="form-input"
+                  placeholder="Enter Pincode"
                 />
               </div>
 
               <div className="form-group">
                 <label className="form-label">City *</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={formData.location.city} 
-                  onChange={(e) => handleNestedChange('location', 'city', e.target.value)} 
-                  className="form-input" 
-                  placeholder="Enter City" 
+                <input
+                  type="text"
+                  required
+                  value={formData.location.city}
+                  onChange={(e) => handleNestedChange('location', 'city', e.target.value)}
+                  className="form-input"
+                  placeholder="Enter City"
                 />
               </div>
 
               <div className="form-group">
                 <label className="form-label">State *</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
-                  value={formData.location.state} 
-                  onChange={(e) => handleNestedChange('location', 'state', e.target.value)} 
-                  className="form-input" 
+                  value={formData.location.state}
+                  onChange={(e) => handleNestedChange('location', 'state', e.target.value)}
+                  className="form-input"
                   placeholder="Enter State"
                 />
               </div>
@@ -915,23 +906,23 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
               <div className="form-group">
                 <label className="form-label">Locality / Neighborhood (Optional)</label>
-                <input 
-                  type="text" 
-                  value={formData.location.locality} 
-                  onChange={(e) => handleNestedChange('location', 'locality', e.target.value)} 
-                  className="form-input" 
-                  placeholder="Enter Locality / Neighborhood" 
+                <input
+                  type="text"
+                  value={formData.location.locality}
+                  onChange={(e) => handleNestedChange('location', 'locality', e.target.value)}
+                  className="form-input"
+                  placeholder="Enter Locality / Neighborhood"
                 />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Nearby Landmark</label>
-                <input 
-                  type="text" 
-                  value={formData.location.landmark} 
-                  onChange={(e) => handleNestedChange('location', 'landmark', e.target.value)} 
-                  className="form-input" 
-                  placeholder="Enter Nearby Landmark" 
+                <input
+                  type="text"
+                  value={formData.location.landmark}
+                  onChange={(e) => handleNestedChange('location', 'landmark', e.target.value)}
+                  className="form-input"
+                  placeholder="Enter Nearby Landmark"
                 />
               </div>
             </div>
@@ -942,32 +933,32 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
         {/* SECTION 5: MEDIA GALLERY */}
         <div style={{ marginBottom: '2.5rem' }}>
-          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>5. Media Gallery (Upload images and video)</h4>
+          <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>5. Media Gallery (Upload images)</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem', maxWidth: '850px' }}>
             {/* 1. Image Gallery */}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <label className="form-label" style={{ marginBottom: 0 }}>High-Resolution Media (MAX 4 Images and 2 Videos) *</label>
+                <label className="form-label" style={{ marginBottom: 0 }}>High-Resolution Media (MAX 5 Images) *</label>
                 <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                  Images: {existingImages.length + selectedImageFiles.length}/4 &bull; Videos: {existingVideos.length + selectedVideoFiles.length}/2
+                  Images: {existingImages.length + selectedImageFiles.length}/5
                 </span>
               </div>
 
               <label htmlFor="media-files-upload" className="upload-dropzone">
                 <UploadCloud size={36} color="#d49a3f" style={{ marginBottom: '0.4rem' }} />
                 <div style={{ fontSize: '0.92rem', color: '#334155', fontWeight: 600 }}>
-                  <span style={{ color: '#b87d28' }}>Browse images and videos</span> or drag & drop here
+                  <span style={{ color: '#b87d28' }}>Browse images</span> or drag & drop here
                 </div>
-                <input 
-                  id="media-files-upload" 
-                  type="file" 
-                  style={{ display: 'none' }} 
-                  multiple 
-                  accept="image/*,video/mp4,video/webm,video/quicktime" 
-                  onChange={handleMediaFileChange} 
+                <input
+                  id="media-files-upload"
+                  type="file"
+                  style={{ display: 'none' }}
+                  multiple
+                  accept="image/*"
+                  onChange={handleMediaFileChange}
                 />
                 <p style={{ fontSize: '0.76rem', color: '#94a3b8', margin: '0.35rem 0 0 0' }}>
-                  Supports JPG, PNG, WEBP, MP4, WebM
+                  Supports JPG, PNG, WEBP
                 </p>
               </label>
 
@@ -979,8 +970,8 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '0.75rem' }}>
                     {existingImages.map((img, i) => (
-                      <div 
-                        key={i} 
+                      <div
+                        key={i}
                         style={{
                           position: 'relative',
                           height: '90px',
@@ -991,7 +982,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                         }}
                       >
                         <img src={img.url} alt={`Photo ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        
+
                         {/* Featured Badge */}
                         {img.isFeatured ? (
                           <div style={{ position: 'absolute', bottom: '4px', left: '4px', background: '#d49a3f', color: '#ffffff', fontSize: '0.65rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
@@ -1022,28 +1013,15 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               )}
 
               {/* Newly selected media chips */}
-              {(selectedImageFiles.length > 0 || selectedVideoFiles.length > 0) && (
+              {selectedImageFiles.length > 0 && (
                 <div style={{ marginTop: '0.75rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                   {selectedImageFiles.map((file, i) => (
                     <div key={`img-${i}`} className="upload-file-chip">
                       <ImageIcon size={14} color="#10b981" />
                       <span className="file-name" title={file.name}>{file.name}</span>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setSelectedImageFiles(prev => prev.filter((_, idx) => idx !== i))}
-                        className="file-remove-btn"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                  {selectedVideoFiles.map((file, i) => (
-                    <div key={`vid-${i}`} className="upload-file-chip">
-                      <Video size={14} color="#3b82f6" />
-                      <span className="file-name" title={file.name}>{file.name} ({(file.size / (1024 * 1024)).toFixed(1)} MB)</span>
-                      <button 
-                        type="button" 
-                        onClick={() => setSelectedVideoFiles(prev => prev.filter((_, idx) => idx !== i))}
                         className="file-remove-btn"
                       >
                         <X size={12} />
@@ -1059,14 +1037,14 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               {/* Walkthrough Video */}
               <div>
                 <label className="form-label">Walkthrough Video Link</label>
-                
+
                 <div style={{ marginBottom: '0.75rem' }}>
-                  <input 
-                    type="url" 
-                    value={formData.customVideoUrl} 
-                    onChange={(e) => setFormData(prev => ({ ...prev, customVideoUrl: e.target.value }))} 
-                    className="form-input" 
-                    placeholder="Paste YouTube / Video link here" 
+                  <input
+                    type="url"
+                    value={formData.customVideoUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, customVideoUrl: e.target.value }))}
+                    className="form-input"
+                    placeholder="Paste YouTube / Video link here"
                   />
                 </div>
 
@@ -1089,7 +1067,6 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                   </div>
                 )}
               </div>
-
               {/* Floor Plans */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
@@ -1098,18 +1075,18 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                     Floor Plans: {existingFloorPlans.length + selectedFloorPlanFiles.length}/3
                   </span>
                 </div>
-                
+
                 <label htmlFor="floorplan-file-upload" className="btn btn-outline btn-sm" style={{ display: 'inline-flex', padding: '0.65rem 1.25rem', cursor: 'pointer', width: '100%', justifyContent: 'center' }}>
                   <FileText size={16} />
                   <span>Upload Floor Plan Blueprint (Images / PDF)</span>
                 </label>
-                <input 
-                  id="floorplan-file-upload" 
-                  type="file" 
-                  style={{ display: 'none' }} 
-                  multiple 
-                  accept="image/*,application/pdf" 
-                  onChange={handleFloorPlanFileChange} 
+                <input
+                  id="floorplan-file-upload"
+                  type="file"
+                  style={{ display: 'none' }}
+                  multiple
+                  accept="image/*,application/pdf"
+                  onChange={handleFloorPlanFileChange}
                 />
 
                 {existingFloorPlans.length > 0 && (
@@ -1132,8 +1109,8 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                       <div key={i} className="upload-file-chip">
                         <FileText size={14} color="#3b82f6" />
                         <span className="file-name">{file.name}</span>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => setSelectedFloorPlanFiles(prev => prev.filter((_, idx) => idx !== i))}
                           className="file-remove-btn"
                         >
@@ -1207,8 +1184,8 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                       }}
                       autoFocus
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={handleAddAmenity}
                       style={{
                         background: '#d49a3f', color: '#fff', border: 'none', borderRadius: '6px',
@@ -1256,21 +1233,21 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
 
         {/* Footer Actions */}
         <div className="upload-form-footer" style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button 
-            type="button" 
-            onClick={onCancel} 
+          <button
+            type="button"
+            onClick={onCancel}
             disabled={isSubmitting}
-            className="btn btn-outline" 
+            className="btn btn-outline"
             style={{ padding: '0.65rem 1.65rem' }}
           >
             Cancel
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button 
-              type="submit" 
-              disabled={isSubmitting} 
-              className="btn btn-gold" 
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn btn-gold"
               style={{ padding: '0.65rem 2rem', minWidth: '170px' }}
             >
               {isSubmitting ? (

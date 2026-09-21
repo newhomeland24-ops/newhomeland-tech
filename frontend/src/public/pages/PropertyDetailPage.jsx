@@ -375,7 +375,14 @@ const PropertyDetailPage = () => {
       {/* Expected Price Callout */}
       <div className="detail-price-box">
         <span className="detail-price-label">Expected Price</span>
-        <div className="detail-price">{formatPrice(effectivePrice)}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <div className="detail-price">{property.price_display || formatPrice(effectivePrice)}</div>
+          {property.pricing?.priceType === 'Per Unit' && (
+            <span style={{ fontSize: '1.05rem', fontWeight: 600, color: '#0f172a' }}>
+              (per {property.specifications?.areaUnit || 'Unit'})
+            </span>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
@@ -605,13 +612,19 @@ const PropertyDetailPage = () => {
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-6 w-full">
-            <div className="flex-1 min-w-0 flex flex-col gap-6">
+            <div 
+              className="flex-1 min-w-0 flex flex-col gap-6 sticky self-start"
+              style={{ top: 'min(6rem, calc(100vh - 100% - 1.5rem))' }}
+            >
               {mediaCard}
               {specsCard}
               {amenitiesCard}
               {descCard}
             </div>
-            <div className="w-full lg:w-[400px] flex flex-col gap-6 sticky top-24 self-start">
+            <div 
+              className="w-full lg:w-[400px] flex flex-col gap-6 sticky self-start min-w-0"
+              style={{ top: 'min(6rem, calc(100vh - 100% - 1.5rem))' }}
+            >
               {headerCard}
               <PropertyInquiryAppointmentForms property={property} />
             </div>

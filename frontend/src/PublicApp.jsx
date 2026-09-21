@@ -47,6 +47,7 @@ function PublicApp() {
   }, []);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const path = location.pathname;
     if (path === '/') {
       document.title = `${businessName} | ${settings.hero_title || 'Verified Plots, Luxury Villas & Dream Homes'}`;
@@ -73,7 +74,7 @@ function PublicApp() {
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col min-h-screen w-full max-w-full bg-gray-50">
+      <div className="flex flex-col min-h-screen min-h-[100dvh] w-full max-w-full bg-gray-50">
         <Header />
         <Routes>
           <Route path="/" element={<HomePage />} />

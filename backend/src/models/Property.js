@@ -36,7 +36,7 @@ const propertySchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, 'Property description is required'],
+    default: '',
     trim: true
   },
   propertyType: {

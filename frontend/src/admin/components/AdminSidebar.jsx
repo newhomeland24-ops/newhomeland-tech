@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Shield, 
   LayoutDashboard, 
@@ -26,6 +26,22 @@ export default function AdminSidebar({
   onLogout = () => {}
 }) {
   const { settings } = useSettings();
+  const [touchStartX, setTouchStartX] = useState(null);
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    // Close if swiped left by at least 50px
+    if (diff > 50) {
+      onClose();
+    }
+    setTouchStartX(null);
+  };
 
   const navItems = [
     {
@@ -95,7 +111,11 @@ export default function AdminSidebar({
         />
       )}
 
-      <aside className={`admin-sidebar ${isOpen ? 'open' : ''}`}>
+      <aside 
+        className={`admin-sidebar ${isOpen ? 'open' : ''}`}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* Top Brand Header */}
         <div className="sidebar-brand-wrap">
           <div className="sidebar-brand-box">

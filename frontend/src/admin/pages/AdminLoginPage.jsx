@@ -218,7 +218,7 @@ const AdminLoginPage = () => {
               <label className="form-label" style={{ display: 'block', textAlign: 'left' }}>
                 6-Digit Security Code
               </label>
-              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between', marginTop: '0.5rem' }} onPaste={handleOtpPaste}>
+              <div className="admin-otp-group" onPaste={handleOtpPaste}>
                 {[...Array(6)].map((_, index) => (
                   <input
                     key={index}
@@ -231,15 +231,7 @@ const AdminLoginPage = () => {
                     value={otp[index] || ''}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="form-input"
-                    style={{
-                      padding: '0.5rem',
-                      textAlign: 'center',
-                      fontSize: '1.4rem',
-                      fontWeight: 700,
-                      width: '45px',
-                      height: '50px'
-                    }}
+                    className="form-input admin-otp-input"
                   />
                 ))}
               </div>

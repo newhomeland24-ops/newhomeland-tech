@@ -19,6 +19,7 @@
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  padding-top: env(safe-area-inset-top);
 }
 
 .admin-nav-container {
@@ -908,6 +909,40 @@
   margin-top: 1rem;
 }
 
+.admin-otp-group {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.admin-otp-input {
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  width: 45px;
+  height: 50px;
+}
+
+@media (max-width: 480px) {
+  .admin-login-wrap {
+    padding: 1.5rem 1rem;
+  }
+  .admin-login-card {
+    padding: 2.5rem 1.5rem;
+  }
+  .admin-otp-group {
+    gap: 0.35rem;
+  }
+  .admin-otp-input {
+    width: 35px;
+    height: 42px;
+    font-size: 1.1rem;
+    padding: 0.25rem;
+  }
+}
+
 /* ==========================================================================
    MODERN ADMIN DASHBOARD & SIDEBAR LAYOUT (NewHomeDevelopers Style)
    ========================================================================== */
@@ -1346,11 +1381,14 @@
 @media (max-width: 1023px) {
   .admin-sidebar {
     position: fixed;
-    top: 0;
+    top: 64px;
     left: 0;
     bottom: 0;
     transform: translateX(-100%);
     box-shadow: none;
+    z-index: 700;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
   }
 
   .admin-sidebar.open {
@@ -1359,15 +1397,20 @@
   }
 
   .sidebar-mobile-close-btn {
-    display: block;
+    display: none;
+  }
+
+  .sidebar-brand-wrap {
+    display: none;
   }
 
   .admin-sidebar-backdrop {
     position: fixed;
     inset: 0;
+    top: 64px;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
-    z-index: 999;
+    z-index: 699;
   }
 
   .admin-mobile-header {
@@ -2165,4 +2208,9 @@
     flex-direction: row !important;
     justify-content: flex-end !important;
   }
+}
+
+/* Capitalize alphabetic text inputs */
+.form-input[type="text"] {
+  text-transform: capitalize;
 }

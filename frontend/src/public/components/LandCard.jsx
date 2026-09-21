@@ -138,7 +138,8 @@ const LandCard = ({ property }) => {
     >
       {/* 1. Media Carousel Wrap (Slidable on Phone & Laptop) */}
       <div
-        className="property-card-image-wrap"
+        className="property-card-image-wrap aspect-video relative overflow-hidden"
+        style={{ aspectRatio: '16/9' }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -265,14 +266,14 @@ const LandCard = ({ property }) => {
       {/* 2. Card Content Body */}
       <div className="property-card-body" style={{ padding: '1.5rem 1.6rem' }}>
         {/* Location */}
-        <div className="card-location" style={{ marginBottom: '0.4rem', color: '#64748b', fontSize: '0.9rem', fontWeight: 500 }}>
-          <MapPin size={15} color="#d49a3f" />
-          <span className="truncate">{locationText}</span>
+        <div className="card-location min-w-0" style={{ marginBottom: '0.4rem', color: '#64748b', fontSize: '0.9rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+          <MapPin size={15} color="#d49a3f" className="flex-shrink-0" />
+          <span className="truncate flex-1 min-w-0">{locationText}</span>
         </div>
 
         {/* Title */}
         <h3
-          className="card-title truncate"
+          className="card-title truncate min-w-0 w-full"
           title={property.title}
           style={{
             fontSize: '1.35rem',
@@ -324,9 +325,16 @@ const LandCard = ({ property }) => {
             <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
               EXPECTED PRICE
             </span>
-            <span style={{ fontSize: '1.45rem', fontWeight: 800, color: '#b87d28', fontFamily: 'var(--font-heading)' }}>
-              {property.price_display || formatPrice(effectivePrice)}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <span style={{ fontSize: '1.45rem', fontWeight: 800, color: '#b87d28', fontFamily: 'var(--font-heading)' }}>
+                {property.price_display || formatPrice(effectivePrice)}
+              </span>
+              {property.pricing?.priceType === 'Per Unit' && (
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>
+                  (per {property.specifications?.areaUnit || 'Unit'})
+                </span>
+              )}
+            </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>

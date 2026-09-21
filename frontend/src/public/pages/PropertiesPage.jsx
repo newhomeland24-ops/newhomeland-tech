@@ -96,7 +96,7 @@ const PropertiesPage = () => {
   const hasActiveFilters = activeFilterCount > 0;
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen min-h-[100dvh] bg-gray-50">
       {/* 1. Page Header */}
       <section className="bg-slate-900 text-white py-14 border-b border-slate-800" style={{ background: 'linear-gradient(180deg, #0b1120 0%, #111827 100%)' }}>
         <div className="container">

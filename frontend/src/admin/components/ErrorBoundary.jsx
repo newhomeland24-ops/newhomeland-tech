@@ -17,7 +17,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
+        <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gray-900 p-4">
           <div className="max-w-md w-full bg-gray-800 p-8 rounded-2xl shadow-xl text-center border border-gray-700">
             <h2 className="text-2xl font-bold text-red-500 mb-4">Admin Portal Error</h2>
             <p className="text-gray-400 mb-6 text-sm">A critical rendering error occurred. Please refresh the dashboard.</p>

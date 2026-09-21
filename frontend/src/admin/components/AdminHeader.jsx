@@ -18,13 +18,26 @@ export default function AdminHeader() {
     <header className="site-header admin-site-header">
       <div className="container nav-container admin-nav-container">
         {/* Brand Logo - Redirects to Admin Home */}
-        <Link to="/admin/dashboard" className="brand-logo" title="Admin Home">
-          <div className="brand-icon">
-            <Building2 size={24} />
+        <Link to="/admin/dashboard" className="sidebar-brand-box" title="Admin Home" style={{ textDecoration: 'none', background: 'none', border: 'none', padding: 0 }}>
+          <div className="sidebar-brand-icon-box">
+            <Building2 size={22} className="sidebar-shield-icon" />
           </div>
-          <div className="brand-text">
-            <span className="brand-title">{settings.business_name || 'NewHomeDevelopers'}</span>
-            <span className="brand-subtitle" style={{ color: '#d49a3f' }}>Operations Console</span>
+          <div 
+            className="sidebar-brand-text" 
+            style={{ minWidth: 0, overflow: 'hidden', textAlign: 'left' }}
+          >
+            <span 
+              className="sidebar-company-title"
+              style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            >
+              {settings.business_name || 'NewHomeDevelopers'}
+            </span>
+            <span 
+              className="sidebar-company-subtitle"
+              style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            >
+              {settings.tagline || 'YOUR HOME. YOUR FUTURE.'}
+            </span>
           </div>
         </Link>
 
