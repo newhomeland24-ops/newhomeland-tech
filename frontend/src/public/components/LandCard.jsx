@@ -24,7 +24,7 @@ const LandCard = ({ property }) => {
 
   const propId = property.propertyId || property._id || property.id;
   const isSold = property.status === 'sold' || property.status === 'Sold';
-  const locationText = [property.location?.locality, property.location?.city].filter(Boolean).join(', ') || property.location?.address || 'Delhi NCR';
+  const locationText = [property.location?.city, property.location?.state].filter(Boolean).join(', ') || property.location?.address || 'Delhi NCR';
   const typeText = property.propertyType || 'Residential';
   const unitText = property.specifications?.areaUnit || property.areaUnit || 'Sq. Ft';
   const effectiveArea = property.specifications?.carpetAreaSqFt;
@@ -149,45 +149,12 @@ const LandCard = ({ property }) => {
           key={currentMedia.url}
           src={optimizedImgUrl}
           alt={property.title}
-          className={`property-card-img ${isSold ? 'grayscale' : ''}`}
+          className="property-card-img"
           loading="lazy"
           decoding="async"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', filter: isSold ? 'grayscale(100%)' : 'none' }}
         />
 
-        {/* Video Walkthrough Indicator Badge */}
-        {hasVideo && (
-          <div className="card-video-playing-badge" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Play size={12} fill="#ffffff" color="#ffffff" />
-            <span>Video Walkthrough</span>
-          </div>
-        )}
-
-        {/* Media Type/Count Badge */}
-        {mediaList.length > 1 && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '10px',
-              left: '10px',
-              background: 'rgba(15, 23, 42, 0.85)',
-              backdropFilter: 'blur(4px)',
-              color: '#ffffff',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              padding: '0.25rem 0.6rem',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              zIndex: 8,
-              pointerEvents: 'none'
-            }}
-          >
-            <Camera size={12} fill="#ffffff" />
-            <span>{currentIndex + 1} / {mediaList.length}</span>
-          </div>
-        )}
 
         {/* Carousel Prev/Next Buttons (Laptop Hover & Phone Accessible) */}
         {mediaList.length > 1 && (
@@ -398,7 +365,8 @@ LandCard.propTypes = {
     location: PropTypes.shape({
       address: PropTypes.string,
       locality: PropTypes.string,
-      city: PropTypes.string
+      city: PropTypes.string,
+      state: PropTypes.string
     }),
     specifications: PropTypes.shape({
       carpetAreaSqFt: PropTypes.number,

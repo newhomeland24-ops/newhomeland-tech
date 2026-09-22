@@ -18,6 +18,7 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeTab, setActiveTab] = useState('all');
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState(null);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-IN', {
@@ -27,21 +28,51 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
     }).format(price);
   };
 
-  const handleMarkSold = async (id, title) => {
-    if (window.confirm(`Mark "${title}" as SOLD? It will remain visible with a Sold Out banner and auto-expire in 5 days.`)) {
-      toast.loading('Updating listing status...', { id: 'sold' });
-      const res = await markSold(id);
-      if (res.success) toast.success(`"${title}" marked as Sold`, { id: 'sold' });
-      else toast.error(res.message || 'Failed to update status', { id: 'sold' });
-    }
+  const handleMarkSold = (id, title) => {
+    setConfirmDialog({
+      type: 'sold',
+      id,
+      title,
+      message: `Mark "${title}" as SOLD? It will remain visible with a Sold Out banner and auto-expire in 5 days.`
+    });
   };
 
-  const handleDelete = async (id, title) => {
-    if (window.confirm(`Are you sure you want to PERMANENTLY delete "${title}" and all its photos/videos? This cannot be undone.`)) {
+  const handleDelete = (id, title) => {
+    setConfirmDialog({
+      type: 'delete',
+      id,
+      title,
+      message: `Are you sure you want to PERMANENTLY delete "${title}" and all its photos/videos? This cannot be undone.`
+    });
+  };
+
+  const executeConfirmAction = async () => {
+    if (!confirmDialog) return;
+    const { type, id, title } = confirmDialog;
+    setConfirmDialog(null);
+
+    if (type === 'sold') {
+      toast.loading('Updating listing status...', { id: 'sold' });
+      const res = await markSold(id);
+      if (res.success) {
+        toast.success(`"${title}" marked as Sold`, { id: 'sold' });
+        if (selectedProperty && (selectedProperty.propertyId === id || selectedProperty._id === id)) {
+          setSelectedProperty(prev => prev ? { ...prev, status: 'sold' } : null);
+        }
+      } else {
+        toast.error(res.message || 'Failed to update status', { id: 'sold' });
+      }
+    } else if (type === 'delete') {
       toast.loading('Deleting listing and assets...', { id: 'delete' });
       const res = await deleteProperty(id);
-      if (res.success) toast.success(`"${title}" deleted successfully`, { id: 'delete' });
-      else toast.error(res.message || 'Failed to delete listing', { id: 'delete' });
+      if (res.success) {
+        toast.success(`"${title}" deleted successfully`, { id: 'delete' });
+        if (selectedProperty && (selectedProperty.propertyId === id || selectedProperty._id === id)) {
+          setSelectedProperty(null);
+        }
+      } else {
+        toast.error(res.message || 'Failed to delete listing', { id: 'delete' });
+      }
     }
   };
 
@@ -178,7 +209,7 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
               const primaryImg = property.media?.images?.[0]?.url || null;
 
               const currentPropertyId = property.propertyId || property._id;
-              const locationDisplay = [property.location?.locality, property.location?.city].filter(Boolean).join(', ') || property.location?.address || 'Delhi NCR';
+              const locationDisplay = [property.location?.city, property.location?.state].filter(Boolean).join(', ') || property.location?.locality || property.location?.address || 'Delhi NCR';
 
               const effectivePrice = property.pricing?.price;
               const effectiveArea = property.specifications?.carpetAreaSqFt;
@@ -243,8 +274,15 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
 
                   {/* Price */}
                   <td data-label="Price">
-                    <div style={{ fontWeight: 800, color: '#b87d28', fontSize: '1.05rem', fontFamily: 'var(--font-heading)' }}>
-                      {formatPrice(effectivePrice)}
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.3rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 800, color: '#b87d28', fontSize: '1.05rem', fontFamily: 'var(--font-heading)' }}>
+                        {property.price_display || formatPrice(effectivePrice)}
+                      </span>
+                      {property.pricing?.priceType === 'Per Unit' && (
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>
+                          (per {property.specifications?.areaUnit || 'Unit'})
+                        </span>
+                      )}
                     </div>
                   </td>
 
@@ -273,7 +311,7 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
 
                   {/* Actions */}
                   <td data-label="Actions" style={{ textAlign: 'right' }}>
-                    <div className="action-btn-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+                    <div className="action-btn-group" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: '0.75rem' }}>
                       {/* Edit Property Button */}
                       {onEditProperty && (
                         <button
@@ -287,16 +325,15 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
                       )}
 
                       {/* Mark Sold */}
-                      {property.status !== 'sold' && (
-                        <button
-                          type="button"
-                          onClick={() => handleMarkSold(currentPropertyId, property.title)}
-                          className="btn-text-action"
-                          style={{ color: '#059669', fontWeight: 600, fontSize: '0.85rem', padding: '0.4rem 0.6rem', border: 'none', background: 'transparent', cursor: 'pointer' }}
-                        >
-                          Mark Sold
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => { if (!isSoldStatus) handleMarkSold(currentPropertyId, property.title); }}
+                        disabled={isSoldStatus}
+                        className="btn-text-action"
+                        style={{ color: isSoldStatus ? '#9ca3af' : '#059669', fontWeight: 600, fontSize: '0.85rem', padding: '0.4rem 0.6rem', border: 'none', background: 'transparent', cursor: isSoldStatus ? 'not-allowed' : 'pointer', opacity: isSoldStatus ? 0.6 : 1 }}
+                      >
+                        {isSoldStatus ? 'Sold Out' : 'Mark Sold'}
+                      </button>
 
                       {/* Delete */}
                       <button
@@ -338,15 +375,39 @@ const LandTable = ({ properties, markSold, deleteProperty, onEditProperty }) => 
         isOpen={!!selectedProperty}
         onClose={() => setSelectedProperty(null)}
         onEdit={onEditProperty}
-        onMarkSold={async (id, title) => {
-          await handleMarkSold(id, title);
-          setSelectedProperty(prev => prev ? { ...prev, status: 'sold' } : null);
-        }}
-        onDelete={async (id, title) => {
-          await handleDelete(id, title);
-          setSelectedProperty(null);
-        }}
+        onMarkSold={(id, title) => handleMarkSold(id, title)}
+        onDelete={(id, title) => handleDelete(id, title)}
       />
+
+      {/* Confirmation Modal */}
+      {confirmDialog && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" style={{ animation: 'fadeIn 0.2s ease-out' }}>
+          <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl" style={{ animation: 'slideUp 0.3s ease-out' }}>
+            <h3 className="font-bold text-gray-900 text-lg mb-2">
+              {confirmDialog.type === 'sold' ? 'Mark as Sold' : 'Delete Property'}
+            </h3>
+            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+              {confirmDialog.message}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+                className="px-4 py-2 rounded-xl text-gray-700 bg-gray-100 hover:bg-gray-200 font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeConfirmAction}
+                className={`px-4 py-2 rounded-xl text-white font-semibold transition-colors ${confirmDialog.type === 'delete' ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

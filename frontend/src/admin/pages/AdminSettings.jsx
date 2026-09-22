@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { 
   Building2, 
@@ -15,7 +15,9 @@ import {
   Sparkles,
   ExternalLink,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  X,
+  Key
 } from 'lucide-react';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
 import toast from 'react-hot-toast';
@@ -29,8 +31,9 @@ export default function AdminSettings() {
     tagline: '',
     phone: '',
     whatsapp: '',
-    email: '',
     address: '',
+    facebook: '',
+    instagram: '',
     business_hours: '',
     hero_title: '',
     hero_subtitle: '',
@@ -45,7 +48,41 @@ export default function AdminSettings() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Sync state when settings context changes or loads
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
+  const inputRefs = useRef([]);
+
+  const handleOtpChange = (index, value) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
+    const newOtp = otpValue.split('');
+    // ensure array is 6 length
+    while(newOtp.length < 6) newOtp.push('');
+    newOtp[index] = digit;
+    const finalOtp = newOtp.join('');
+    setOtpValue(finalOtp);
+
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && (!otpValue[index] || otpValue[index] === ' ') && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text/plain').replace(/\D/g, '').slice(0, 6);
+    if (pastedData) {
+      setOtpValue(pastedData);
+      const focusIndex = Math.min(pastedData.length, 5);
+      inputRefs.current[focusIndex]?.focus();
+    }
+  };
+
   useEffect(() => {
     if (settings) {
       setFormData({
@@ -53,7 +90,8 @@ export default function AdminSettings() {
         tagline: settings.tagline || '',
         phone: settings.phone || '',
         whatsapp: settings.whatsapp || '',
-        email: settings.email || '',
+        facebook: settings.social_links?.facebook || '',
+        instagram: settings.social_links?.instagram || '',
         address: settings.address || '',
         business_hours: settings.business_hours || '',
         hero_title: settings.hero_title || '',
@@ -79,21 +117,54 @@ export default function AdminSettings() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsRequestingOtp(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const res = await axios.post('/api/admin/settings/request-otp', {}, {
+        withCredentials: true
+      });
+
+      if (res.data?.success || res.status === 200) {
+        setShowOtpModal(true);
+        toast.success('OTP sent to your admin email!');
+      } else {
+        throw new Error(res.data?.message || 'Failed to request OTP');
+      }
+    } catch (err) {
+      console.error('Failed to request OTP:', err);
+      const msg = err.response?.data?.message || err.message || 'An error occurred while requesting OTP.';
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setIsRequestingOtp(false);
+    }
+  };
+
+  const confirmUpdate = async () => {
+    if (!otpValue || otpValue.length !== 6) {
+      toast.error('Please enter a valid 6-digit OTP');
+      return;
+    }
+
     setIsSaving(true);
     setErrorMsg('');
     setSuccessMsg('');
 
     try {
-      const res = await axios.put('/api/admin/settings', formData, {
+      const payload = { ...formData, otp: otpValue };
+      const res = await axios.put('/api/admin/settings', payload, {
         headers: { 'Content-Type': 'application/json' },
         withCredentials: true
       });
 
       if (res.data?.success || res.status === 200) {
-        // Trigger instantaneous app-wide state refresh
         await refreshSettings();
         setSuccessMsg('Broker & site configuration updated successfully!');
         toast.success('Configuration saved & synchronized in real time!');
+        setShowOtpModal(false);
+        setOtpValue('');
       } else {
         throw new Error(res.data?.message || 'Failed to update settings');
       }
@@ -114,7 +185,8 @@ export default function AdminSettings() {
         tagline: settings.tagline || '',
         phone: settings.phone || '',
         whatsapp: settings.whatsapp || '',
-        email: settings.email || '',
+        facebook: settings.social_links?.facebook || '',
+        instagram: settings.social_links?.instagram || '',
         address: settings.address || '',
         business_hours: settings.business_hours || '',
         hero_title: settings.hero_title || '',
@@ -155,27 +227,7 @@ export default function AdminSettings() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={isSaving}
-            className="btn btn-outline"
-            style={{ borderRadius: '10px', padding: '0.55rem 1.1rem', fontSize: '0.85rem' }}
-          >
-            Reset Form
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSaving}
-            className="btn btn-gold"
-            style={{ borderRadius: '10px', padding: '0.55rem 1.35rem', display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', fontWeight: 700 }}
-          >
-            {isSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-            <span>{isSaving ? 'Saving Changes...' : 'Save Configuration'}</span>
-          </button>
-        </div>
+
       </div>
 
       {/* Alerts */}
@@ -193,10 +245,10 @@ export default function AdminSettings() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         
         {/* SECTION 1: COMPANY IDENTITY */}
-        <div className="admin-card" style={{ padding: '1.75rem', borderRadius: '14px' }}>
+        <div className="admin-card" style={{ marginBottom: 0, padding: '1.75rem', borderRadius: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
             <div style={{ padding: '0.45rem', background: 'rgba(212, 154, 63, 0.12)', borderRadius: '8px', color: '#d49a3f' }}>
               <Building2 size={20} />
@@ -249,7 +301,7 @@ export default function AdminSettings() {
         </div>
 
         {/* SECTION 2: DIRECT CONTACT CHANNELS */}
-        <div className="admin-card" style={{ padding: '1.75rem', borderRadius: '14px' }}>
+        <div className="admin-card" style={{ marginBottom: 0, padding: '1.75rem', borderRadius: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
             <div style={{ padding: '0.45rem', background: 'rgba(16, 185, 129, 0.12)', borderRadius: '8px', color: '#10b981' }}>
               <Phone size={20} />
@@ -304,21 +356,40 @@ export default function AdminSettings() {
                 <code style={{ background: '#f1f5f9', padding: '0.1rem 0.35rem', borderRadius: '4px', color: '#16a34a' }}>wa.me/{cleanWhatsappPreview}</code>
               </div>
             </div>
+          </div>
 
-            {/* Email */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem', marginTop: '1rem' }}>
+            {/* Facebook */}
             <div className="form-group">
               <label className="form-label" style={{ fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Mail size={15} color="#d97706" />
-                <span>Support Email Address</span> <span style={{ color: '#ef4444' }}>*</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" color="#1877F2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                <span>Facebook Link</span> <span style={{ color: '#ef4444' }}>*</span>
               </label>
               <input
-                type="email"
+                type="url"
                 required
-                name="email"
-                value={formData.email}
+                name="facebook"
+                value={formData.facebook}
                 onChange={handleChange}
                 className="form-input"
-                placeholder="Support Email Address"
+                placeholder="https://facebook.com/yourpage"
+              />
+            </div>
+
+            {/* Instagram */}
+            <div className="form-group">
+              <label className="form-label" style={{ fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" color="#E4405F"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                <span>Instagram Link</span> <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <input
+                type="url"
+                required
+                name="instagram"
+                value={formData.instagram}
+                onChange={handleChange}
+                className="form-input"
+                placeholder="https://instagram.com/yourprofile"
               />
             </div>
           </div>
@@ -361,7 +432,7 @@ export default function AdminSettings() {
         </div>
 
         {/* SECTION 3: HOMEPAGE HERO & ABOUT TEXTS */}
-        <div className="admin-card" style={{ padding: '1.75rem', borderRadius: '14px' }}>
+        <div className="admin-card" style={{ marginBottom: 0, padding: '1.75rem', borderRadius: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '1.25rem', borderBottom: '1px solid #f1f5f9', paddingBottom: '0.85rem' }}>
             <div style={{ padding: '0.45rem', background: 'rgba(59, 130, 246, 0.12)', borderRadius: '8px', color: '#3b82f6' }}>
               <FileText size={20} />
@@ -456,7 +527,7 @@ export default function AdminSettings() {
         </div>
 
         {/* SECTION 4: PORTAL MAINTENANCE TOGGLE */}
-        <div className="admin-card" style={{ padding: '1.75rem', borderRadius: '14px', borderLeft: formData.isMaintenance ? '4px solid #d97706' : '4px solid #10b981' }}>
+        <div className="admin-card" style={{ marginBottom: 0, padding: '1.75rem', borderRadius: '14px', borderLeft: formData.isMaintenance ? '4px solid #d97706' : '4px solid #10b981' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
               <div style={{ padding: '0.45rem', background: formData.isMaintenance ? 'rgba(217, 119, 6, 0.12)' : 'rgba(16, 185, 129, 0.12)', borderRadius: '8px', color: formData.isMaintenance ? '#d97706' : '#10b981' }}>
@@ -503,27 +574,80 @@ export default function AdminSettings() {
 
         {/* Bottom Save Action Bar */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', padding: '1rem 0' }}>
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={isSaving}
-            className="btn btn-outline"
-            style={{ borderRadius: '10px', padding: '0.75rem 1.5rem', fontWeight: 600 }}
-          >
-            Cancel / Reset
-          </button>
+
           <button
             type="submit"
-            disabled={isSaving}
+            disabled={isRequestingOtp || isSaving}
             className="btn btn-gold"
             style={{ borderRadius: '10px', padding: '0.75rem 2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.95rem' }}
           >
-            {isSaving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-            <span>{isSaving ? 'Saving Changes...' : 'Save Configuration'}</span>
+            {isRequestingOtp ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
+            <span>{isRequestingOtp ? 'Requesting OTP...' : 'Save Configuration'}</span>
           </button>
         </div>
 
       </form>
+
+      {/* OTP Modal */}
+      {showOtpModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', width: '100%', maxWidth: '420px', padding: '2rem', position: 'relative', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}>
+            <button
+              onClick={() => { setShowOtpModal(false); setOtpValue(''); }}
+              style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer' }}
+            >
+              <X size={20} />
+            </button>
+            
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ width: '48px', height: '48px', background: 'rgba(212, 154, 63, 0.15)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d49a3f', margin: '0 auto 1rem auto' }}>
+                <Key size={24} />
+              </div>
+              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>Security Verification</h3>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
+                Enter the 6-digit verification code sent to your admin email to authorize these changes.
+              </p>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <div className="admin-otp-group" onPaste={handleOtpPaste} style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                {[...Array(6)].map((_, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => (inputRefs.current[index] = el)}
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    autoFocus={index === 0}
+                    maxLength={2}
+                    value={otpValue[index] || ''}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    className="form-input admin-otp-input"
+                    style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 700, width: '48px', height: '48px', padding: '0' }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={confirmUpdate}
+              disabled={isSaving || otpValue.length !== 6}
+              className="btn btn-gold"
+              style={{ width: '100%', padding: '0.85rem', borderRadius: '10px', fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            >
+              {isSaving ? (
+                <>
+                  <RefreshCw size={18} className="animate-spin" />
+                  <span>Verifying...</span>
+                </>
+              ) : (
+                <span>Confirm Update</span>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,7 +21,7 @@ const brokerSettingSchema = new mongoose.Schema({
   },
   whatsapp: { 
     type: String, 
-    default: '+919876543210',
+    default: '',
     trim: true
   },
   email: { 

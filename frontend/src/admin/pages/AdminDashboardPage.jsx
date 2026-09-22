@@ -872,73 +872,7 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
                 </div>
               </div>
 
-              {/* Recent Real Properties Overview */}
-              <div className="admin-card">
-                <div className="admin-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h2 className="admin-card-title">Recent Real Estate Listings</h2>
-                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.84rem', color: '#64748b' }}>
-                      Latest property listings currently in your database.
-                    </p>
-                  </div>
-                  <button 
-                    type="button" 
-                    onClick={() => setActiveTab('properties')} 
-                    className="widget-view-all-link"
-                    style={{ fontSize: '0.9rem' }}
-                  >
-                    View All {properties.length} Properties &rarr;
-                  </button>
-                </div>
 
-                {properties.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '3rem 1.5rem', color: '#64748b' }}>
-                    <p>No listings created yet. Click "Publish New Property" to add your first listing.</p>
-                  </div>
-                ) : (
-                  <div className="widget-table-wrap" style={{ padding: '0 1.5rem 1.5rem 1.5rem' }}>
-                    <table className="widget-mini-table">
-                      <thead>
-                        <tr>
-                          <th>Property Title</th>
-                          <th>Location</th>
-                          <th>Category</th>
-                          <th>Price</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {properties.slice(0, 5).map((p) => (
-                          <tr 
-                            key={p.propertyId || p._id}
-                            onClick={() => setPreviewProperty(p)}
-                            style={{ cursor: 'pointer' }}
-                            title="Click to view property details"
-                          >
-                            <td>
-                              <div style={{ fontWeight: 700, color: '#0f172a' }}>{p.title}</div>
-                            </td>
-                            <td>
-                              <span style={{ color: '#64748b', fontSize: '0.86rem' }}>{formatLocation(p.location)}</span>
-                            </td>
-                            <td>
-                              <span className="badge-type-pill">{p.propertyType}</span>
-                            </td>
-                            <td>
-                              <span style={{ fontWeight: 700, color: '#b87d28' }}>{formatPrice(p.pricing?.price ?? p.price ?? 0)}</span>
-                            </td>
-                            <td>
-                              <span className={`badge-status ${p.status}`}>
-                                {p.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
             </div>
           )}
 
@@ -1041,7 +975,7 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
                   </div>
                 ) : (
                   <div className="widget-table-wrap" style={{ padding: '1rem 1.5rem' }}>
-                    <table className="widget-mini-table">
+                    <table className="widget-mini-table responsive-enquiry-table">
                       <thead>
                         <tr>
                           <th>Client Name & Contact</th>
@@ -1075,9 +1009,6 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
                                   >
                                     ID: #{inq.propertyId}
                                   </a>
-                                )}
-                                {inq.propertyLocation && (
-                                  <span style={{ fontSize: '0.76rem', color: '#64748b' }}>{formatLocation(inq.propertyLocation)}</span>
                                 )}
                               </div>
                             </td>
@@ -1221,7 +1152,7 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
                   </div>
                 ) : (
                   <div className="widget-table-wrap" style={{ padding: '1rem 1.5rem' }}>
-                    <table className="widget-mini-table">
+                    <table className="widget-mini-table responsive-enquiry-table">
                       <thead>
                         <tr>
                           <th>Client Information</th>
@@ -1255,9 +1186,6 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
                                   >
                                     ID: #{app.propertyId}
                                   </a>
-                                )}
-                                {app.propertyLocation && (
-                                  <span style={{ fontSize: '0.76rem', color: '#64748b' }}>{formatLocation(app.propertyLocation)}</span>
                                 )}
                               </div>
                             </td>

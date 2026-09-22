@@ -5,7 +5,7 @@ export const DEFAULT_SETTINGS = {
   business_name: 'NewHomeDevelopers',
   tagline: 'Your Ground. Your Future.',
   phone: '+91 98765 43210',
-  whatsapp: '+919876543210',
+  whatsapp: '',
   email: 'contact@newhomedevelopers.com',
   address: 'Plot No. 42, Sector 14, Commercial Complex, Delhi NCR',
   business_hours: 'Mon - Sat: 9:30 AM - 7:30 PM | Sunday: By Appointment',

@@ -9,7 +9,7 @@ const ContactPage = () => {
   const businessName = settings.business_name || 'NewHomeDevelopers';
   const rawPhone = settings.phone || '+91 98765 43210';
   const cleanPhone = rawPhone.replace(/[^\d+]/g, '');
-  const rawWhatsapp = settings.whatsapp || '+919876543210';
+  const rawWhatsapp = settings.whatsapp || '';
   const cleanWhatsapp = rawWhatsapp.replace(/[^\d]/g, '');
   const email = settings.email || 'contact@apexlandmark.com';
   const address = settings.address || 'Plot No. 42, Sector 14, Commercial Complex, Delhi NCR';

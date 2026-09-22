@@ -5,6 +5,7 @@ import {
   UploadCloud,
   Plus,
   Video,
+  AlertCircle,
   Image as ImageIcon,
   FileText,
   Check,
@@ -528,14 +529,14 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
       {/* Header */}
       <div className="upload-form-header" style={{ padding: '1.25rem 1.75rem', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #d49a3f 0%, #b87d28 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff' }}>
+          <div style={{ width: '40px', height: '40px', flexShrink: 0, borderRadius: '10px', background: 'linear-gradient(135deg, #d49a3f 0%, #b87d28 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff' }}>
             {isEditMode ? <Edit3 size={20} /> : <Plus size={20} />}
           </div>
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
+            <h3 className="text-lg sm:text-xl" style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
               {isEditMode ? `Edit Property (${formData.propertyId || 'Listing'})` : 'Create New Real Estate Listing'}
             </h3>
-            <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+            <p className="text-xs sm:text-sm" style={{ margin: '0.15rem 0 0 0', color: '#64748b' }}>
               {isEditMode
                 ? 'Update pricing, specifications, amenities, or media assets.'
                 : 'Enter comprehensive property details, pricing, and high-resolution media to publish a new listing.'}
@@ -553,7 +554,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
         <div style={{ marginBottom: '2.5rem' }}>
           <h4 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '1.25rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>1. Basic Info</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '850px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="form-label">Property Category *</label>
                 {isAddingType ? (
@@ -589,7 +590,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               <div className="form-group">
                 <label className="form-label">
                   Publish Schedule Date
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400, marginLeft: '0.5rem' }}>
+                  <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b', fontWeight: 400, marginTop: '0.15rem' }}>
                     (Optional - leave blank to publish now)
                   </span>
                 </label>
@@ -903,7 +904,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="form-label">Locality / Neighborhood (Optional)</label>
                 <input
@@ -916,7 +917,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Nearby Landmark</label>
+                <label className="form-label">Nearby Landmark (Optional)</label>
                 <input
                   type="text"
                   value={formData.location.landmark}
@@ -1038,13 +1039,18 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               <div>
                 <label className="form-label">Walkthrough Video Link</label>
 
+                <div style={{ marginBottom: '0.75rem', padding: '0.5rem 0.75rem', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', color: '#991b1b', fontSize: '0.8rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                  <span>Only <b>YouTube</b> video links are supported. Instagram/Facebook links will not play.</span>
+                </div>
+
                 <div style={{ marginBottom: '0.75rem' }}>
                   <input
                     type="url"
                     value={formData.customVideoUrl}
                     onChange={(e) => setFormData(prev => ({ ...prev, customVideoUrl: e.target.value }))}
                     className="form-input"
-                    placeholder="Paste YouTube / Video link here"
+                    placeholder="Paste YouTube link here"
                   />
                 </div>
 
@@ -1071,9 +1077,6 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                   <label className="form-label" style={{ marginBottom: 0 }}>Floor Plans & Architectural Blueprints (Max 3)</label>
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    Floor Plans: {existingFloorPlans.length + selectedFloorPlanFiles.length}/3
-                  </span>
                 </div>
 
                 <label htmlFor="floorplan-file-upload" className="btn btn-outline btn-sm" style={{ display: 'inline-flex', padding: '0.65rem 1.25rem', cursor: 'pointer', width: '100%', justifyContent: 'center' }}>

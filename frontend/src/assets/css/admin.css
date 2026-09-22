@@ -606,7 +606,7 @@
 }
 
 .admin-table td {
-  padding: 1.1rem 1.25rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--slate-100);
   vertical-align: middle;
 }
@@ -2163,54 +2163,99 @@
   .admin-table.responsive-card-table thead {
     display: none;
   }
-  
-  .admin-table.responsive-card-table tr {
-    margin-bottom: 1.5rem;
+   .admin-table.responsive-card-table tr {
+    display: grid;
+    grid-template-columns: 85px 1fr;
+    grid-template-areas:
+      "media title"
+      "type price"
+      "status actions";
+    gap: 0.4rem 1rem;
+    margin: 0 0.75rem 1.25rem 0.75rem;
+    width: auto;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     background: #fff;
     overflow: hidden;
+    padding: 1rem;
   }
   
   .admin-table.responsive-card-table td {
-    position: relative;
-    padding: 1rem 1rem 1rem 40% !important;
-    text-align: right !important;
-    border-bottom: 1px solid #f1f5f9;
-    min-height: 50px;
+    padding: 0 !important;
+    text-align: left !important;
+    border-bottom: none !important;
+    min-height: auto;
   }
   
-  .admin-table.responsive-card-table td:last-child {
-    border-bottom: 0;
-  }
+  .admin-table.responsive-card-table td:nth-child(1) { grid-area: media; align-self: start; justify-self: start; }
+  .admin-table.responsive-card-table td:nth-child(2) { grid-area: title; align-self: start; justify-self: start; }
+  .admin-table.responsive-card-table td:nth-child(3) { grid-area: type; align-self: center; justify-self: start; text-align: left !important; }
+  .admin-table.responsive-card-table td:nth-child(4) { grid-area: price; align-self: center; justify-self: start; }
+  .admin-table.responsive-card-table td:nth-child(5) { grid-area: status; align-self: end; justify-self: start; text-align: left !important; }
+  .admin-table.responsive-card-table td:nth-child(6) { grid-area: actions; align-self: end; justify-self: end; }
 
-  .admin-table.responsive-card-table td::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 35%;
-    text-align: left;
-    font-weight: 700;
-    color: #64748b;
-    font-size: 0.85rem;
+  .admin-table.responsive-card-table td .table-thumb-wrap {
+    width: 85px;
+    height: 85px;
   }
   
-  .admin-table.responsive-card-table td > div {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-  }
-
   .admin-table.responsive-card-table td .action-btn-group {
-    flex-direction: row !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
     justify-content: flex-end !important;
+    gap: 0 !important;
+    width: auto;
+  }
+
+  .admin-table.responsive-card-table td .action-btn-group button {
+    padding: 0.15rem 0.5rem !important;
   }
 }
 
 /* Capitalize alphabetic text inputs */
 .form-input[type="text"] {
   text-transform: capitalize;
+}
+
+@media (max-width: 768px) {
+  .widget-mini-table.responsive-enquiry-table,
+  .widget-mini-table.responsive-enquiry-table tbody,
+  .widget-mini-table.responsive-enquiry-table th,
+  .widget-mini-table.responsive-enquiry-table td,
+  .widget-mini-table.responsive-enquiry-table tr {
+    display: block;
+    width: 100%;
+  }
+  
+  .widget-mini-table.responsive-enquiry-table thead {
+    display: none;
+  }
+  
+  .widget-mini-table.responsive-enquiry-table tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    background: #fff;
+    padding: 1.25rem;
+  }
+
+  .widget-mini-table.responsive-enquiry-table td {
+    padding: 0 !important;
+    text-align: left !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding-bottom: 0.75rem !important;
+    white-space: normal !important;
+  }
+  
+  .widget-mini-table.responsive-enquiry-table td:last-child {
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+    display: flex;
+    justify-content: flex-end;
+  }
 }

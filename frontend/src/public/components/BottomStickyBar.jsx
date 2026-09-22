@@ -7,7 +7,7 @@ const BottomStickyBar = () => {
   const { settings } = useSettings();
 
   const rawPhone = settings.phone || '+91 98765 43210';
-  const rawWhatsapp = settings.whatsapp || '+919876543210';
+  const rawWhatsapp = settings.whatsapp || '';
   const cleanPhone = rawPhone.replace(/[^\d+]/g, '');
   const cleanWhatsapp = rawWhatsapp.replace(/[^\d]/g, '');
   const businessName = settings.business_name || 'NewHomeDevelopers';

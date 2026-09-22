@@ -140,10 +140,6 @@ const PropertyDetailPage = () => {
 
   // Build Media List (Videos + Images + Floor Plans)
   const mediaList = [];
-  if (property.media?.videos?.length > 0) {
-    property.media.videos.forEach(v => mediaList.push({ type: 'video', url: v.url }));
-  }
-
   if (property.media?.images?.length > 0) {
     property.media.images.forEach(img => {
       if (img.url) mediaList.push({ type: 'image', url: img.url, caption: img.caption });
@@ -154,6 +150,10 @@ const PropertyDetailPage = () => {
     property.media.floorPlans.forEach(fp => {
       if (fp.url) mediaList.push({ type: 'image', url: fp.url, caption: fp.title || 'Floor Plan Layout' });
     });
+  }
+
+  if (property.media?.videos?.length > 0) {
+    property.media.videos.forEach(v => mediaList.push({ type: 'video', url: v.url }));
   }
 
   if (mediaList.length === 0) {
@@ -167,7 +167,7 @@ const PropertyDetailPage = () => {
   const getYouTubeEmbedUrl = (url) => {
     if (!url) return null;
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-    return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1&mute=0&controls=1&rel=0` : null;
+    return match ? `https://www.youtube.com/embed/${match[1]}?autoplay=0&mute=0&controls=1&rel=0` : null;
   };
 
   const currentMedia = mediaList[currentIndex] || mediaList[0];
@@ -253,19 +253,18 @@ const PropertyDetailPage = () => {
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              style={{ width: '100%', height: '100%', border: 'none' }}
+              style={{ width: '100%', height: '100%', border: 'none', filter: isSold ? 'grayscale(100%)' : 'none' }}
             />
           ) : (
             <video
               key={currentMedia.url}
               src={getOptimizedVideoUrl(currentMedia.url)}
               controls
-              autoPlay
               muted
               playsInline
               preload="metadata"
               className="w-full h-full object-contain"
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', filter: isSold ? 'grayscale(100%)' : 'none' }}
             />
           )
         ) : (
@@ -274,7 +273,8 @@ const PropertyDetailPage = () => {
             src={getOptimizedImageUrl(currentMedia.url, { width: 1400 })}
             alt={property.title}
             decoding="async"
-            className={`detail-media-img ${isSold ? 'grayscale' : ''}`}
+            className="detail-media-img"
+            style={{ filter: isSold ? 'grayscale(100%)' : 'none' }}
           />
         )}
 
@@ -286,10 +286,6 @@ const PropertyDetailPage = () => {
           </div>
         )}
 
-        {/* Counter Badge */}
-        <div className="media-counter-badge">
-          <span>{currentIndex + 1} / {mediaList.length}</span>
-        </div>
 
         {/* Navigation Arrow Buttons */}
         {mediaList.length > 1 && (
@@ -326,11 +322,11 @@ const PropertyDetailPage = () => {
               aria-label={`Go to media ${idx + 1}`}
             >
               {item.type === 'video' ? (
-                <div className="thumbnail-video-wrap">
+                <div className="thumbnail-video-wrap" style={{ filter: isSold ? 'grayscale(100%)' : 'none' }}>
                   <Play size={16} fill="#ffffff" color="#ffffff" />
                 </div>
               ) : (
-                <img src={getOptimizedImageUrl(item.url, { width: 180 })} alt={`Thumb ${idx + 1}`} loading="lazy" decoding="async" />
+                <img src={getOptimizedImageUrl(item.url, { width: 180 })} alt={`Thumb ${idx + 1}`} loading="lazy" decoding="async" style={{ filter: isSold ? 'grayscale(100%)' : 'none' }} />
               )}
             </button>
           ))}
@@ -395,22 +391,28 @@ const PropertyDetailPage = () => {
           <button 
             type="button" 
             onClick={() => {
+              if (isSold) return;
               setModalTab('enquiry');
               setIsFormModalOpen(true);
             }}
+            disabled={isSold}
+            title={isSold ? 'Property is Sold Out' : ''}
             className="btn btn-dark btn-sm flex-1"
-            style={{ padding: '0.6rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px', background: '#0f172a', color: '#ffffff', display: 'flex', justifyContent: 'center' }}
+            style={{ padding: '0.6rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px', background: isSold ? '#94a3b8' : '#0f172a', color: '#ffffff', display: 'flex', justifyContent: 'center', cursor: isSold ? 'not-allowed' : 'pointer' }}
           >
             Send Enquiry
           </button>
           <button 
             type="button" 
             onClick={() => {
+              if (isSold) return;
               setModalTab('appointment');
               setIsFormModalOpen(true);
             }}
+            disabled={isSold}
+            title={isSold ? 'Property is Sold Out' : ''}
             className="btn btn-primary btn-sm flex-1"
-            style={{ padding: '0.6rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px', display: 'flex', justifyContent: 'center' }}
+            style={{ padding: '0.6rem 0.75rem', fontSize: '0.8rem', borderRadius: '8px', display: 'flex', justifyContent: 'center', background: isSold ? '#cbd5e1' : '', color: isSold ? '#64748b' : '', borderColor: isSold ? '#cbd5e1' : '', cursor: isSold ? 'not-allowed' : 'pointer' }}
           >
             Book Site Visit
           </button>
@@ -575,7 +577,7 @@ const PropertyDetailPage = () => {
     <div className="property-detail-page">
       {property && (
         <Helmet>
-          <title>{`${property.title} in ${property.location?.locality || ''}, ${property.location?.city || ''} | ${businessName}`}</title>
+          <title>{`${property.title} in ${property.location?.city || ''}, ${property.location?.state || ''} | ${businessName}`.replace(/ in , /, ' in ').replace(/,  \|/, ' |').replace(/ in  \|/, ' |')}</title>
           <meta name="description" content={cleanDesc} />
           <meta property="og:title" content={`${property.title} | ${businessName}`} />
           <meta property="og:description" content={cleanDesc} />

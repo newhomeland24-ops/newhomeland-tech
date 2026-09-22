@@ -24,6 +24,7 @@ export default function PropertyInquiryAppointmentForms({ property, initialTab =
   const [activeTab, setActiveTab] = useState(initialTab); // 'enquiry' | 'appointment'
 
   const propCustomId = property?.propertyId || property?._id || '';
+  const isSold = property?.status === 'sold' || property?.status === 'Sold';
 
   // Element Refs for Auto-Focus on Error
   const enquiryNameRef = useRef(null);
@@ -213,7 +214,7 @@ export default function PropertyInquiryAppointmentForms({ property, initialTab =
 
     // 1. Immediately open WhatsApp with client details
     const text = encodeURIComponent(
-      `Hello ${businessName}, I would like to inquire about "${property?.title}" (ID: #${propCustomId}).\nName: ${name}\nContact: ${phone}${email ? `\nEmail: ${email}` : ''}\nMessage: ${enquiryData.message || 'Please share verified legal paperwork and site visit coordinates.'}`
+      `Hello ${businessName}, I would like to inquire about "${property?.title}" (ID: #${propCustomId}).\nName: ${name}\nContact: ${phone}${email ? `\nEmail: ${email}` : ''}`
     );
     window.open(`https://wa.me/${brokerPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
 
@@ -364,7 +365,7 @@ export default function PropertyInquiryAppointmentForms({ property, initialTab =
   const openEnquiryWhatsApp = () => {
     if (!validateEnquiry()) return;
     const text = encodeURIComponent(
-      `Hello ${businessName}, I submitted an enquiry for property "${property?.title}" (ID: #${propCustomId}).\nName: ${enquiryData.name.trim()}\nPhone: ${enquiryData.phone.trim()}\nMessage: ${enquiryData.message}`
+      `Hello ${businessName}, I submitted an enquiry for property "${property?.title}" (ID: #${propCustomId}).\nName: ${enquiryData.name.trim()}\nPhone: ${enquiryData.phone.trim()}`
     );
     window.open(`https://wa.me/${brokerPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
   };
@@ -552,9 +553,10 @@ export default function PropertyInquiryAppointmentForms({ property, initialTab =
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.25rem' }}>
                   <button
                     type="submit"
-                    disabled={enquiryLoading}
+                    disabled={enquiryLoading || isSold}
+                    title={isSold ? 'Property is Sold Out' : ''}
                     className="btn btn-gold"
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', fontWeight: 700 }}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', fontWeight: 700, opacity: isSold ? 0.6 : 1, cursor: isSold ? 'not-allowed' : 'pointer' }}
                   >
                     {enquiryLoading ? 'Submitting Enquiry...' : 'Submit Enquiry'}
                   </button>
@@ -565,9 +567,11 @@ export default function PropertyInquiryAppointmentForms({ property, initialTab =
 
                   <button
                     type="button"
-                    onClick={handleWhatsAppEnquiry}
+                    onClick={() => { if (!isSold) handleWhatsAppEnquiry(); }}
+                    disabled={isSold}
+                    title={isSold ? 'Property is Sold Out' : ''}
                     className="btn-whatsapp-action"
-                    style={{ justifyContent: 'center', width: '100%' }}
+                    style={{ justifyContent: 'center', width: '100%', opacity: isSold ? 0.6 : 1, cursor: isSold ? 'not-allowed' : 'pointer' }}
                   >
                     <WhatsAppIcon size={19} />
                     <span>Inquire Directly on WhatsApp</span>
@@ -765,9 +769,10 @@ export default function PropertyInquiryAppointmentForms({ property, initialTab =
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.25rem' }}>
                   <button
                     type="submit"
-                    disabled={appointmentLoading}
+                    disabled={appointmentLoading || isSold}
+                    title={isSold ? 'Property is Sold Out' : ''}
                     className="btn btn-gold"
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', fontWeight: 700 }}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: '12px', fontWeight: 700, opacity: isSold ? 0.6 : 1, cursor: isSold ? 'not-allowed' : 'pointer' }}
                   >
                     {appointmentLoading ? 'Scheduling Visit...' : 'Confirm Site Visit Booking'}
                   </button>
@@ -778,9 +783,11 @@ export default function PropertyInquiryAppointmentForms({ property, initialTab =
 
                   <button
                     type="button"
-                    onClick={handleWhatsAppAppointment}
+                    onClick={() => { if (!isSold) handleWhatsAppAppointment(); }}
+                    disabled={isSold}
+                    title={isSold ? 'Property is Sold Out' : ''}
                     className="btn-whatsapp-action"
-                    style={{ justifyContent: 'center', width: '100%' }}
+                    style={{ justifyContent: 'center', width: '100%', opacity: isSold ? 0.6 : 1, cursor: isSold ? 'not-allowed' : 'pointer' }}
                   >
                     <WhatsAppIcon size={19} />
                     <span>Book Directly via WhatsApp</span>

@@ -70,11 +70,11 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
 
   return (
     <div 
-      className="admin-modal-overlay fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm"
+      className="admin-modal-overlay fixed inset-0 z-[1100] flex items-center justify-center p-2 sm:p-4 bg-slate-900/85"
       onClick={onClose}
     >
       <div 
-        className="admin-modal-card max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4 bg-white rounded-2xl flex flex-col shadow-2xl border border-slate-200"
+        className="admin-modal-card max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-white rounded-2xl flex flex-col shadow-2xl border border-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -82,12 +82,12 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '1.25rem 1.75rem',
+          padding: '1rem',
           borderBottom: '1px solid #f1f5f9',
           background: '#fafafa'
         }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
               <span className="badge-type-pill">{property.propertyType}</span>
               <span style={{
                 fontSize: '0.78rem',
@@ -124,11 +124,11 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
         </div>
 
         {/* Modal Body */}
-        <div style={{ padding: '1.5rem 1.75rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div style={{ padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Media Showcase */}
           {mediaList.length > 0 && (
-            <div style={{ borderRadius: '14px', overflow: 'hidden', background: '#090f1d', border: '1px solid #1e293b' }}>
-              <div style={{ position: 'relative', width: '100%', height: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ borderRadius: '14px', overflow: 'hidden', background: '#090f1d', border: '1px solid #1e293b', flexShrink: 0 }}>
+              <div style={{ position: 'relative', width: '100%', minHeight: '320px', height: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {mediaList[activeMediaIndex]?.type === 'video' ? (
                   getYouTubeEmbedUrl(mediaList[activeMediaIndex].url) ? (
                     <iframe
@@ -335,11 +335,13 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '1.1rem 1.75rem',
+          padding: '1rem',
           borderTop: '1px solid #f1f5f9',
-          background: '#fafafa'
+          background: '#fafafa',
+          flexWrap: 'wrap',
+          gap: '1rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
             {/* View Live Public Page */}
             <a
               href={`/properties/${currentPropertyId}`}
@@ -378,24 +380,26 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
             )}
 
             {/* Mark Sold button */}
-            {!isSold && onMarkSold && (
+            {onMarkSold && (
               <button
                 type="button"
-                onClick={() => onMarkSold(currentPropertyId, property.title)}
+                onClick={() => { if (!isSold) onMarkSold(currentPropertyId, property.title); }}
+                disabled={isSold}
                 className="btn btn-sm"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '0.45rem',
                   borderRadius: '10px',
-                  background: '#f0fdf4',
-                  color: '#16a34a',
-                  border: '1px solid #bbf7d0',
-                  fontWeight: 600
+                  background: isSold ? '#f3f4f6' : '#f0fdf4',
+                  color: isSold ? '#9ca3af' : '#16a34a',
+                  border: isSold ? '1px solid #e5e7eb' : '1px solid #bbf7d0',
+                  fontWeight: 600,
+                  cursor: isSold ? 'not-allowed' : 'pointer'
                 }}
               >
                 <CheckCircle size={15} />
-                <span>Mark as Sold</span>
+                <span>{isSold ? 'Sold Out' : 'Mark as Sold'}</span>
               </button>
             )}
 
