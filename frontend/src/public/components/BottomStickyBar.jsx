@@ -19,17 +19,17 @@ const BottomStickyBar = () => {
           href={`https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Hello ${businessName}, I would like to inquire about available properties.`)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 bg-green-500 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center space-x-2 active:bg-green-600 transition-colors"
+          className="flex-1 bg-green-500 text-white py-1.5 px-2 rounded-md text-xs font-semibold flex items-center justify-center space-x-2 active:bg-green-600 transition-colors"
         >
-          <WhatsAppIcon size={20} />
+          <WhatsAppIcon size={14} />
           <span>WhatsApp</span>
         </a>
       )}
       <a 
         href={`tel:${cleanPhone}`}
-        className="flex-1 bg-primary-600 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center space-x-2 active:bg-primary-700 transition-colors"
+        className="flex-1 bg-primary-600 text-white py-1.5 px-2 rounded-md text-xs font-semibold flex items-center justify-center space-x-2 active:bg-primary-700 transition-colors"
       >
-        <Phone className="w-5 h-5" />
+        <Phone className="w-3.5 h-3.5" />
         <span>Call Broker</span>
       </a>
     </div>

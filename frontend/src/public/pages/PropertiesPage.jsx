@@ -14,7 +14,7 @@ import {
 import { useProperties } from '../hooks/useProperties';
 import { useSettings } from '../../context/SettingsContext';
 import LandCard from '../components/LandCard';
-import axios from 'axios';
+import axios from '../../config/axios';
 
 const PropertiesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();

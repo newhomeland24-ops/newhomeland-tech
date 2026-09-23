@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import axios from '../../config/axios';
 import {
   X,
   UploadCloud,
@@ -969,7 +969,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                   <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '0.5rem' }}>
                     Uploaded Images ({existingImages.length}):
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '0.75rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 110px), 1fr))', gap: '0.75rem' }}>
                     {existingImages.map((img, i) => (
                       <div
                         key={i}
@@ -1034,7 +1034,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
             </div>
 
             {/* 2. Walkthrough Video & 3. Floor Plans side-by-side */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))', gap: '1.5rem', borderTop: '1px solid #f1f5f9', paddingTop: '1.25rem' }}>
               {/* Walkthrough Video */}
               <div>
                 <label className="form-label">Walkthrough Video Link</label>
@@ -1137,7 +1137,7 @@ const UploadForm = ({ onSuccess, onCancel, initialData = null }) => {
                 Select all lifestyle amenities and infrastructure features available for this listing:
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.85rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: '0.85rem' }}>
                 {availableAmenities.map((amenity) => {
                   const isSelected = formData.amenities.includes(amenity);
                   return (

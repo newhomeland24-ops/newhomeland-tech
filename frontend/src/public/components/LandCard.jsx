@@ -231,7 +231,7 @@ const LandCard = ({ property }) => {
       </div>
 
       {/* 2. Card Content Body */}
-      <div className="property-card-body" style={{ padding: '1.5rem 1.6rem' }}>
+      <div className="property-card-body p-3.5 sm:p-5 md:p-6">
         {/* Location */}
         <div className="card-location min-w-0" style={{ marginBottom: '0.4rem', color: '#64748b', fontSize: '0.9rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
           <MapPin size={15} color="#d49a3f" className="flex-shrink-0" />
@@ -240,15 +240,8 @@ const LandCard = ({ property }) => {
 
         {/* Title */}
         <h3
-          className="card-title truncate min-w-0 w-full"
+          className="card-title truncate min-w-0 w-full text-base sm:text-lg md:text-xl font-extrabold text-slate-900 mb-2 leading-snug"
           title={property.title}
-          style={{
-            fontSize: '1.35rem',
-            fontWeight: 800,
-            color: '#0f172a',
-            marginBottom: '0.85rem',
-            lineHeight: 1.3
-          }}
         >
           {property.title}
         </h3>

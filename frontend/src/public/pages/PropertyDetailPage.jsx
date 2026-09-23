@@ -616,7 +616,7 @@ const PropertyDetailPage = () => {
           <div className="flex flex-col lg:flex-row gap-6 w-full">
             <div 
               className="flex-1 min-w-0 flex flex-col gap-6 sticky self-start"
-              style={{ top: 'min(6rem, calc(100vh - 100% - 1.5rem))' }}
+              style={{ top: 'min(6rem, calc(100dvh - 100% - 1.5rem))' }}
             >
               {mediaCard}
               {specsCard}
@@ -625,7 +625,7 @@ const PropertyDetailPage = () => {
             </div>
             <div 
               className="w-full lg:w-[400px] flex flex-col gap-6 sticky self-start min-w-0"
-              style={{ top: 'min(6rem, calc(100vh - 100% - 1.5rem))' }}
+              style={{ top: 'min(6rem, calc(100dvh - 100% - 1.5rem))' }}
             >
               {headerCard}
               <PropertyInquiryAppointmentForms property={property} />

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import axios from '../config/axios';
 
 export const DEFAULT_SETTINGS = {
   business_name: 'NewHomeDevelopers',

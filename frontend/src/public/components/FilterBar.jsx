@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Home, IndianRupee } from 'lucide-react';
-import axios from 'axios';
+import axios from '../../config/axios';
 
 const FilterBar = ({ onFilterChange }) => {
   const [propertyTypes, setPropertyTypes] = useState([]);

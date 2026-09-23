@@ -239,7 +239,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
           )}
 
           {/* Quick Metrics Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '1rem' }}>
             <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Price</div>
               <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#b87d28', marginTop: '0.2rem' }}>
@@ -280,7 +280,7 @@ export default function PropertyDetailModal({ property, isOpen, onClose, onEdit,
                 <Building size={16} color="#d49a3f" />
                 <span>Property Specifications</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 130px), 1fr))', gap: '0.75rem' }}>
                 {property.specifications.bedrooms > 0 && (
                   <div><span style={{ fontSize: '0.75rem', color: '#64748b' }}>Bedrooms:</span> <strong style={{ color: '#0f172a' }}>{property.specifications.bedrooms} BHK</strong></div>
                 )}

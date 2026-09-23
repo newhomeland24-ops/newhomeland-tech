@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../config/axios';
 
 export const useProperties = (filters = {}) => {
   const [properties, setProperties] = useState([]);

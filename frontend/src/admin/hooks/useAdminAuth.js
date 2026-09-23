@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import axios from '../../config/axios';
 
 // 3 hours of inactivity in milliseconds
 const INACTIVITY_TIMEOUT_MS = 3 * 60 * 60 * 1000;

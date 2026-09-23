@@ -58,7 +58,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <main className="flex-grow bg-gray-50 pt-8 pb-24 md:pt-10 md:pb-12">
+      <main className="flex-grow bg-gray-50 pt-6 pb-20 sm:pt-10 sm:pb-24">
         <div className="container">
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>

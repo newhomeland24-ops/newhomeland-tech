@@ -3,7 +3,7 @@
    ========================================================================== */
 
 .admin-page-container {
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-light);
   display: flex;
   flex-direction: column;
@@ -518,7 +518,7 @@
 .admin-search-box {
   position: relative;
   flex: 1;
-  min-width: 260px;
+  min-width: min(100%, 260px);
 }
 
 .search-icon {
@@ -878,7 +878,7 @@
 
 /* Admin Login Screen */
 .admin-login-wrap {
-  min-height: calc(100vh - 80px);
+  min-height: calc(100dvh - 80px);
   background: var(--bg-light);
   display: flex;
   align-items: center;
@@ -949,7 +949,7 @@
 
 .admin-dashboard-layout {
   display: flex;
-  min-height: 100vh;
+  min-height: 100dvh;
   background-color: #f8fafc;
   position: relative;
 }
@@ -958,7 +958,8 @@
 .admin-sidebar {
   width: 285px;
   min-width: 285px;
-  height: 100vh;
+  max-width: calc(100vw - 3rem);
+  height: 100dvh;
   position: sticky;
   top: 0;
   background: #090f1d;

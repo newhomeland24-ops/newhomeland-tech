@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Building2, Phone, Mail, MapPin, Clock, Shield } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import WhatsAppIcon from '../../components/WhatsAppIcon';
-import axios from 'axios';
+import axios from '../../config/axios';
 
 export default function Footer() {
   const { settings } = useSettings();

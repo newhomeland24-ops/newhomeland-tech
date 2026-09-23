@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../hooks/useAdminAuth';
 import { useAdminProperties } from '../hooks/useAdminProperties';
-import axios from 'axios';
+import axios from '../../config/axios';
 import LandTable from '../components/LandTable';
 import UploadForm from '../components/UploadForm';
 import AdminSidebar from '../components/AdminSidebar';
@@ -600,7 +600,7 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
 
   if (authLoading || !isAuthenticated) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b1120', color: '#cbd5e1' }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0b1120', color: '#cbd5e1' }}>
         <div style={{ textAlign: 'center' }}>
           <RefreshCw size={28} className="animate-spin" style={{ margin: '0 auto 1rem auto', color: '#d49a3f' }} />
           <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>Authenticating Admin Session...</p>
@@ -819,7 +819,7 @@ Our property advisor is ready to assist you. Contact us at ${brokerPhone} for an
               </div>
 
               {/* Quick Navigation Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem', margin: '2rem 0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.25rem', margin: '2rem 0' }}>
                 <div 
                   onClick={() => setActiveTab('properties')} 
                   className="dashboard-widget-card" 

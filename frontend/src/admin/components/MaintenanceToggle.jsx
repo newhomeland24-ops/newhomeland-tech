@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../../config/axios';
 import { AlertTriangle, ShieldAlert, CheckCircle2, Save, RefreshCw, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 

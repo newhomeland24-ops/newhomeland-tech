@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ErrorBoundary from './admin/components/ErrorBoundary';
 import AdminLoginPage from './admin/pages/AdminLoginPage';
 import AdminDashboardPage from './admin/pages/AdminDashboardPage';
-import { Toaster } from 'react-hot-toast';
 
 function AdminApp() {
   useEffect(() => {
@@ -12,7 +11,6 @@ function AdminApp() {
 
   return (
     <ErrorBoundary>
-      <Toaster position="top-right" />
       <div className="admin-app-layout w-full max-w-full min-h-screen min-h-[100dvh] bg-slate-50">
         <Routes>
           <Route path="login" element={<AdminLoginPage />} />
